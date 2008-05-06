@@ -1,0 +1,159 @@
+<project
+    name="Man's Best Friend"
+    default="client"
+    basedir=".">
+
+    <property name="version" value="mansbestfriend-0.1"/>
+    <property name="jar" value="${version}.jar"/>
+
+    <property name="srcdir" value="./src"/>
+    <property name="builddir" value="./build"/>
+    <property name="distdir" value="./jars"/>
+
+    <property name="external" value="./external/ibis/ipl-2.0.jar:./external/freetts/freetts.jar"/>
+
+    <!-- Internal target - Preparations for building. -->
+    <target name="prepare"> 
+    	<mkdir dir="${distdir}" />
+        <mkdir dir="${builddir}" />
+        <mkdir dir="${builddir}/headers" />
+    </target>
+
+    <target name="compile" depends="prepare">
+	
+	<javac 	classpath="${external}"
+		destdir="${builddir}"
+                srcdir="${srcdir}"
+                debug="true"
+		target="1.5"
+                includes="**/*.java"/>
+    </target>
+
+    <target name="build-native-headers-client" depends="compile">
+	
+	<javah 	classpath="${builddir}"
+		destdir="${builddir}/headers"
+		class="ibis.mbf.media.LinuxWebcam"/>
+    </target>
+
+    <target name="build-native-headers-server" depends="compile">
+	
+	<javah 	classpath="${builddir}"
+		destdir="${builddir}/headers"
+		class="ibis.mbf.server.PXHI"/>
+    </target>
+
+
+    <target name="build-native-client" depends="build-native-headers-client">
+	
+	<exec executable="make">
+		<arg value="-f"/>
+		<arg value="native.makefile"/>
+		<arg value="client"/>
+	</exec>
+    </target>
+
+    <target name="build-native-server" depends="build-native-headers-server">
+<!--	
+	<exec executable="make">
+		<arg value="-f"/>
+		<arg value="native.makefile"/>
+		<arg value="server"/>
+	</exec>
+-->
+    </target>
+
+
+
+    <!-- Internal target - Builds the JAR file -->
+    <target name="jar" depends="compile">
+
+	<delete failonerror="false" file="${distdir}/${jar}" />
+
+	<jar 	jarfile="${distdir}/${jar}"
+                basedir="${builddir}"
+		includes="**">
+       		<manifest>
+			<attribute name="Built-By" value="${user.name}"/>
+		</manifest>
+	</jar>
+
+    </target>
+    
+    <target name="client" depends="clean,prepare,compile,build-native-client,jar">
+    </target>
+
+    <target name="broker" depends="clean,prepare,compile,jar">
+    </target>
+
+    <target name="server" depends="clean,prepare,compile,build-native-server,jar">
+    </target>
+
+    <target name="all" depends="clean,prepare,client,broker,server">
+    </target>
+
+    <target name="client.zip" depends="client">
+	<delete failonerror="false" file="${version}-client.zip"/>
+
+	 <zip destfile="${version}-client.zip">
+            <zipfileset dir="." prefix="${version}"
+                includes="external/**,jars/**,*.properties,*.example,libWebcam.so,nativemedia.dll,Images/**"
+                />
+            <zipfileset dir="." prefix="${version}" filemode="755"
+                includes="bin/AddToClassPath.bat"
+                />
+            <zipfileset dir="./bin" prefix="${version}" filemode="755"
+                includes="client.bat"
+                />
+        </zip>
+    </target>
+
+    <target name="broker.zip" depends="broker">
+	<delete failonerror="false" file="${version}-broker.zip"/>
+
+	 <zip destfile="${version}-broker.zip">
+            <zipfileset dir="." prefix="${version}"
+                includes="external/ibis/**,jars/**,log4j.properties,*.example"
+                />
+            <zipfileset dir="." prefix="${version}" filemode="755"
+                includes="bin/broker*,bin/ibis*"
+                />
+        </zip>
+    </target>
+
+    <target name="server.zip" depends="server">
+	<delete failonerror="false" file="${version}-server.zip"/>
+
+	 <zip destfile="${version}-server.zip">
+            <zipfileset dir="." prefix="${version}"
+                includes="external/ibis/**,jars/**,log4j.properties,libPXHI.so,*.example"
+                />
+            <zipfileset dir="." prefix="${version}" filemode="755"
+                includes="bin/server,bin/ibis-server,bin/my-sge-script,bin/prunServer"
+                />
+            <zipfileset dir="./data" prefix="${version}" 
+                includes="concept.txt,concept_data.model"
+                />
+
+
+        </zip>
+    </target>
+
+
+    <target name="all.zip" depends="client.zip,broker.zip,server.zip">
+    </target>
+
+    <!-- remove all generated code -->
+    <target name="clean" description="Removes the ${distdir} directory">
+        <delete failonerror="false" dir="${builddir}" />
+        <delete failonerror="false" dir="${distdir}" />
+	<delete failonerror="false" file="libWebcam.so" />
+    </target>
+
+    <target name="distclean" depends="clean">
+         <delete failonerror="false" dir="./build-eclipse" />
+ 	 <delete failonerror="false" file="${version}.zip"/>
+    </target>
+
+
+</project>

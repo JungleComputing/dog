@@ -1,0 +1,5 @@
+# Example Ibis properties file which sets the location of the 
+# Ibis server to the fs0.das2
+#
+ibis.server.address=
+ibis.pool.name=MansBestFriend

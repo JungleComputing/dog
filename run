@@ -1,0 +1,5 @@
+#!/bin/sh
+prun -1 -no-panda ibis-run $1 -Dibis.server.address=fs0.das3.cs.vu.nl-7777 -Dibis.pool.name=test -Dibis.pool.size=$1 GetWeibulls
+
+# prun -1 -no-panda ibis-run $1 IbisTest
+# /usr/local/package/jdk1.6.0/bin/java GetWeibulls

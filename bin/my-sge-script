@@ -1,0 +1,35 @@
+#!/bin/sh
+# SGE default annotations:
+#$ -pe prun 1
+#$ -l h_rt=0:15:00
+#$ -cwd
+#$ -S /bin/sh
+
+# Sanity checks to make sure we are running under SGE:
+if [ "X$JOB_ID" = X ]; then
+    echo "No JOB_ID in environment; not running under SGE?" >&2
+    exit 1
+fi
+if [ "X$PRUN_PE_HOSTS" = X ]; then
+    echo "No PRUN_PE_HOSTS in environment; not running under prun/SGE?" >&2
+    exit 1
+fi
+if [ "X$PRUN_PROG" = X ]; then
+    echo "No PRUN_PROG in environment; not running under prun/SGE?" >&2
+    exit 1
+fi
+
+# Construct host file for MPICH's mpirun:
+mkdir -p ~/.gmpi
+NODEFILE=~/.gmpi/hosts.$JOB_ID
+for i in $PRUN_PE_HOSTS; do
+    echo $i >>$NODEFILE
+done
+
+mpirun=/usr/local/Cluster-Apps/mpich/mx/gcc/64/1.2.7..1//bin/mpirun
+$mpirun -machinefile $NODEFILE -np $PRUN_CPUS $PRUN_PROG $PRUN_PROGARGS
+exitval=$?
+
+rm -f $NODEFILE
+
+exit $exitval

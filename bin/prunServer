@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# Additional command-line parameters for Server
+#
+ZCPUS=1
+ROOTCPU=0
+IOCPU=0
+RUNPAR=1
+RUNLAZY=1
+
+################################################################3
+
+APP=ibis.mbf.server.Server
+
+for i in external/ibis/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in jars/*.jar
+do
+    CP=$CP:$i
+done
+
+CPUS=$1
+shift
+
+NORMAL=
+SPECIAL=
+
+while [ $# -gt 0 ]
+do
+
+        HEADER=`echo $1 | head --bytes=2`
+
+        case "$HEADER" in
+        -D)
+                SPECIAL="$SPECIAL $1"
+                ;;
+        *)
+                NORMAL="$NORMAL $1"
+                ;;
+        esac
+        shift
+done
+
+prun -1 -v -no-core -sge-script ./bin/my-sge-script $JAVA_HOME/bin/java $CPUS -cp $CP $SPECIAL $APP $NORMAL $ZCPUS $ROOTCPU $IOCPU $RUNPAR $RUNLAZY
