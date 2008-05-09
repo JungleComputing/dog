@@ -2,9 +2,9 @@
 
 if "%OS%"=="Windows_NT" @setlocal
 
-set S_ADDRESS="-Dibis.server.address=localhost-8888"
-set POOL_NAME="-Dibis.pool.name=ibisDist"
-set PROG_NAME="ibis.mbf.broker.Broker"
+set ADAPTORS="-Dgat.adaptor.path=external\deploy\adaptors"
+rem set PROG_NAME="deployer.DogDeploy"
+set PROG_NAME="MyApp"
 
 rem %~dp0 is expanded pathname of the current script under NT
 rem set CLIENT_HOME=%~dp0
@@ -15,6 +15,10 @@ set JAVA_EXEC=java
 set JAVACLASSPATH=%CLASSPATH%;
 
 for %%i in ("%CLIENT_HOME%\external\ibis\*.jar") do call "%CLIENT_HOME%\bin\AddToClassPath.bat" %%i
+
+for %%i in ("%CLIENT_HOME%\external\freetts\*.jar") do call "%CLIENT_HOME%\bin\AddToClassPath.bat" %%i
+
+for %%i in ("%CLIENT_HOME%\external\deploy\*.jar") do call "%CLIENT_HOME%\bin\AddToClassPath.bat" %%i
 
 for %%i in ("%CLIENT_HOME%\jars\*.jar") do call "%CLIENT_HOME%\bin\AddToClassPath.bat" %%i
 
@@ -39,8 +43,8 @@ if not "%JAVA_HOME%"=="" (
 )
 
 rem echo "%JAVA_EXEC%" -classpath "%JAVACLASSPATH%" %APP_ARGS%
-echo "%JAVA_EXEC%" -classpath "%JAVACLASSPATH%" "%S_ADDRESS%" "%POOL_NAME%" "%PROG_NAME%" %APP_ARGS% 
-"%JAVA_EXEC%" -classpath "%JAVACLASSPATH%" "%S_ADDRESS%" "%POOL_NAME%" "%PROG_NAME%" %APP_ARGS% 
+echo "%JAVA_EXEC%" -classpath "%JAVACLASSPATH%" %ADAPTORS% %PROG_NAME% %APP_ARGS% 
+"%JAVA_EXEC%" -classpath "%JAVACLASSPATH%" %ADAPTORS% %PROG_NAME% %APP_ARGS% 
 
 if "%OS%"=="Windows_NT" @endlocal
 

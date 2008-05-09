@@ -23,6 +23,4 @@ public class Image implements Serializable {
         this.height = height;
         this.pixels = image;
     }
-    
-    
 }

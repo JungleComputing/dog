@@ -57,10 +57,12 @@ public class PxSystem
 
 	/*** Public Methods ***********************************************/
 
-	public static void initParallelSystem(String name) throws Exception
+	public static void initParallelSystem(String name, String size)
+	throws Exception
 	{
 		Properties props = new Properties();
 		props.setProperty("ibis.pool.name", name);
+		props.setProperty("ibis.pool.size", size);
 
 
 		// Create Ibis & obtain parallel environment parameters (local)

@@ -15,12 +15,14 @@ public class Request implements Serializable
     
     public byte operation;    
     public long sequenceNumber;
-    public Image image;
+//    public Image image;
+    public CompressedImage image;
     public MachineDescription replyAddress;        
         
 
     public Request(byte operation, long sequenceNumber,
-				   Image image, MachineDescription replyAddress)
+				CompressedImage image, MachineDescription replyAddress)
+//				   Image image, MachineDescription replyAddress)
 	{ 
         this.operation = operation;
         this.sequenceNumber = sequenceNumber;

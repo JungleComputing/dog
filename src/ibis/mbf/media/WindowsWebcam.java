@@ -125,5 +125,4 @@ public abstract class WindowsWebcam extends Media {
  
         libraryInitialized = true;
     }
-
 }

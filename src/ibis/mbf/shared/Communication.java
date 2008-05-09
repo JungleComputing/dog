@@ -65,7 +65,9 @@ implements MessageUpcall, ReceivePortConnectUpcall
         ibis = IbisFactory.createIbis(ibisCapabilities, ibisDistProps,
 									  true, null, portType);
 */
-        ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
+//      ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
+        ibis = IbisFactory.createIbis(ibisCapabilities, null,
+									  true, null, portType);
         
         // Create the receive port for the broker and switch it on. 
         receive = ibis.createReceivePort(portType,

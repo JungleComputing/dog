@@ -217,7 +217,7 @@ public class Server implements Upcall
                 return;
             }
             operation = r.operation;            
-            img = r.image;
+			img = r.image.uncompress();
 
 			try {
             	PxSystem.broadcastValue(img.width);
@@ -255,7 +255,7 @@ public class Server implements Upcall
 //			break;
 //		}   
         case Request.OPERATION_DUMMY: {
-            reply = new Integer(666);
+            reply = new Integer(123);
             break;
         }   
         default: {
@@ -301,14 +301,14 @@ public class Server implements Upcall
 
     public static void main(String [] args)
 	{
-		if (args.length != 1) {
-			System.out.println("USAGE: Server poolname");
+		if (args.length != 2) {
+			System.out.println("USAGE: Server poolname poolsize");
 			System.exit(0);
 		}
 
 		System.out.println("Initializing Parallel System...");
 		try {
-			PxSystem.initParallelSystem(args[0]);
+			PxSystem.initParallelSystem(args[0], args[1]);
 		} catch (Exception e) {
 			System.out.println("Could not initialize Parallel system");
 			System.exit(0);

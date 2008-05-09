@@ -2,7 +2,8 @@
 
 if "%OS%"=="Windows_NT" @setlocal
 
-set S_ADDRESS="-Dibis.server.address=localhost-8888"
+rem set S_ADDRESS="-Dibis.server.address=localhost-8888"
+set S_ADDRESS="-Dibis.server.address=fs0.das3.cs.vu.nl-7777"
 set POOL_NAME="-Dibis.pool.name=ibisDist"
 set PROG_NAME="MyApp"
 

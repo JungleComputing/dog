@@ -5,6 +5,7 @@ import ibis.mbf.client.gui.ClientWindow;
 import ibis.mbf.media.Media;
 import ibis.mbf.media.MediaFactory;
 import ibis.mbf.shared.Communication;
+import ibis.mbf.shared.CompressedImage;
 import ibis.mbf.shared.FeatureVector;
 import ibis.mbf.shared.Image;
 import ibis.mbf.shared.MachineDescription;
@@ -21,8 +22,6 @@ public class Client implements Upcall
     public static final int DEFAULT_TIMEOUT = 5000;
     public static final int DEFAULT_WIDTH   = 320;
     public static final int DEFAULT_HEIGHT  = 240;
-//public static final int DEFAULT_WIDTH   = 285;
-//public static final int DEFAULT_HEIGHT  = 231;
         
     // Communication object.
     private Communication comm;
@@ -180,9 +179,10 @@ public class Client implements Upcall
             data.hasFrame(false);
             if (r.operation == Request.OPERATION_RECOGNISE) { 
                 setFeatureVector((FeatureVector) r.result);
-            } else if (r.operation == Request.OPERATION_LABELING) { 
-                Image image = (Image) r.result;        
-                forwardFrameToListnener(image, 1);
+				System.out.println("Feature Vector received");
+//			} else if (r.operation == Request.OPERATION_LABELING) { 
+//				Image image = (Image) r.result;        
+//				forwardFrameToListnener(image, 1);
             } else if (r.operation == Request.OPERATION_DUMMY) {
 				System.out.println("Dummy reply received " +
 													(Integer)r.result);
@@ -251,8 +251,8 @@ public class Client implements Upcall
 	{ 
         ServerData target = servers.findIdleServer();
         if (target != null) {       
-            target.send(new Request(getCurrentOperation(),
-									0L, image, me));
+			target.send(new Request(getCurrentOperation(), 0L,
+									new CompressedImage(image), me));
         } 
     }
     
@@ -267,7 +267,7 @@ public class Client implements Upcall
     
 
     public void run()
-	{         
+	{
         while (true) {            
             if (waitForMedia(DEFAULT_TIMEOUT)) { 
                 processFrames();

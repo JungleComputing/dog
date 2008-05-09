@@ -10,7 +10,11 @@
     <property name="builddir" value="./build"/>
     <property name="distdir" value="./jars"/>
 
-    <property name="external" value="./external/ibis/ipl-2.0.jar:./external/freetts/freetts.jar"/>
+    <property name="external"
+	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar"/>
+
+<!-- <property name="external" -->
+<!-- value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/deploy/ibis-util-2.1.jar"/> -->
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 
@@ -80,7 +84,7 @@
 
     </target>
     
-    <target name="client" depends="clean,prepare,compile,build-native-client,jar">
+    <target name="client" depends="clean,prepare,compile,jar">
     </target>
 
     <target name="broker" depends="clean,prepare,compile,jar">
