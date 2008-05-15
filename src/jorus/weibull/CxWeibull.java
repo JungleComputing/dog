@@ -383,10 +383,10 @@ public class CxWeibull
 				}
 				vector[2*(i*NR_INVARS+j)]   = resgammas[j][i];
 				vector[2*(i*NR_INVARS+j)+1] = resbetas[j][i];
-if (PxSystem.myCPU() == 0) {
-System.out.println(resgammas[j][i]);
-System.out.println(resbetas[j][i]);
-}
+//if (PxSystem.myCPU() == 0) {
+//System.out.println(resgammas[j][i]);
+//System.out.println(resbetas[j][i]);
+//}
 			}
 		}
 	}
@@ -594,10 +594,10 @@ System.out.println(resbetas[j][i]);
 					resgammas[j][i] = 100.;
 					resbetas[j][i] = 100.;
 				}
-if (PxSystem.myCPU() == 0) {
-System.out.println(resgammas[j][i]);
-System.out.println(resbetas[j][i]);
-}
+//if (PxSystem.myCPU() == 0) {
+//System.out.println(resgammas[j][i]);
+//System.out.println(resbetas[j][i]);
+//}
 			}
 		}
 
