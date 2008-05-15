@@ -1,10 +1,10 @@
 package gui.application;
 
-import gui.Output.OutputFrame;
 import gui.grid.Grid;
 import gui.grid.GridFrame;
 import gui.grid.GridRunner;
 import gui.network.SmartSocketsFrame;
+import gui.output.OutputFrame;
 import ibis.smartsockets.direct.DirectSocketAddress;
 
 import java.awt.Dimension;
