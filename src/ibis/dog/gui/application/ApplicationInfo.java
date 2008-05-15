@@ -30,9 +30,11 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
     
     private int currentServers = 0;
     
+    /*
     private double currentThroughput = 0.0;
     
     private double currentLatency = 0.0;
+    */
     
     private class Update extends Thread { 
         
@@ -58,8 +60,8 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
         plot = new CombinedDomainXYPlot(new DateAxis("Time"));
         datasets = new TimeSeriesCollection[2];
         
-        createSeries(0, "Framerate", "Frames/sec", 30);
-        createSeries(1, "Servers", "Servers", 50);
+        createSeries(0, "Framerate", "Frames/sec", 40);
+        createSeries(1, "Servers", "Servers", 40);
         
         JFreeChart chart = new JFreeChart(plot);
         chart.setBorderVisible(false);
@@ -120,20 +122,21 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
         currentFrameRate = fps;
     }
     
-    public synchronized void setThroughput(double throughput) {
-        currentThroughput = throughput;
-    }
-    
-    public synchronized void setLatency(double latency) {
-        currentLatency = latency;
-    }
-    
     private synchronized int getServers() { 
         return currentServers;
     }
     
     private synchronized double getFramerate() { 
         return currentFrameRate;
+    }
+    
+    /*
+    public synchronized void setThroughput(double throughput) {
+        currentThroughput = throughput;
+    }
+    
+    public synchronized void setLatency(double latency) {
+        currentLatency = latency;
     }
     
     private synchronized double getThroughput() { 
@@ -143,38 +146,5 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
     private synchronized double getLatency() { 
         return currentLatency;
     }
-    
-    
-    
-    
-    
-    /*
-    public void paint(Graphics g) {
-        
-        Dimension d = getSize();
-        
-        Graphics2D g2 = (Graphics2D) g;
-        FontRenderContext frc = g2.getFontRenderContext();
-        
-        int x = d.width / 2;
-        int y = d.height / 2;
-        
-        g2.setColor(Color.WHITE);
-        g2.fillRect(0, 0, d.width, d.height);
-            
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        Font f = getFont().deriveFont(Font.BOLD);
-        TextLayout tl = new TextLayout("INFO PANEL", f, frc);
-            
-        float sw = (float) tl.getBounds().getWidth();
-        float sh = (float) tl.getBounds().getHeight();
-        Shape sha = tl.getOutline(AffineTransform.getTranslateInstance(
-                    x-sw/2, y+sh/2));
-        g2.setColor(Color.GRAY);
-        g2.draw(sha);
-        g2.setColor(Color.BLACK);
-        g2.fill(sha);
-    }*/
+    */
 }

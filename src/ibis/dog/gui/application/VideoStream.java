@@ -42,12 +42,16 @@ class VideoStream extends JPanel implements VideoConsumer {
     
     private FrameRateConsumer framerate;
     
-    public VideoStream(int width, int height, FrameRateConsumer f) { 
+    private VideoConsumer nextConsumer;
+    
+    public VideoStream(int width, int height, FrameRateConsumer f, 
+            VideoConsumer nextConsumer) { 
         setBackground(Color.white);
         
         this.camWidth = width;
         this.camHeight = height;
         this.framerate = f;
+        this.nextConsumer = nextConsumer;
     
         pixels = new int[width*height];
         
@@ -104,6 +108,16 @@ class VideoStream extends JPanel implements VideoConsumer {
         
         image++; 
         repaint();
+        
+        if (nextConsumer != null) { 
+            
+            int [] buffer = nextConsumer.getBuffer(camWidth, camHeight, 0);
+            
+            if (buffer != null) { 
+                System.arraycopy(pixels, 0, buffer, 0, pixels.length);
+                nextConsumer.gotImage(buffer, 0);
+            }
+        }
     }
 
    

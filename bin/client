@@ -1,0 +1,55 @@
+#!/bin/sh
+
+for i in external/video4J/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in external/jfreechart/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in external/deploy/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in external/ibis/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in external/freetts/*.jar
+do
+    CP=$CP:$i
+done
+
+for i in jars/*.jar
+do
+    CP=$CP:$i
+done
+
+NORMAL=
+SPECIAL=
+
+while [ $# -gt 0 ]
+do
+
+        HEADER=`echo $1 | head --bytes=2`
+
+        case "$HEADER" in
+        -D)
+                SPECIAL="$SPECIAL $1"
+                ;;
+        *)
+                NORMAL="$NORMAL $1"
+                ;;
+        esac
+        shift
+done
+
+java -cp $CP -Dlog4j.configuration=file:`pwd`/log4j.properties -Djava.library.path=`pwd`/external/native_libraries $SPECIAL ibis.dog.client.Main $NORMAL
+
+
+

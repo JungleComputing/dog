@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import ibis.video4j.VideoConsumer;
 import ibis.video4j.VideoDeviceDescription;
 import ibis.video4j.VideoDeviceFactory;
 
@@ -25,9 +26,9 @@ public class VideoPanel extends JPanel implements ActionListener {
     
     private VideoStream videoStream;
     
-    public VideoPanel(FrameRateConsumer f) {
+    public VideoPanel(FrameRateConsumer f, VideoConsumer v) {
         
-        videoStream = new VideoStream(352, 288, f);
+        videoStream = new VideoStream(352, 288, f, v);
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(videoStream);

@@ -167,6 +167,7 @@ public class ComputeResource {
         */
     }
 
+    @SuppressWarnings("unchecked")
     public ArrayList<ComputeResourceLoadElement> getLoadInfo() {
         removeOldLoadInfo();
         return (ArrayList<ComputeResourceLoadElement>) loadInfo.clone();

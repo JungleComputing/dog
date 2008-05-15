@@ -1,20 +1,19 @@
 package ibis.dog.gui.application;
 
+import ibis.dog.client.Client;
+import ibis.dog.client.ClientListener;
+import ibis.dog.client.ServerData;
 import ibis.dog.gui.console.OutputFrame;
 import ibis.dog.gui.grid.Grid;
 import ibis.dog.gui.grid.GridFrame;
 import ibis.dog.gui.grid.GridRunner;
 import ibis.dog.gui.network.SmartSocketsFrame;
-import ibis.smartsockets.direct.DirectSocketAddress;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,9 +24,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import app.Application;
-
-public class ClientGUI extends JPanel implements ActionListener {
+public class ClientPanel extends JPanel implements ActionListener, ClientListener {
 
     // Generated
     private static final long serialVersionUID = 7697445736367043254L;
@@ -38,7 +35,7 @@ public class ClientGUI extends JPanel implements ActionListener {
     
     private static final int MAX_SERVERS = 10;
     
-    private final Application application;
+    private final Client application;
     
     private SmartSocketsFrame networkTopology;
     private GridFrame grid;    
@@ -48,14 +45,14 @@ public class ClientGUI extends JPanel implements ActionListener {
     
     private JMenuBar menuBar;
     
-    private VideoStream videoStream;
+   // private VideoStream videoStream;
     
     private ApplicationInfo applicationInfo;
     private ControlPanel controlPanel;
     private OutputPanel outputPanel;
     private ServerInfo serverInfo;
     
-    public ClientGUI(JFrame frame, Application application) { 
+    public ClientPanel(JFrame frame, Client application) { 
         
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
@@ -77,7 +74,7 @@ public class ClientGUI extends JPanel implements ActionListener {
         // Combine video and IOPanel into 1 panel
         JPanel videoAndInfo = new JPanel();
         videoAndInfo.setLayout(new GridLayout(1,3));
-        videoAndInfo.add(new VideoPanel(applicationInfo));
+        videoAndInfo.add(new VideoPanel(applicationInfo, application));
         videoAndInfo.add(IOPanel);
         videoAndInfo.add(serverInfo);
         
@@ -141,10 +138,12 @@ public class ClientGUI extends JPanel implements ActionListener {
             
             if (networkTopology == null) { 
                 
+                /*
                 List<DirectSocketAddress> tmp = new LinkedList<DirectSocketAddress>();
                 tmp.add(application.getHubAddress());
                 
                 networkTopology = new SmartSocketsFrame(tmp);
+               */
             }
   
       } else if (cmd.equals(CONSOLE_OUTPUT)) { 
@@ -158,18 +157,25 @@ public class ClientGUI extends JPanel implements ActionListener {
         } 
     }
     
+    public void updateServers(ServerData [] servers) {
+        // TODO Auto-generated method stub
+        
+        System.out.println("Got server update!");
+        
+    }
+    
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    private static void createAndShowGUI(Application app) {
+    private static void createAndShowGUI(Client app) {
         //Create and set up the window.
         JFrame frame = new JFrame("Application Control");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         //Create and set up the content pane.
-        JComponent content = new ClientGUI(frame, app);
+        JComponent content = new ClientPanel(frame, app);
         content.setOpaque(true); //content panes must be opaque
         frame.setContentPane(content);
 
@@ -178,7 +184,7 @@ public class ClientGUI extends JPanel implements ActionListener {
         frame.setVisible(true);
     }
 
-    public static void createGUI(final Application app) {
+    public static void createGUI(final Client app) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -187,5 +193,7 @@ public class ClientGUI extends JPanel implements ActionListener {
             }
         });
     }
+
+
 }
       

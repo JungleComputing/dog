@@ -7,7 +7,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -19,13 +18,15 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-
 import java.util.ArrayList;
 
 import javax.swing.JComponent;
 import javax.swing.event.MouseInputListener;
 
 class GridCanvas extends JComponent implements MouseInputListener, KeyListener {
+
+    // Generated
+    private static final long serialVersionUID = 1L;
 
     static final boolean LOAD_GRAPH_BACK_BACKGROUND = false;
 

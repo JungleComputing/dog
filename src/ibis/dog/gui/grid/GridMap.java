@@ -125,7 +125,7 @@ implements MouseInputListener, MouseWheelListener {
             addMouseWheelListener(this);
             
         } catch (IOException e) {
-            System.out.println("Image could not be read");
+            System.out.println("RGB24Image could not be read");
             System.exit(1);
         }
     }
