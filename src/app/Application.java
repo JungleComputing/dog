@@ -2,10 +2,10 @@ package app;
 
 import java.io.IOException;
 
+import ibis.dog.gui.application.ClientGUI;
 import ibis.smartsockets.direct.DirectSocketAddress;
 import ibis.smartsockets.hub.Hub;
 import ibis.smartsockets.util.TypedProperties;
-import gui.application.ClientGUI;
 
 public class Application {
 
