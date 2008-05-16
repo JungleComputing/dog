@@ -4,10 +4,12 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -24,9 +26,13 @@ public class GridPanel extends JPanel implements ActionListener {
     
     private JFrame frame;
     private JMenuBar menuBar;
+    private JFileChooser chooser;
     
     private GridMap map;
     private JobInfo jobs;
+    
+    private JMenuItem add; 
+    private JMenuItem remove; 
     
     public GridPanel(JFrame frame, GridRunner runner, Grid grid) {
         
@@ -44,7 +50,8 @@ public class GridPanel extends JPanel implements ActionListener {
         add(Box.createRigidArea(new Dimension(5,0)));
         add(jobs);
         
-       
+        chooser = new JFileChooser(new File("grids"));
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
     }
 
     private void createMenuBar() { 
@@ -57,21 +64,38 @@ public class GridPanel extends JPanel implements ActionListener {
                 "Load a Grid description");
         menuBar.add(menu);
        
-        JMenuItem menuItem = new JMenuItem(ADD);
-        menuItem.setMnemonic(KeyEvent.VK_A);
-        menuItem.addActionListener(this);
-        menu.add(menuItem);
+        add = new JMenuItem(ADD);
+        add.setMnemonic(KeyEvent.VK_A);
+        add.addActionListener(this);
+        menu.add(add);
         
-        menuItem = new JMenuItem(REMOVE);
-        menuItem.setMnemonic(KeyEvent.VK_R);
-        menuItem.addActionListener(this);
-        menu.add(menuItem);
+        remove = new JMenuItem(REMOVE);
+        remove.setMnemonic(KeyEvent.VK_R);
+        remove.addActionListener(this);
+        menu.add(remove);
         
         frame.setJMenuBar(menuBar);        
     }
 
-    public void actionPerformed(ActionEvent arg0) {
-        // TODO Auto-generated method stub
+    public void actionPerformed(ActionEvent e) {
+        System.out.println("Got event: " + e);        
         
+        if (e.getSource() == add) { 
+            System.out.println("Must ADD grid");  
+            
+            int returnVal = chooser.showOpenDialog(this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = chooser.getSelectedFile();
+                //This is where a real application would open the file.
+                
+                System.out.println("Must ADD grid " + file.getName());                      
+            } 
+
+            
+            
+        } else if (e.getSource() == remove) { 
+            System.out.println("Must REMOVE grid");        
+        }
     }
 }

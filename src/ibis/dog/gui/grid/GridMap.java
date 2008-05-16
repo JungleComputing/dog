@@ -17,6 +17,7 @@ import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -58,7 +59,7 @@ implements MouseInputListener, MouseWheelListener {
     private int posX = 4200;
     private int posY = 950;
     
-    private int preferredSizeW = 1000;
+    private int preferredSizeW = 800;
     private int preferredSizeH = 800;
     
     private int mouseLocationX = -1;
@@ -66,17 +67,17 @@ implements MouseInputListener, MouseWheelListener {
     
     private double scale = 100;
     
-    private Grid grid;
+   // private Grid grid;
 
-    private GridRunner gridRunner;
+   // private GridRunner gridRunner;
 
     public GridMap(GridRunner gridRunner, Grid grid) {
        
-        this.gridRunner = gridRunner;
-        this.grid = grid;
+        //this.gridRunner = gridRunner;
+       // this.grid = grid;
         
         try {
-            map = ImageIO.read(grid.getMapFile());
+            map = ImageIO.read(new File("images/world-large.jpg"));
           
             imageW = map.getWidth(null);
             imageH = map.getHeight(null);
@@ -161,7 +162,7 @@ implements MouseInputListener, MouseWheelListener {
     public void paint(Graphics g) {
         
         Graphics2D tmp = (Graphics2D) map.getGraphics();
-        drawSites(tmp);
+      //  drawSites(tmp);
         
         drawMap((Graphics2D) g);
     } 
@@ -191,6 +192,8 @@ implements MouseInputListener, MouseWheelListener {
                 startX, startY, endX, endY,             // src area of image
                 null);
     }
+    
+    /*
 
     private void drawSites(Graphics2D g2) {
         
@@ -283,8 +286,10 @@ implements MouseInputListener, MouseWheelListener {
         }
         return null;
     }
+    */
     
     public void mouseClicked(MouseEvent e) {
+        /*
         ComputeResource m = getComputeResource(e);
         
         if (m != null) {
@@ -294,7 +299,7 @@ implements MouseInputListener, MouseWheelListener {
                 gridRunner.clickedRemoveComputeResource(m);
             }
         }
-        
+        */
     }
 
     public void mouseEntered(MouseEvent e) {

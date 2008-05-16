@@ -11,10 +11,12 @@ import javax.swing.JFrame;
 
 public class OutputFrame {
     
+    private final OutputPanel out;
+    
     public OutputFrame() { 
         
         final JFrame frame = new JFrame("Console Output");
-        final OutputPanel out = new OutputPanel(null);
+        out = new OutputPanel(null);
    
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {

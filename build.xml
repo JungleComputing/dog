@@ -11,13 +11,15 @@
     <property name="distdir" value="./jars"/>
 
     <property name="external"
-	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.09.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
+	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.10.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 
     	<mkdir dir="${distdir}" />
         <mkdir dir="${builddir}" />
         <mkdir dir="${builddir}/headers" />
+        <mkdir dir="prestage-hub" />
+        <mkdir dir="prestage-app" />
     </target>
 
     <target name="compile" depends="prepare">
@@ -45,7 +47,23 @@
 
     </target>
 
-    <target name="all" depends="clean,prepare,compile,jar">
+
+    <!-- Internal target - Perpares the stageing directories -->
+    <target name="stage" depends="jar">
+	<copy todir="prestage-hub">
+	    <fileset dir="external/ibis"/>
+	</copy>
+
+	<copy todir="prestage-server">
+	    <fileset dir="external/ibis"/>
+	</copy>
+
+	<copy todir="prestage-server">
+	    <fileset dir="jars"/>
+	</copy>
+    </target>
+
+    <target name="all" depends="clean,prepare,compile,jar,stage">
     </target>
 
     <!-- remove all generated code -->

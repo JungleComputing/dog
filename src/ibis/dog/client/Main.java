@@ -354,11 +354,13 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            // And start Client GUI and Application
+            // Create GUI and Application
             Client c = new Client();
+            ClientPanel.createGUI(c);
+
+            // Activate the application
             c.start();
 
-            ClientPanel.createGUI(c);
             
 /*          while (brokerJob.getStatus() !=
                 org.gridlab.gat.resources.Job.STOPPED_STRING ||

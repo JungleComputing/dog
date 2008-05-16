@@ -45,7 +45,7 @@ public class Servers implements Runnable {
     public synchronized ServerData findIdleServer() {
         
         for (ServerData s : servers.values()) {
-            if (/*s.isConnected() &&*/ !s.hasFrame()) {
+            if (s.isConnected() && !s.hasFrame()) {
                 return s;
             }
         }

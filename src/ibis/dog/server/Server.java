@@ -2,17 +2,17 @@ package ibis.dog.server;
 
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.RGB24Image;
 import ibis.dog.shared.MachineDescription;
+import ibis.dog.shared.RGB24Image;
 import ibis.dog.shared.Reply;
 import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 import ibis.ipl.IbisCreationFailedException;
+import ibis.smartsockets.util.NetworkUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.util.LinkedList;
 
 import jorus.parallel.PxSystem;
@@ -48,14 +48,16 @@ public class Server implements Upcall {
         }
     }
 
-    private String getHostname() throws IOException {
-        InetAddress a = InetAddress.getLocalHost();
-
-        if (a != null) {
-            return a.getHostName();
-        } else {
-            throw new IOException("Failed to get local address");
+    private String getHostname() { 
+        
+        try { 
+            return NetworkUtils.getHostname();
+        } catch (Exception e) {
+            System.out.println("Failed to get hostname!");
+            e.printStackTrace();
         }
+        
+        return "Unknown host";        
     }
 
     private synchronized void registered(boolean value) {

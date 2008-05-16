@@ -47,7 +47,9 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     private int frameNumber = 0;
 
     private FeatureVector vector;
-
+    
+    private Deployment deployment;
+    
     // Link to the GUI.
     private ClientListener listener;
     
@@ -55,7 +57,12 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         recognition = new ObjectRecognition();
     }
 
-    private void init() throws IbisCreationFailedException, IOException {
+    private void init() throws Exception {
+
+        // This may take a while, since it will deploy the server, hub and 
+        // broker for us...
+        deployment = new Deployment();
+        
         comm = new Communication("Client", this);
         me = comm.getMachineDescription();
         servers = new Servers(comm);
@@ -81,8 +88,6 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             this.image = image;
         }
     }
-    
-    
     
     public boolean learn(String name) {
 
@@ -233,7 +238,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             target.send(new Request(getCurrentOperation(), 0L,
                     new CompressedImage(image), me));
         } else { 
-            System.out.println("Dropping frame");
+            // System.out.println("Dropping frame");
         }
     }
 

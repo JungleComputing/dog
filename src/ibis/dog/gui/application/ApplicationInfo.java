@@ -5,6 +5,7 @@ import java.awt.Dimension;
 
 import javax.swing.JPanel;
 
+import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -17,7 +18,7 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-public class ApplicationInfo extends JPanel implements FrameRateConsumer {
+public class ApplicationInfo extends JPanel implements FrameRateConsumer, ServerCountConsumer {
 
     private static final long serialVersionUID = 1L;
 
@@ -29,6 +30,8 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
     private double currentFrameRate = 0.0;
     
     private int currentServers = 0;
+    
+    private int activeServers = 0; 
     
     /*
     private double currentThroughput = 0.0;
@@ -48,7 +51,9 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
                 }
                 
                 datasets[0].getSeries(0).add(new Millisecond(), getFramerate());
+             
                 datasets[1].getSeries(0).add(new Millisecond(), getServers());
+                datasets[1].getSeries(1).add(new Millisecond(), getActiveServers());
             }
         }
         
@@ -60,12 +65,59 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
         plot = new CombinedDomainXYPlot(new DateAxis("Time"));
         datasets = new TimeSeriesCollection[2];
         
-        createSeries(0, "Framerate", "Frames/sec", 40);
-        createSeries(1, "Servers", "Servers", 40);
+        datasets[0] = new TimeSeriesCollection();
+        datasets[1] = new TimeSeriesCollection();
+        
+        //createSeries(0, "Framerate", "Frames/sec", 40);
+        //createSeries(1, "Servers", "Servers", 10);
+        
+        TimeSeries series = new TimeSeries("in", Millisecond.class);        
+        datasets[0].addSeries(series);
+        
+        NumberAxis rangeAxis = new NumberAxis("Frames/sec.");
+        
+        rangeAxis.setAutoRangeIncludesZero(false);
+        rangeAxis.setAutoRange(true);
+        rangeAxis.setLowerBound(0.0);
+        rangeAxis.setUpperBound(40.0);
+        
+        XYPlot subplot = new XYPlot(
+                datasets[0], null, rangeAxis, new StandardXYItemRenderer()
+        );
+        
+        subplot.setForegroundAlpha(0.75f);
+        subplot.setBackgroundPaint(Color.white);
+        subplot.setDomainGridlinePaint(Color.darkGray);
+        subplot.setRangeGridlinePaint(Color.darkGray);
+        plot.add(subplot);
+        
+        series = new TimeSeries("total", Millisecond.class);        
+        datasets[1].addSeries(series);
+        
+        series = new TimeSeries("active", Millisecond.class);        
+        datasets[1].addSeries(series);
+        
+        rangeAxis = new NumberAxis("Servers");
+        
+        rangeAxis.setAutoRangeIncludesZero(false);
+        rangeAxis.setAutoRange(true);
+        rangeAxis.setLowerBound(0.0);
+        rangeAxis.setUpperBound(10.0);
+        
+        subplot = new XYPlot(
+                datasets[1], null, rangeAxis, new StandardXYItemRenderer()
+        );
+        
+        subplot.setForegroundAlpha(0.75f);
+        subplot.setBackgroundPaint(Color.white);
+        subplot.setDomainGridlinePaint(Color.darkGray);
+        subplot.setRangeGridlinePaint(Color.darkGray);
+        plot.add(subplot);
         
         JFreeChart chart = new JFreeChart(plot);
         chart.setBorderVisible(false);
         chart.removeLegend();
+        chart.setAntiAlias(true);
         
         plot.setBackgroundPaint(Color.white);
         plot.setDomainGridlinePaint(Color.darkGray);
@@ -93,26 +145,7 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
        // setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
     }
     
-    private void createSeries(int index, String name, String unit, double upperBound) { 
-        
-        TimeSeries fpsSeries = new TimeSeries(name, Millisecond.class);
-        datasets[index] = new TimeSeriesCollection(fpsSeries);
-        NumberAxis rangeAxis = new NumberAxis(unit);
-     
-        rangeAxis.setAutoRangeIncludesZero(false);
-        rangeAxis.setAutoRange(true);
-        rangeAxis.setLowerBound(0.0);
-        rangeAxis.setUpperBound(upperBound);
-        
-        XYPlot subplot = new XYPlot(
-                datasets[index], null, rangeAxis, new StandardXYItemRenderer()
-        );
-        
-        subplot.setBackgroundPaint(Color.white);
-        subplot.setDomainGridlinePaint(Color.darkGray);
-        subplot.setRangeGridlinePaint(Color.darkGray);
-        plot.add(subplot);
-    }
+   
     
     public synchronized void setServers(int servers) {
         currentServers = servers;
@@ -126,8 +159,29 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer {
         return currentServers;
     }
     
+    private synchronized int getActiveServers() { 
+        return activeServers;
+    }
+    
+    
     private synchronized double getFramerate() { 
         return currentFrameRate;
+    }
+
+    public synchronized void addActiveServer() {
+        activeServers++;
+    }
+
+    public synchronized void addServer() {
+        currentServers++;
+    }
+
+    public synchronized void removeActiveServer() {
+        activeServers--;
+    }
+
+    public synchronized void removeServer() {
+        currentServers--;
     }
     
     /*

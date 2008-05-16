@@ -35,7 +35,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
     
     private static final int MAX_SERVERS = 10;
     
-    private final Client application;
+    private final Client client;
     
     private SmartSocketsFrame networkTopology;
     private GridFrame grid;    
@@ -57,14 +57,15 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         this.frame = frame;
-        this.application = application;
+        this.client = application;
      
         createMenuBar();
         
-        controlPanel = new ControlPanel();
         outputPanel = new OutputPanel("Application Output");
+        controlPanel = new ControlPanel(outputPanel, client);
+        
         applicationInfo = new ApplicationInfo();
-        serverInfo = new ServerInfo(MAX_SERVERS);
+        serverInfo = new ServerInfo(MAX_SERVERS, applicationInfo);
         
         JPanel IOPanel = new JPanel();
         IOPanel.setLayout(new BoxLayout(IOPanel, BoxLayout.Y_AXIS));
@@ -85,9 +86,10 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
         add(new InfoPanel(applicationInfo));
         add(Box.createRigidArea(new Dimension(0,5)));
         add(new LogoPanel());
+        
+        outputPanel.write("Voice initialized", true);
+        client.registerListener(serverInfo);
     }
-       
-   
     
     private void createMenuBar() { 
 
@@ -128,10 +130,10 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
             if (grid == null) { 
                 
                 // Dummy object
-                GridRunner gr = new GridRunner();
-                Grid g = Grid.loadGrid("./grids/DAS-3_globus.grid");
+                //GridRunner gr = new GridRunner();
+                //Grid g = Grid.loadGrid("./grids/DAS-3_globus.grid");
                 
-                grid = new GridFrame(gr, g);
+                grid = new GridFrame(null, null);
             }
             
         } else if (cmd.equals(NETWORK_TOPOLOGY)) { 
@@ -140,7 +142,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
                 
                 /*
                 List<DirectSocketAddress> tmp = new LinkedList<DirectSocketAddress>();
-                tmp.add(application.getHubAddress());
+                tmp.add(client.getHubAddress());
                 
                 networkTopology = new SmartSocketsFrame(tmp);
                */
@@ -186,7 +188,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
 
     public static void createGUI(final Client app) {
         //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
+        //creating and showing this client's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(app);
