@@ -79,5 +79,7 @@ public class Speech implements Runnable {
                     myVoice.speak(line);
             }
         }
+        
+        System.out.println("Speech done!");
     }
 }

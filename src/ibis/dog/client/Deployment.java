@@ -59,6 +59,7 @@ public class Deployment {
         );
         
         deployer.addApplication(brokerApp);
+        
         SubJob brokerJob = new SubJob("broker job");
         brokerJob.setApplication(brokerApp);
         brokerJob.setGrid(supportGrid);
@@ -149,5 +150,26 @@ public class Deployment {
         return resources.values().toArray(new ComputeResource[resources.size()]);
     }
     
+    public void done() { 
+  
+        System.out.println("Stopping all servers");
+        
+        for (ComputeResource r : resources.values()) { 
+            r.killAllJobs();
+        }
+        
+        System.out.println("Stopping broker");
+       
+        try {
+            supportJob.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        
+        deployer.end();
+   
+        System.out.println("Deployment done!");
+    }
     
 }

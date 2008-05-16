@@ -3,26 +3,45 @@ package ibis.dog.gui.network;
 import ibis.smartsockets.direct.DirectSocketAddress;
 import ibis.smartsockets.viz.SmartsocketsViz;
 
-import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
 
-public class SmartSocketsFrame {
+import javax.swing.JFrame;
+
+public class SmartSocketsFrame extends JFrame {
+    
+    // Generated
+    private static final long serialVersionUID = 1L;
+
+    private final SmartsocketsViz glPanel;
     
     public SmartSocketsFrame(List<DirectSocketAddress> hub) { 
-        final Frame frame = new Frame("TouchGraph GraphLayout");
         
-        final SmartsocketsViz glPanel = new SmartsocketsViz(hub);
+        super("SmartSockets Network Topology");
+        
+        glPanel = new SmartsocketsViz(hub);
    
-        frame.addWindowListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                frame.remove(glPanel);
-                frame.dispose();
+                
+                System.out.println("Removing SS frame");
+                
+                remove(glPanel);
+                dispose();
             }
         });
-        frame.add("Center", glPanel);
-        frame.setSize(800, 600);
-        frame.setVisible(true);
+
+        add("Center", glPanel);
+        setSize(800, 600);
+        setVisible(true);
+    }
+    
+    public void exit() { 
+        System.out.println("SmartSocketsFrame.exit called!");
+        
+        glPanel.done();
+        remove(glPanel);
+        dispose();
     }
 }

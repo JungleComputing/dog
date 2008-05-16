@@ -55,4 +55,9 @@ public class OutputPanel extends JPanel implements SpeechInterface {
     public synchronized void write(String text) {
         write(text, useSpeech);
     }    
+    
+    public void exit() { 
+        speech.done();
+    }
+    
 }

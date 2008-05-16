@@ -15,6 +15,8 @@ public class Servers implements Runnable {
 
     private final Communication comm;
 
+    private boolean done = false;
+    
     public Servers(Communication comm) {
         this.comm = comm;
         new Thread(this).start();
@@ -93,15 +95,34 @@ public class Servers implements Runnable {
         return servers.values().toArray(new ServerData[servers.size()]);
     }
 
+    public synchronized void done() {
+        done = true;
+        notifyAll();
+    }
+    
+    public synchronized boolean getDone() { 
+        return done;
+    }
+    
+    private synchronized void waitFor(long time) { 
+        try { 
+            wait(time);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    }
+    
     public void run() {
         try {
-            while (true) {
-                Thread.sleep(UPDATE_INTERVAL);
+            while (!getDone()) {
                 requestServers();
+                waitFor(UPDATE_INTERVAL);
             }
         } catch (Throwable e) {
             System.err.println("Broker died unexpectedly!");
             e.printStackTrace(System.err);
         }
+        
+        System.out.println("Server polling done!");
     }
 }

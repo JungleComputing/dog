@@ -27,7 +27,6 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
     public static final byte CLIENT_REPLY_REQUEST      = 11;
     public static final byte SERVER_REGISTERED         = 20;
     public static final byte SERVER_REQUEST            = 21;
-    
 
     private final PortType portType =
 							new PortType(
@@ -195,4 +194,26 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         }
         return new MachineDescription(id, port);
     }
+    
+    public void exit() { 
+     
+        // NOTE: we should make sure no sendport is in use...
+        
+        try { 
+            receive.close(DEFAULT_TIMEOUT);
+        } catch (Exception e) {
+            System.out.println("Problems while closing receiveport!");
+            e.printStackTrace();
+        }
+        
+        try { 
+            ibis.end();
+        } catch (Exception e) {
+            System.out.println("Problems while closing ibis!");
+            e.printStackTrace();
+        }
+        
+        System.out.println("Communication done");
+    }
+    
 }

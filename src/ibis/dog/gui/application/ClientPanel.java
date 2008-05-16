@@ -1,8 +1,6 @@
 package ibis.dog.gui.application;
 
 import ibis.dog.client.Client;
-import ibis.dog.client.ClientListener;
-import ibis.dog.client.ServerData;
 import ibis.dog.gui.console.OutputFrame;
 import ibis.dog.gui.grid.GridFrame;
 import ibis.dog.gui.network.SmartSocketsFrame;
@@ -12,17 +10,19 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-public class ClientPanel extends JPanel implements ActionListener {
+public class ClientPanel extends JPanel 
+    implements ActionListener, WindowListener {
 
     // Generated
     private static final long serialVersionUID = 7697445736367043254L;
@@ -137,7 +137,8 @@ public class ClientPanel extends JPanel implements ActionListener {
         } else if (cmd.equals(NETWORK_TOPOLOGY)) { 
             
             if (networkTopology == null) { 
-                networkTopology = new SmartSocketsFrame(client.getDeployment().getHubAddresses());
+                networkTopology = 
+                    new SmartSocketsFrame(client.getDeployment().getHubAddresses());
             }
   
       } else if (cmd.equals(CONSOLE_OUTPUT)) { 
@@ -151,6 +152,59 @@ public class ClientPanel extends JPanel implements ActionListener {
         } 
     }
     
+    private void exit() { 
+        
+        System.out.println("Exit called!");
+        
+        if (networkTopology != null) { 
+            networkTopology.exit();
+        }
+        
+        if (grid != null) { 
+            grid.dispose();
+        }
+
+        outputPanel.exit();
+        
+        client.done();
+        
+        // Note: output should go last!
+        if (output != null) { 
+            output.dispose();
+        }
+        
+        System.exit(0);
+    }
+    
+    
+    public void windowClosed(WindowEvent arg0) {
+        exit();
+    }
+
+    public void windowClosing(WindowEvent arg0) {
+        exit();
+    }
+
+    public void windowDeactivated(WindowEvent arg0) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void windowDeiconified(WindowEvent arg0) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void windowIconified(WindowEvent arg0) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void windowOpened(WindowEvent arg0) {
+        // TODO Auto-generated method stub
+        
+    }
+
    
     /**
      * Create the GUI and show it.  For thread safety,
@@ -160,16 +214,19 @@ public class ClientPanel extends JPanel implements ActionListener {
     private static void createAndShowGUI(Client app) {
         //Create and set up the window.
         JFrame frame = new JFrame("Application Control");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         //Create and set up the content pane.
-        JComponent content = new ClientPanel(frame, app);
+        ClientPanel content = new ClientPanel(frame, app);
         content.setOpaque(true); //content panes must be opaque
         frame.setContentPane(content);
 
+        frame.addWindowListener(content);
+        
         //Display the window.
         frame.pack();
         frame.setVisible(true);
+    
+    
     }
 
     public static void createGUI(final Client app) {
@@ -181,6 +238,12 @@ public class ClientPanel extends JPanel implements ActionListener {
             }
         });
     }
+
+    public void windowActivated(WindowEvent arg0) {
+        // TODO Auto-generated method stub
+        
+    }
+
 
 
 }

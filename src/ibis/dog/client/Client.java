@@ -161,6 +161,12 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         this.operation = operation;
     }
     
+    public synchronized void done() { 
+        System.out.println("Client done!");
+        done = true;
+        notifyAll();
+    }
+    
     private RGB32Image getFrame() {
     
         synchronized (this) { 
@@ -173,7 +179,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                 }
             }
 
-            if (!imageValid) {
+            if (done || !imageValid) {
                 return null;
             }
             
@@ -265,8 +271,6 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         }
     }
 
-    
-    
     public void run() {
  
         try { 
@@ -284,9 +288,12 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             returnImage(image);
             image = getFrame();
         }
+ 
+        // We are done, so kill the servers polling, deployment and 
+        // communication.
+        servers.done();
+        deployment.done();
+        comm.exit();
     }
-
-    
-    
     
 }

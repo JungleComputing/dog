@@ -93,6 +93,8 @@ public class GridPanel extends JPanel implements ActionListener {
                 //This is where a real application would open the file.
                 System.out.println("Must ADD grid " + file.getName());                      
                 deploy.loadGrid(file.getAbsolutePath());
+                
+                map.repaint();
             } 
             
         } else if (e.getSource() == remove) { 

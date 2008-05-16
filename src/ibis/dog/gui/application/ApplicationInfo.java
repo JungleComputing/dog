@@ -41,6 +41,10 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
     
     private class Update extends Thread { 
         
+        Update() { 
+            setDaemon(true);
+        }
+        
         public void run() { 
             
             while (true) { 
