@@ -1,15 +1,18 @@
 package ibis.dog.client;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import ibis.deploy.Application;
 import ibis.deploy.Cluster;
 import ibis.deploy.Deployer;
 import ibis.deploy.Grid;
 import ibis.deploy.Job;
 import ibis.deploy.SubJob;
+import ibis.smartsockets.direct.DirectSocketAddress;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class Deployment {
 
@@ -84,6 +87,35 @@ public class Deployment {
 
     }
 
+    public List<DirectSocketAddress> getHubAddresses() { 
+        
+        LinkedList<DirectSocketAddress> result = 
+            new LinkedList<DirectSocketAddress>();
+        
+        try {
+            String tmp = supportJob.getHubAddresses();
+            
+            StringTokenizer st = new StringTokenizer(tmp, ",");
+            
+            while (st.hasMoreTokens()) { 
+                
+                String token = st.nextToken();
+                
+                try { 
+                    result.addLast(DirectSocketAddress.getByAddress(token));
+                } catch (Exception e) {
+                    System.out.println("Failed to parse address " + token);
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to get hub addresses!");
+            e.printStackTrace();
+        }
+        
+        return result;
+    }
+    
     public void loadGrid(String filename) {
   
         System.out.println("Loading grid: " + filename);

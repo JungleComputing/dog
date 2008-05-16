@@ -22,7 +22,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-public class ClientPanel extends JPanel implements ActionListener, ClientListener {
+public class ClientPanel extends JPanel implements ActionListener {
 
     // Generated
     private static final long serialVersionUID = 7697445736367043254L;
@@ -137,13 +137,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
         } else if (cmd.equals(NETWORK_TOPOLOGY)) { 
             
             if (networkTopology == null) { 
-                
-                /*
-                List<DirectSocketAddress> tmp = new LinkedList<DirectSocketAddress>();
-                tmp.add(client.getHubAddress());
-                
-                networkTopology = new SmartSocketsFrame(tmp);
-               */
+                networkTopology = new SmartSocketsFrame(client.getDeployment().getHubAddresses());
             }
   
       } else if (cmd.equals(CONSOLE_OUTPUT)) { 
@@ -157,13 +151,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
         } 
     }
     
-    public void updateServers(ServerData [] servers) {
-        // TODO Auto-generated method stub
-        
-        System.out.println("Got server update!");
-        
-    }
-    
+   
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
