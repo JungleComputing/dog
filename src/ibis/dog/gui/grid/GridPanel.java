@@ -1,12 +1,13 @@
 package ibis.dog.gui.grid;
 
+import ibis.dog.client.Deployment;
+
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
@@ -34,18 +35,20 @@ public class GridPanel extends JPanel implements ActionListener {
     private JMenuItem add; 
     private JMenuItem remove; 
     
-    public GridPanel(JFrame frame, GridRunner runner, Grid grid) {
+    private Deployment deploy;
+    
+    public GridPanel(JFrame frame, Deployment deploy) {
+        
+        this.deploy= deploy;
+        this.frame = frame;        
         
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        
-        this.frame = frame;        
         
         createMenuBar();
        
         jobs = new JobInfo();
-        map = new GridMap(runner, grid);
-        
-        
+        map = new GridMap(deploy);
+         
         add(map);
         add(Box.createRigidArea(new Dimension(5,0)));
         add(jobs);
@@ -88,11 +91,9 @@ public class GridPanel extends JPanel implements ActionListener {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = chooser.getSelectedFile();
                 //This is where a real application would open the file.
-                
                 System.out.println("Must ADD grid " + file.getName());                      
+                deploy.loadGrid(file.getAbsolutePath());
             } 
-
-            
             
         } else if (e.getSource() == remove) { 
             System.out.println("Must REMOVE grid");        

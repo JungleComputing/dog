@@ -1,5 +1,6 @@
 package ibis.dog.client;
 
+import ibis.deploy.Grid;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
@@ -12,6 +13,7 @@ import ibis.dog.shared.Upcall;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.video4j.VideoConsumer;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
@@ -53,6 +55,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     // Link to the GUI.
     private ClientListener listener;
     
+    private boolean initialized = false;
+    
     public Client() {
         recognition = new ObjectRecognition();
     }
@@ -66,8 +70,27 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         comm = new Communication("Client", this);
         me = comm.getMachineDescription();
         servers = new Servers(comm);
+   
+        synchronized (this) {
+            initialized = true;
+            notifyAll();
+        }
     }
 
+    public synchronized Deployment getDeployment() {
+
+        while (!initialized) { 
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+        
+        return deployment;
+    }
+
+    
     public synchronized int [] getBuffer(int width, int heigth, int index) {
         
         if (image == null || image.width != width || image.height != heigth) {
@@ -242,6 +265,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         }
     }
 
+    
+    
     public void run() {
  
         try { 
@@ -260,6 +285,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             image = getFrame();
         }
     }
+
+    
     
     
 }

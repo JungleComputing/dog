@@ -4,9 +4,7 @@ import ibis.dog.client.Client;
 import ibis.dog.client.ClientListener;
 import ibis.dog.client.ServerData;
 import ibis.dog.gui.console.OutputFrame;
-import ibis.dog.gui.grid.Grid;
 import ibis.dog.gui.grid.GridFrame;
-import ibis.dog.gui.grid.GridRunner;
 import ibis.dog.gui.network.SmartSocketsFrame;
 
 import java.awt.Dimension;
@@ -133,7 +131,7 @@ public class ClientPanel extends JPanel implements ActionListener, ClientListene
                 //GridRunner gr = new GridRunner();
                 //Grid g = Grid.loadGrid("./grids/DAS-3_globus.grid");
                 
-                grid = new GridFrame(null, null);
+                grid = new GridFrame(client.getDeployment());
             }
             
         } else if (cmd.equals(NETWORK_TOPOLOGY)) { 

@@ -1,5 +1,9 @@
 package ibis.dog.gui.grid;
 
+import ibis.deploy.Job;
+import ibis.dog.client.ComputeResource;
+import ibis.dog.client.Deployment;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -67,14 +71,11 @@ implements MouseInputListener, MouseWheelListener {
     
     private double scale = 100;
     
-   // private Grid grid;
-
-   // private GridRunner gridRunner;
-
-    public GridMap(GridRunner gridRunner, Grid grid) {
+    private Deployment deploy;
+    
+    public GridMap(Deployment deploy) {
        
-        //this.gridRunner = gridRunner;
-       // this.grid = grid;
+        this.deploy = deploy;
         
         try {
             map = ImageIO.read(new File("images/world-large.jpg"));
@@ -139,12 +140,19 @@ implements MouseInputListener, MouseWheelListener {
         return COLORS[site % COLORS.length];
     }
     
+    /*
     private String getSiteStateString(ComputeResource c) {
         String res = "IDLE";
 
-        ArrayList jobList = c.getJobList();
+        ArrayList<Job> jobList = c.getJobList();
+        
         for (int x = 0; x < jobList.size(); x++) {
-            JobSubmitter j = (JobSubmitter) jobList.get(x);
+
+            Job j = jobList.get(x);
+            
+           
+            
+            
             String stateString = j.getStateString();
 
             if (stateString.equals("RUNNING")) {
@@ -158,11 +166,12 @@ implements MouseInputListener, MouseWheelListener {
 
         return res;
     }
+*/
     
     public void paint(Graphics g) {
         
         Graphics2D tmp = (Graphics2D) map.getGraphics();
-      //  drawSites(tmp);
+        drawSites(tmp);
         
         drawMap((Graphics2D) g);
     } 
@@ -193,8 +202,6 @@ implements MouseInputListener, MouseWheelListener {
                 null);
     }
     
-    /*
-
     private void drawSites(Graphics2D g2) {
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, 
@@ -203,13 +210,14 @@ implements MouseInputListener, MouseWheelListener {
         FontRenderContext frc = g2.getFontRenderContext();
         Font f = new Font("SansSerif", Font.BOLD, 20); 
         
-        ArrayList<ComputeResource> machines = grid.getComputeResources();
+        ComputeResource [] machines = deploy.getComputeResources();
         
-        for (int i = 0; i < machines.size(); i++) {
-            ComputeResource m = machines.get(i);
+        for (int i = 0; i < machines.length; i++) {
+            ComputeResource m = machines[i];
             
             g2.setColor(getColor(i));
 
+            /*
             if (m.getLoadInfo().size() > 0) {
                 
                 long time = (m.getLoadInfo().get(m.getLoadInfo().size() - 1)).timestamp;
@@ -224,9 +232,8 @@ implements MouseInputListener, MouseWheelListener {
                         g2.setColor(getColor(i));
                     }
                 }
-            }
+            }*/
 
-            
             // make color transparent
             Color orig = g2.getColor();
             
@@ -272,11 +279,9 @@ implements MouseInputListener, MouseWheelListener {
     }
     
     private ComputeResource getComputeResource(MouseEvent e) {
-        ArrayList machines = grid.getComputeResources();
+        ComputeResource [] machines = deploy.getComputeResources();
 
-        for (int i = 0; i < machines.size(); i++) {
-            ComputeResource m = (ComputeResource) machines.get(i);
-
+        for (ComputeResource m : machines) {
             // TODO: Fix to incorperate postion and scaling
             if (m.getX() < e.getX() && e.getX() < m.getX() + GRID_CIRCLE_SIZE
                 && m.getY() < e.getY()
@@ -286,20 +291,18 @@ implements MouseInputListener, MouseWheelListener {
         }
         return null;
     }
-    */
+    
     
     public void mouseClicked(MouseEvent e) {
-        /*
         ComputeResource m = getComputeResource(e);
         
         if (m != null) {
             if (e.getButton() == MouseEvent.BUTTON1) {
-                gridRunner.clickedAddComputeResource(m);
+   //             gridRunner.clickedAddComputeResource(m);
             } else {
-                gridRunner.clickedRemoveComputeResource(m);
+    //            gridRunner.clickedRemoveComputeResource(m);
             }
         }
-        */
     }
 
     public void mouseEntered(MouseEvent e) {

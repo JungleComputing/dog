@@ -1,6 +1,11 @@
 package ibis.dog.client;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import ibis.deploy.Application;
+import ibis.deploy.Cluster;
 import ibis.deploy.Deployer;
 import ibis.deploy.Grid;
 import ibis.deploy.Job;
@@ -18,6 +23,9 @@ public class Deployment {
     
     private Job supportJob;
     
+    private HashMap<String, ComputeResource> resources = 
+        new HashMap<String, ComputeResource>();
+     
     public Deployment() throws Exception {
         
         deployer = new Deployer();
@@ -74,6 +82,39 @@ public class Deployment {
         System.setProperty("ibis.server.hub.addresses",
                                     supportJob.getHubAddresses());
 
+    }
+
+    public void loadGrid(String filename) {
+  
+        System.out.println("Loading grid: " + filename);
+        
+        String name = null;
+        
+        try { 
+            name = deployer.addGrid(filename);
+        } catch (Exception e) {
+            System.out.println("Failed to add grid " + filename);
+        }
+  
+        Grid grid = deployer.getGrid(name);
+        
+        for (Cluster c : grid.getClusters()) { 
+            
+            String tmp = c.getName();
+            
+            synchronized (this) {
+                if (!resources.containsKey(tmp)) { 
+                    System.out.println("Storing cluster: " + tmp);
+                    resources.put(tmp, new ComputeResource(c)); 
+                } else { 
+                    System.out.println("Cluster " + tmp + " already known");
+                }
+            }
+        }
+    }
+
+    public synchronized ComputeResource [] getComputeResources() {
+        return resources.values().toArray(new ComputeResource[resources.size()]);
     }
     
     
