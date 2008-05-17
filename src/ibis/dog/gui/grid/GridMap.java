@@ -3,6 +3,7 @@ package ibis.dog.gui.grid;
 import ibis.deploy.Job;
 import ibis.dog.client.ComputeResource;
 import ibis.dog.client.Deployment;
+import ibis.smartsockets.viz.UniqueColor;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -41,7 +42,7 @@ implements MouseInputListener, MouseWheelListener {
     private static final int BLINK_TIME = 10 * 1000;
     
     private static final int GRID_CIRCLE_SIZE = 30;
-    private static final int DOT_CIRCLE_SIZE = 5;
+    private static final int DOT_CIRCLE_SIZE = 6;
     
     private static final int MAX_SCALE  = 300;
     private static final int SCALE_STEP = 10;
@@ -50,15 +51,7 @@ implements MouseInputListener, MouseWheelListener {
     private static final BasicStroke stroke = new BasicStroke(1.5f);
     private static final BasicStroke thinStroke = new BasicStroke(0.75f);
    
-    private static final Color[] COLORS = new Color[] { 
-        Color.ORANGE, 
-        Color.RED,
-        Color.YELLOW, 
-        Color.MAGENTA,
-        Color.CYAN, 
-        Color.PINK,
-        Color.BLACK 
-    };
+    private UniqueColor colorGenerator;
     
     private BufferedImage map;
     
@@ -104,6 +97,7 @@ implements MouseInputListener, MouseWheelListener {
     }
     
     private ArrayList<Slot> slots = new ArrayList<Slot>();
+    private LinkedList<Slot> used = new LinkedList<Slot>();
     
     public GridMap(Deployment deploy) {
        
@@ -166,6 +160,8 @@ implements MouseInputListener, MouseWheelListener {
         }
         
         generateSlots();
+        
+        colorGenerator = new UniqueColor();
     }
 
     private void generateSlots() { 
@@ -188,10 +184,6 @@ implements MouseInputListener, MouseWheelListener {
     
     public Dimension getPreferredSize() {
         return new Dimension(preferredSizeW, preferredSizeH);
-    }
-    
-    private Color getColor(int site) {
-        return COLORS[site % COLORS.length];
     }
     
     /*
@@ -222,6 +214,18 @@ implements MouseInputListener, MouseWheelListener {
     }
 */
     
+    private Color selectColor() { 
+        
+        Color color = colorGenerator.getUniqueColor();
+        
+        if (SITES_TRANSPARENT) {
+            color = new Color(color.getRed(), color.getGreen(), 
+                    color.getBlue(), 200);
+        }
+        
+        return color;  
+    }
+    
     public void paint(Graphics g) {
   
         System.out.println("SCALE " + scale);
@@ -247,35 +251,80 @@ implements MouseInputListener, MouseWheelListener {
    private void drawMap(Graphics2D g, int startX, int startY, int endX, 
             int endY) {
         
+           g.setColor(Color.black);
+           g.fill(new Rectangle2D.Double(0, 0, preferredSizeW, preferredSizeH));
+       
         
-        g.drawImage(map,
-                borderW, borderH, preferredSizeW-borderW, preferredSizeH-borderH,// dst rectangle 
+           g.drawImage(map,
+                borderW, borderH, 
+                preferredSizeW-borderW, preferredSizeH-borderH,// dst rectangle 
                 startX, startY, endX, endY,             // src area of image
                 null);
     }
    
-    private void drawSlot(Graphics2D g, int x, int y, int w, int h, 
-            int dx, int dy, Color color, String text, FontRenderContext frc, 
-            Font f) { 
+    private void drawSite(Graphics2D g, Slot s, int x, int y, 
+            FontRenderContext frc, Font f, ComputeResource m) { 
    
-        RoundRectangle2D rect = new RoundRectangle2D.Double(x, y, w, h, 10, 10);
+        RoundRectangle2D rect = new RoundRectangle2D.Double(s.x, s.y, borderW, 
+                borderW, 10, 10);
         
-        g.setColor(color);
+        Ellipse2D elipse = 
+            new Ellipse2D.Double(x-DOT_CIRCLE_SIZE/2.0, y-DOT_CIRCLE_SIZE/2.0, 
+                    DOT_CIRCLE_SIZE, DOT_CIRCLE_SIZE);
+        
+        Color c = m.getColor();
+        
+        if (c == null) { 
+            c = selectColor();
+            m.setColor(c);
+        }
+        
+        g.setColor(c);
+        
+        g.fill(elipse);
         g.fill(rect);
+
+        int lx = -1;
+        int ly = -1;
         
-        g.drawLine(x+w/2, y+h/2, dx, dy);
         
-        g.setColor(Color.darkGray);        
+        if (s.y == 0) { 
+            // top row
+            lx = s.x + borderW/2;
+            ly = borderH;
+            
+        } else if (s.y == preferredSizeH-borderH) { 
+            // bottom row
+            lx = s.x + borderW/2;
+            ly = preferredSizeH-borderH;
+        } else { 
+            
+            if (s.x == 0) { 
+                // left column
+                lx = borderW;
+                ly = s.y + borderH/2;
+             } else {
+                // right colunm
+                 lx = preferredSizeW-borderW;
+                 ly = s.y + borderH/2;
+             }
+        }
+        
         g.setStroke(stroke);
-        
+        g.drawLine(lx, ly, x, y);
+      
+        g.setColor(Color.darkGray);        
+        g.setStroke(thinStroke);
+        g.draw(elipse);
         g.draw(rect);
         
-        TextLayout tl = new TextLayout(text, f, frc);
+        // Draw the text into the slot
+        TextLayout tl = new TextLayout(m.getFriendlyName(), f, frc);
         
         float sw = (float) tl.getBounds().getWidth();
         float sh = (float) tl.getBounds().getHeight();
     
-        double scale = (w-4) / sw;
+        double scale = (borderW-4) / sw;
        
         if (scale > 1.0) { 
             scale = 1.0;
@@ -285,12 +334,12 @@ implements MouseInputListener, MouseWheelListener {
         t1.setToScale(scale, scale);
         
         AffineTransform t2 = new AffineTransform();
-        t2.setToTranslation(x, y+w/2+(sh/2)*scale);
+        t2.setToTranslation(s.x, s.y+borderW/2+(sh/2)*scale);
         
         t2.concatenate(t1);
         
         Shape sha = tl.getOutline(t2);
-        
+     
         g.setColor(Color.black);
         g.draw(sha);
         g.setColor(Color.white);
@@ -304,14 +353,23 @@ implements MouseInputListener, MouseWheelListener {
     
     private void drawSites(Graphics2D g2, int startX, int startY,
             int endX, int endY) {
+ 
+        // reset the used slots
+        for (Slot s: used) { 
+            s.owner = null;
+        }
+        
+        used.clear();
         
         double resize = (preferredSizeW-borderW*2.0)/(endX - startX); 
-    
+  
+        /*
         drawEmptySlot(g2, 0, 0, preferredSizeW, borderH);
         drawEmptySlot(g2, 0, preferredSizeH-borderH, preferredSizeW, borderH);
         
         drawEmptySlot(g2, 0, borderH, borderW, preferredSizeH-borderH);
         drawEmptySlot(g2, preferredSizeW-borderW, borderH, borderW, preferredSizeH-borderH);
+        */
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, 
                 RenderingHints.VALUE_ANTIALIAS_ON);
@@ -322,7 +380,6 @@ implements MouseInputListener, MouseWheelListener {
         ComputeResource [] machines = deploy.getComputeResources();
         
         LinkedList<ComputeResource> visible = new LinkedList<ComputeResource>();
-        LinkedList<Slot> used = new LinkedList<Slot>();
         
         for (int i = 0; i < machines.length; i++) {
             ComputeResource m = machines[i];
@@ -416,36 +473,11 @@ implements MouseInputListener, MouseWheelListener {
             
             ComputeResource m = s.owner;
             
-            int x = m.getX();
-            int y = m.getY();
+            int x = borderW + (int) ((m.getX() - startX) * resize);
+            int y = borderH + (int) ((m.getY() - startY) * resize);
             
-            Color color = Color.red; // getColor(i);
-
-            if (SITES_TRANSPARENT) {
-                color = new Color(color.getRed(), color.getGreen(), 
-                        color.getBlue(), 150);
-            }
-            
-            g2.setColor(color);
-            
-            x = borderW + (int) ((x - startX) * resize);
-            y = borderH + (int) ((y - startY) * resize);
-            
-            
-            Ellipse2D elipse = new Ellipse2D.Double(x, y,  
-                    DOT_CIRCLE_SIZE, DOT_CIRCLE_SIZE);
-            
-            g2.fill(elipse);
-        
-            g2.setColor(Color.BLACK);
-            g2.setStroke(thinStroke);
-            g2.draw(elipse);
-            
-            drawSlot(g2, s.x, s.y, borderW, borderH, x, y, color, 
-                    m.getFriendlyName(), frc, f);
-       
-            // reset the slot
-            s.owner = null;
+            drawSite(g2, s, x, y, frc, f, m);
+           
         }
         
         
@@ -599,15 +631,32 @@ implements MouseInputListener, MouseWheelListener {
     
     
     public void mouseClicked(MouseEvent e) {
-        ComputeResource m = getComputeResource(e);
         
-        if (m != null) {
-            if (e.getButton() == MouseEvent.BUTTON1) {
-   //             gridRunner.clickedAddComputeResource(m);
-            } else {
-    //            gridRunner.clickedRemoveComputeResource(m);
+        if (used.size() == 0) { 
+            return;
+        }
+        
+        int x = e.getX();
+        int y = e.getY();
+        
+        Slot clicked = null;
+        
+        for (Slot s : used) { 
+        
+            if (x > s.x && x < s.x+borderW && y > s.y && y < s.y+borderH) { 
+               
+                if (s.owner != null) { 
+                    clicked = s;
+                }
+              
+                break;
             }
         }
+
+        if (clicked != null) { 
+            System.out.println("Clicked on " + clicked.owner.getFriendlyName());
+        }
+        
     }
 
     public void mouseEntered(MouseEvent e) {

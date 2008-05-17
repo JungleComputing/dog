@@ -6,11 +6,14 @@ package ibis.dog.client;
 import ibis.deploy.Cluster;
 import ibis.deploy.Job;
 
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class ComputeResource {
 
     private final Cluster cluster; 
+    
+    private Color color;
     
     private ArrayList<Job> jobList = new ArrayList<Job>(); 
     
@@ -77,4 +80,13 @@ public class ComputeResource {
  //           js.kill();
         }
     }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
 }
