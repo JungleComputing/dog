@@ -11,7 +11,7 @@
     <property name="distdir" value="./jars"/>
 
     <property name="external"
-	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.10.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
+	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 
@@ -20,6 +20,7 @@
         <mkdir dir="${builddir}/headers" />
         <mkdir dir="prestage-hub" />
         <mkdir dir="prestage-app" />
+        <mkdir dir="prestage-server" />
     </target>
 
     <target name="compile" depends="prepare">
@@ -52,6 +53,14 @@
     <target name="stage" depends="jar">
 	<copy todir="prestage-hub">
 	    <fileset dir="external/ibis"/>
+	</copy>
+
+	<copy todir="prestage-app">
+	    <fileset dir="external/ibis"/>
+	</copy>
+
+	<copy todir="prestage-app">
+	    <fileset dir="jars"/>
 	</copy>
 
 	<copy todir="prestage-server">
