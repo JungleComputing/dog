@@ -49,7 +49,7 @@ do
         shift
 done
 
-java -cp $CP -Dlog4j.configuration=file:`pwd`/log4j.properties -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.Main $NORMAL
+java -cp $CP -Dlog4j.configuration=file:/home/jason/workspace/ccgrid08-scale-challenge/log4j.properties -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.Main $NORMAL
 
 
 
