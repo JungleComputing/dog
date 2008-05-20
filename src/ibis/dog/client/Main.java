@@ -1,16 +1,11 @@
 package ibis.dog.client;
 
-import ibis.deploy.Application;
-import ibis.deploy.Deployer;
-import ibis.deploy.Grid;
-import ibis.deploy.Job;
-import ibis.deploy.SubJob;
 import ibis.dog.gui.application.ClientPanel;
 
 public class Main {
 
     private static void unused() { 
-        try {
+      //  try {
         
         // Create Deployer & indicate location of ibis-server
 
@@ -19,11 +14,11 @@ public class Main {
 //      Deployer deployer = new Deployer();
 //      Deployer deployer = new Deployer(serverCluster);
 //      Deployer deployer = new Deployer("das-3.properties", "VU");
-        Deployer deployer = new Deployer();
+//        Deployer deployer = new Deployer();
 
 
         // Create Global Job instance and Grid objects
-
+/*
         Job globalJob = new Job("global job");
         deployer.addGrid("das-3.properties");
         Grid das3 = deployer.getGrid("DAS-3");
@@ -55,7 +50,7 @@ public class Main {
         brokerJob.setApplication(brokerApp);
         brokerJob.setGrid(das3);
         brokerJob.setCluster(das3.getCluster("VU"));
-
+*/
 
         // Create Server Application/Job
 
@@ -150,7 +145,7 @@ public class Main {
 */
 
         // Hiroshi, Sydney...
-
+/*
         Application serverApp = new Application("Server",
             "ibis.mbf.server.Server", // main class
             null, // java options
@@ -168,6 +163,7 @@ public class Main {
         serverJob.setNodes(8);
         serverJob.setWrapperExecutable("/bin/sh");
         serverJob.setWrapperArguments("/home/fjseins/serverscript.sh");
+*/
 /*
 */
 
@@ -329,14 +325,14 @@ public class Main {
 
 
         // Deploy the just created Applations/Jobs
-
+/*
         globalJob.addSubJob(brokerJob);
         globalJob.addSubJob(serverJob);
         deployer.deploy(globalJob);
 
-
+*/
         // Obtain essential system properties from Deployer
-
+/*
         System.setProperty("ibis.pool.name",
                                     globalJob.getPoolID());
         System.setProperty("ibis.server.address",
@@ -348,7 +344,7 @@ public class Main {
             System.out.println("FATAL MyApp ERROR");
             e.printStackTrace();
         }
-        
+        */
     }
     
     public static void main(String[] args) {

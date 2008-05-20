@@ -22,23 +22,48 @@ public class Deployment {
     
     private final Deployer deployer;
     
-    private Grid supportGrid; 
+    private final Grid supportGrid; 
     
-    private Job supportJob;
+    private final Job global;
     
-    private HashMap<String, ComputeResource> resources = 
+    private final HashMap<String, ComputeResource> resources = 
         new HashMap<String, ComputeResource>();
      
-    public Deployment() throws Exception {
+    private String password;
+   
+    private class DeploymentThread extends Thread { 
         
-        deployer = new Deployer();
+        private final SubJob job;
+        
+        DeploymentThread(SubJob job) {
+            super("DeploymentThread");
+            this.job = job;
+        }
+        
+        public void run() { 
+            try {
+                System.out.println("Starting deployment of " + job);
+                
+                deployer.deploy(job, global);
+            } catch (Exception e) {
+                System.out.println("Failed to deploy job!");
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public Deployment(String password) throws Exception {
+        
+        deployer = new Deployer(SUPPORT_FILE, SUPPORT_CLUSTER);
         
         // By default we load the support grid (local laptop, etc). 
-        deployer.addGrid(SUPPORT_FILE);
+     //   deployer.addGrid(SUPPORT_FILE);
         
         supportGrid = deployer.getGrid(SUPPORT_GRID);
 
-        supportJob = new Job("support");
+        global = new Job("support");
+
+        this.password = password;
         
         startBroker();
     }
@@ -53,38 +78,42 @@ public class Deployment {
                 null, // java options
                 null, // java system properties
                 null, // java arguments
-                new String[] { "prestage-server" }, // app prestage
+                new String[] { "prestage-server", "log4j.properties" }, // app prestage
                 null, // post stage
                 new String[] { "prestage-hub", "log4j.properties" } // hub prestage
         );
         
         deployer.addApplication(brokerApp);
         
-        SubJob brokerJob = new SubJob("broker job");
+        SubJob brokerJob = new SubJob("BrokerJob");
         brokerJob.setApplication(brokerApp);
         brokerJob.setGrid(supportGrid);
-        brokerJob.setCluster(supportGrid.getCluster(SUPPORT_CLUSTER));
         
-        supportJob.addSubJob(brokerJob);
+        Cluster cluster = supportGrid.getCluster(SUPPORT_CLUSTER);
+        brokerJob.setCluster(cluster);
+        
+        supportGrid.getCluster(SUPPORT_CLUSTER).setPassword(password);
+        
+        global.addSubJob(brokerJob);
         
         System.out.println("Starting broker on: " + SUPPORT_GRID + "/" 
                 + SUPPORT_CLUSTER);
         
-        deployer.deploy(supportJob);
+        deployer.deploy(global);
         
         System.out.println("Broker started!");
 
-        System.out.println("pool = " + supportJob.getPoolID());
-        System.out.println("address = " + supportJob.getServerAddress());
-        System.out.println("hub address = " + supportJob.getHubAddresses());
+        System.out.println("pool = " + global.getPoolID());
+        System.out.println("address = " + global.getServerAddress());
+     //   System.out.println("hub address = " + global.getHubAddresses());
         
         // TODO: Nasty hack!!
         System.setProperty("ibis.pool.name",
-                                    supportJob.getPoolID()); 
+                                    global.getPoolID()); 
         System.setProperty("ibis.server.address",
-                                    supportJob.getServerAddress());
-        System.setProperty("ibis.server.hub.addresses",
-                                    supportJob.getHubAddresses());
+                                    global.getServerAddress());
+      //  System.setProperty("ibis.server.hub.addresses",
+        //                            global.getHubAddresses());
 
     }
 
@@ -94,7 +123,12 @@ public class Deployment {
             new LinkedList<DirectSocketAddress>();
         
         try {
-            String tmp = supportJob.getHubAddresses();
+
+            System.out.println("Getting hub addresses!!!!");
+            
+            String tmp = global.getServerAddress();
+            
+            System.out.println("Hub addresses: " + tmp);
             
             StringTokenizer st = new StringTokenizer(tmp, ",");
             
@@ -103,6 +137,8 @@ public class Deployment {
                 String token = st.nextToken();
                 
                 try { 
+                    System.out.println("Next address: " + token);
+                    
                     result.addLast(DirectSocketAddress.getByAddress(token));
                 } catch (Exception e) {
                     System.out.println("Failed to parse address " + token);
@@ -133,12 +169,14 @@ public class Deployment {
         
         for (Cluster c : grid.getClusters()) { 
             
+            c.setPassword(password);
+            
             String tmp = c.getName();
             
             synchronized (this) {
                 if (!resources.containsKey(tmp)) { 
                     System.out.println("Storing cluster: " + tmp);
-                    resources.put(tmp, new ComputeResource(c)); 
+                    resources.put(tmp, new ComputeResource(grid, c)); 
                 } else { 
                     System.out.println("Cluster " + tmp + " already known");
                 }
@@ -148,6 +186,31 @@ public class Deployment {
 
     public synchronized ComputeResource [] getComputeResources() {
         return resources.values().toArray(new ComputeResource[resources.size()]);
+    }
+    
+    public void deployApplication(ComputeResource target) { 
+        
+            String name = target.getFriendlyName() + "-" + target.getJobID();
+            
+            System.out.println("Creating application description: " + name);
+            
+            Application application = new Application(name,
+                    "ibis.dog.server.Server",                // main class
+                    null,                                    // java options
+                    null,                                    // java system properties
+                    new String[] { name },                   // main arguments
+                    new String[] { "prestage-app", "jars", 
+                        target.getCluster().getStartupScript(),
+                        "log4j.properties"},                 // pre stage
+                    null,                                    // post stage
+                    new String[] { "prestage-hub", "log4j.properties" } // hub prestage
+            );
+
+            deployer.addApplication(application);
+            
+            // We perform the deployment in a seperate thread!
+            new DeploymentThread(target.getSubJob(application,
+                    target.getCluster().getStartupScript())).start();    
     }
     
     public void done() { 
@@ -161,7 +224,7 @@ public class Deployment {
         System.out.println("Stopping broker");
        
         try {
-            supportJob.stop();
+            global.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }

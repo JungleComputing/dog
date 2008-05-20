@@ -29,7 +29,7 @@ public class Broker implements Upcall {
     
     private void pingServers() {
         
-        System.out.println("Ping to all servers to check if they are alive...");
+      //  System.out.println("Ping to all servers to check if they are alive...");
       
         ServerDescription [] servers = getServers();
         

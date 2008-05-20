@@ -53,9 +53,17 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         this.upcall = upcall;
 		myName = name;
         
+        System.out.println("####### starting ibis");
+        
+        System.out.println("PROP:" + System.getProperties());
+        
+        
         // Create an Ibis
         ibis = IbisFactory.createIbis(ibisCapabilities, null,
 									  true, null, portType);
+        
+        System.out.println("####### DONE starting ibis");
+        
         
         // Create the receive port for the broker and switch it on. 
         receive = ibis.createReceivePort(portType,

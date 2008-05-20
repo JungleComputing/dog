@@ -13,6 +13,7 @@ import ibis.smartsockets.util.NetworkUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import jorus.parallel.PxSystem;
@@ -278,6 +279,9 @@ public class Server implements Upcall {
     }
 
     public static void main(String[] args) {
+        
+        System.out.println("Server: " + Arrays.toString(args));
+        
         if (args.length != 2) {
             System.out.println("USAGE: Server poolname poolsize");
             System.exit(0);

@@ -56,8 +56,14 @@ public class OutputPanel extends JPanel implements SpeechInterface {
         write(text, useSpeech);
     }    
     
+    public void writeChar(int c) {
+        textOutput.append(String.valueOf((char) c));
+    }
+    
     public void exit() { 
         speech.done();
     }
+
+    
     
 }

@@ -1,6 +1,5 @@
 package ibis.dog.client;
 
-import ibis.deploy.Grid;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
@@ -10,11 +9,7 @@ import ibis.dog.shared.Reply;
 import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
-import ibis.ipl.IbisCreationFailedException;
 import ibis.video4j.VideoConsumer;
-
-import java.io.File;
-import java.io.IOException;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
 
@@ -58,6 +53,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     private boolean initialized = false;
     
     public Client() {
+        super("CLIENT");
         recognition = new ObjectRecognition();
     }
 
@@ -65,12 +61,28 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
         // This may take a while, since it will deploy the server, hub and 
         // broker for us...
-        deployment = new Deployment();
+        
+        Deployment d = new Deployment(null);
+        
+        synchronized (this) {
+            deployment = d;
+            notifyAll();
+        }
+        
+        System.out.println("$$$$$$$$$$$$ comm");
         
         comm = new Communication("Client", this);
+        
+        System.out.println("$$$$$$$$$$$$ me");
+        
         me = comm.getMachineDescription();
+        
+        System.out.println("$$$$$$$$$$$$ server");
+        
         servers = new Servers(comm);
    
+        System.out.println("$$$$$$$$$$$$ init");
+         
         synchronized (this) {
             initialized = true;
             notifyAll();
@@ -79,7 +91,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     public synchronized Deployment getDeployment() {
 
-        while (!initialized) { 
+        while (deployment == null) { 
             try {
                 wait();
             } catch (InterruptedException e) {

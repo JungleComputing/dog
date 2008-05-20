@@ -1,9 +1,12 @@
 package ibis.dog.gui.application;
 
+import ibis.deploy.Deployer;
 import ibis.dog.client.Client;
+import ibis.dog.client.Deployment;
 import ibis.dog.gui.console.OutputFrame;
 import ibis.dog.gui.grid.GridFrame;
 import ibis.dog.gui.network.SmartSocketsFrame;
+import ibis.smartsockets.direct.DirectSocketAddress;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -12,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -86,6 +90,12 @@ public class ClientPanel extends JPanel
         add(new LogoPanel());
         
         outputPanel.write("Voice initialized", true);
+  
+     //   output = new OutputFrame();
+        
+    //    System.setOut(new PrintStream(output.getOutputStream()));
+     //   System.setErr(new PrintStream(output.getOutputStream()));
+        
         client.registerListener(serverInfo);
     }
     
@@ -121,7 +131,10 @@ public class ClientPanel extends JPanel
     
     public void actionPerformed(ActionEvent e) {
         
+        
         String cmd = e.getActionCommand();
+        
+        System.out.println("GOT CLICK "+ cmd);
         
         if (cmd.equals(GRID_MANAGER)) { 
             
@@ -135,10 +148,28 @@ public class ClientPanel extends JPanel
             }
             
         } else if (cmd.equals(NETWORK_TOPOLOGY)) { 
+
+            System.out.println("networkTopology == " + networkTopology);
             
-            if (networkTopology == null) { 
-                networkTopology = 
-                    new SmartSocketsFrame(client.getDeployment().getHubAddresses());
+            if (networkTopology == null) {
+            
+                System.out.println("NT ");
+                
+                Deployment d = client.getDeployment();
+                
+                System.out.println("DEPLOY == " + d);
+                
+                List<DirectSocketAddress> tmp = d.getHubAddresses();
+                
+                if (tmp == null || tmp.size() == 0) { 
+                    System.out.println("GO AWAY!");
+                    return;
+                } else { 
+                    System.out.println("GOT LIST");
+                    
+                }
+                
+                networkTopology = new SmartSocketsFrame(tmp);
             }
   
       } else if (cmd.equals(CONSOLE_OUTPUT)) { 

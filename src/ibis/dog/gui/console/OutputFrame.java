@@ -6,12 +6,20 @@ import ibis.dog.gui.application.OutputPanel;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.swing.JFrame;
 
 public class OutputFrame extends JFrame {
     
     private final OutputPanel out;
+    
+    class SwingOutputStream extends OutputStream {
+        public void write(int c) throws IOException {
+            out.writeChar(c);
+        }
+    }
     
     public OutputFrame() { 
         
@@ -32,5 +40,9 @@ public class OutputFrame extends JFrame {
         
         pack();
         setVisible(true);
+    }
+    
+    public OutputStream getOutputStream() { 
+        return new SwingOutputStream();
     }
 }

@@ -1,6 +1,5 @@
 package ibis.dog.gui.grid;
 
-import ibis.deploy.Job;
 import ibis.dog.client.ComputeResource;
 import ibis.dog.client.Deployment;
 import ibis.smartsockets.viz.UniqueColor;
@@ -34,8 +33,10 @@ import javax.swing.JComponent;
 import javax.swing.event.MouseInputListener;
 
 public class GridMap extends JComponent 
+    implements MouseInputListener, MouseWheelListener {
 
-implements MouseInputListener, MouseWheelListener {
+    // Generated
+    private static final long serialVersionUID = 1L;
 
     private static final boolean SITES_TRANSPARENT = true;
 
@@ -120,8 +121,8 @@ implements MouseInputListener, MouseWheelListener {
             imageW = map.getWidth(null);
             imageH = map.getHeight(null);
         
-            System.out.println("ImageWidth = "+ imageW);
-            System.out.println("ImageHeight = "+ imageH);            
+           // System.out.println("ImageWidth = "+ imageW);
+            //System.out.println("ImageHeight = "+ imageH);            
         
             /*
             double ratio = (double) imageW / (double) imageH;
@@ -148,7 +149,7 @@ implements MouseInputListener, MouseWheelListener {
                 MIN_SCALE = 1;
             }
             
-            System.out.println("MIN_SCALE set to " + MIN_SCALE);
+     //       System.out.println("MIN_SCALE set to " + MIN_SCALE);
             
             addMouseMotionListener(this);
             addMouseListener(this);
@@ -179,7 +180,7 @@ implements MouseInputListener, MouseWheelListener {
             slots.add(new Slot(preferredSizeW-borderW, h));
         }
         
-        System.out.println("Slots total " + slots.size());
+  //      System.out.println("Slots total " + slots.size());
     }
     
     public Dimension getPreferredSize() {
@@ -228,7 +229,7 @@ implements MouseInputListener, MouseWheelListener {
     
     public void paint(Graphics g) {
   
-        System.out.println("SCALE " + scale);
+    //    System.out.println("SCALE " + scale);
         
         double resize = scale / 100.0;
         
@@ -241,8 +242,8 @@ implements MouseInputListener, MouseWheelListener {
         int endX = posX + w;
         int endY = posY + h;
         
-        System.out.println("Frawing map area: (" + startX + "," + startY 
-                + ") to (" + endX + ", " + endY + ")");
+     //   System.out.println("Frawing map area: (" + startX + "," + startY 
+    //            + ") to (" + endX + ", " + endY + ")");
         
         drawMap((Graphics2D) g, startX, startY, endX, endY);
         drawSites((Graphics2D) g, startX, startY, endX, endY);
@@ -388,26 +389,26 @@ implements MouseInputListener, MouseWheelListener {
             int y = m.getY();
             
             if (x <= startX || x >= endX) { 
-                System.out.println("ComputeResource: " + m.getFriendlyName() 
-                        + " not visible (" + x + "!, " + y + ")");
+   //             System.out.println("ComputeResource: " + m.getFriendlyName() 
+   //                     + " not visible (" + x + "!, " + y + ")");
                 continue;
             }
             
             if (y <= startY || y >= endY) { 
-                System.out.println("ComputeResource: " + m.getFriendlyName() 
-                        + " not visible (" + x + ", " + y + "!)");
+   //             System.out.println("ComputeResource: " + m.getFriendlyName() 
+   //                     + " not visible (" + x + ", " + y + "!)");
                 continue;
             }
         
-            System.out.println("ComputeResource: " + m.getFriendlyName() 
-                    + " is visible!");
+    //        System.out.println("ComputeResource: " + m.getFriendlyName() 
+   //                 + " is visible!");
         
             visible.addLast(m);
         }
         
         while (visible.size() > 0) { 
         
-            System.out.println("Size " + visible.size());
+          //  System.out.println("Size " + visible.size());
             
             ComputeResource tmp = visible.removeFirst();
         
@@ -433,7 +434,7 @@ implements MouseInputListener, MouseWheelListener {
                             // We may steal this slot
                             best = s; 
                             distance = d;
-                 System.out.println("option " + d + " S");
+            //     System.out.println("option " + d + " S");
                         
                         } else { 
                             // we may not steal this slot
@@ -442,7 +443,7 @@ implements MouseInputListener, MouseWheelListener {
                         // unused slot
                         best = s;
                         distance = d;
-                System.out.println("option " + d + " S");
+            //    System.out.println("option " + d + " S");
                         
                     }
                 }
@@ -456,13 +457,13 @@ implements MouseInputListener, MouseWheelListener {
                     best.owner = tmp;
                     best.distance = distance;
                 
-                    System.out.println("BEST " + distance + " S");
+             //       System.out.println("BEST " + distance + " S");
                     
                 } else { 
                     best.owner = tmp;
                     best.distance = distance;
              
-                    System.out.println("BEST " + distance);
+            //        System.out.println("BEST " + distance);
                     
                     used.addLast(best);
                 }
@@ -614,19 +615,20 @@ implements MouseInputListener, MouseWheelListener {
             g2.fill(sha);*/
         
     }
-    
-    private ComputeResource getComputeResource(MouseEvent e) {
-        ComputeResource [] machines = deploy.getComputeResources();
-
-        for (ComputeResource m : machines) {
-            // TODO: Fix to incorperate postion and scaling
-            if (m.getX() < e.getX() && e.getX() < m.getX() + GRID_CIRCLE_SIZE
-                && m.getY() < e.getY()
-                && e.getY() < m.getY() + GRID_CIRCLE_SIZE) {
-                return m;
+   
+    private ComputeResource getResourceFromUsedSlot(int x, int y) { 
+        
+        for (Slot s : used) { 
+        
+            if (x > s.x && x < s.x+borderW && y > s.y && y < s.y+borderH) { 
+                if (s.owner != null) { 
+                    return s.owner;
+                }
             }
         }
+
         return null;
+        
     }
     
     
@@ -636,27 +638,12 @@ implements MouseInputListener, MouseWheelListener {
             return;
         }
         
-        int x = e.getX();
-        int y = e.getY();
+        ComputeResource r = getResourceFromUsedSlot(e.getX(), e.getY());
         
-        Slot clicked = null;
-        
-        for (Slot s : used) { 
-        
-            if (x > s.x && x < s.x+borderW && y > s.y && y < s.y+borderH) { 
-               
-                if (s.owner != null) { 
-                    clicked = s;
-                }
-              
-                break;
-            }
-        }
-
-        if (clicked != null) { 
-            System.out.println("Clicked on " + clicked.owner.getFriendlyName());
-        }
-        
+        if (r != null) { 
+            System.out.println("Clicked on " + r.getFriendlyName());
+            deploy.deployApplication(r);
+        }        
     }
 
     public void mouseEntered(MouseEvent e) {
