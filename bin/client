@@ -1,5 +1,7 @@
 #!/bin/sh
 
+CP=.
+
 for i in external/video4J/*.jar
 do
     CP=$CP:$i
@@ -49,7 +51,7 @@ do
         shift
 done
 
-java -cp $CP -Dlog4j.configuration=file:/home/jason/workspace/ccgrid08-scale-challenge/log4j.properties -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.Main $NORMAL
+java -cp $CP -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.Main $NORMAL
 
 
 
