@@ -195,11 +195,16 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
 	{ 
         IbisIdentifier id = null;
         try { 
-            id = ibis.registry().getElectionResult(name,
-													DEFAULT_TIMEOUT);
+            id = ibis.registry().getElectionResult(name, DEFAULT_TIMEOUT);
+            // Test below added. A timeout results in null, not in an exception.
+            // --Ceriel
+            if (id == null) {
+                return null;
+            }
         } catch (Exception e) {
             return null;
         }
+
         return new MachineDescription(id, port);
     }
     
