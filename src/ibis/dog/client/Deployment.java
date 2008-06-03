@@ -62,6 +62,9 @@ public class Deployment {
         supportGrid = deployer.getGrid(SUPPORT_GRID);
 
         global = new Job("support");
+        
+        //stuff all log files in a seperate dir
+        global.setOutputDirectory("logs");
 
         this.password = password;
         

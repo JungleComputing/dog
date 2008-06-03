@@ -10,8 +10,9 @@
     <property name="builddir" value="./build"/>
     <property name="distdir" value="./jars"/>
 
+
     <property name="external"
-	value="./external/ibis/ipl-2.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
+	value="./external/ibis/ipl-2.1.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 
@@ -79,6 +80,9 @@
     <target name="clean" description="Removes the ${distdir} directory">
         <delete failonerror="false" dir="${builddir}" />
         <delete failonerror="false" dir="${distdir}" />
+        <delete failonerror="false" dir="prestage-app" />
+        <delete failonerror="false" dir="prestage-hub" />
+        <delete failonerror="false" dir="prestage-server" />
     </target>
 
     <target name="distclean" depends="clean">
