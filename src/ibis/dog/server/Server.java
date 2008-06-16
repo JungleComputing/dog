@@ -271,16 +271,16 @@ public class Server implements Upcall {
         System.out.println("Server: " + Arrays.toString(args));
         
         if (args.length != 2) {
-            System.out.println("USAGE: Server poolname poolsize");
-            System.exit(0);
+            System.err.println("USAGE: Server poolname poolsize");
+            System.exit(1);
         }
 
         System.out.println("Initializing Parallel System...");
         try {
             PxSystem.initParallelSystem(args[0], args[1]);
         } catch (Exception e) {
-            System.out.println("Could not initialize Parallel system");
-            System.exit(0);
+            System.err.println("Could not initialize Parallel system");
+            System.exit(1);
         }
 
         System.out.println("nrCPUs = " + PxSystem.nrCPUs());

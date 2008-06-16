@@ -30,7 +30,7 @@ public class GridPanel extends JPanel implements ActionListener {
     private JFileChooser chooser;
     
     private GridMap map;
-    private JobInfo jobs;
+  //  private JobInfo jobs;
     
     private JMenuItem add; 
     private JMenuItem remove; 
@@ -46,12 +46,13 @@ public class GridPanel extends JPanel implements ActionListener {
         
         createMenuBar();
        
-        jobs = new JobInfo();
+    //    jobs = new JobInfo();
         map = new GridMap(deploy);
          
         add(map);
-        add(Box.createRigidArea(new Dimension(5,0)));
-        add(jobs);
+        //FIXME: add jobs info stats and re-anable job info box
+  //      add(Box.createRigidArea(new Dimension(5,0)));
+    //    add(jobs);
         
         chooser = new JFileChooser(new File("grids"));
         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);

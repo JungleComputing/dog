@@ -15,16 +15,16 @@ import java.util.ArrayList;
 
 public class ComputeResource {
 
-    private final Grid grid; 
-    private final Cluster cluster; 
-    
-    private final ArrayList<Job> jobList = new ArrayList<Job>(); 
-    
+    private final Grid grid;
+    private final Cluster cluster;
+
+    private final ArrayList<Job> jobList = new ArrayList<Job>();
+
     private Color color;
-   
+
     private int nextID = 0;
-    
-    public ComputeResource(Grid grid, Cluster cluster) { 
+
+    public ComputeResource(Grid grid, Cluster cluster) {
         this.grid = grid;
         this.cluster = cluster;
     }
@@ -36,7 +36,7 @@ public class ComputeResource {
     public int getX() {
         return cluster.getLocationX();
     }
-  
+
     public int getY() {
         return cluster.getLocationY();
     }
@@ -48,9 +48,9 @@ public class ComputeResource {
     public String getJobsInfoSting() {
         String res = cluster.getName() + " (" + jobList.size() + " nodes): \n";
         for (Job j : jobList) {
-            
-            //String stateString = j.getStateString();
-            //res += "  job state is: " + stateString + "\n";
+
+            // String stateString = j.getStateString();
+            // res += " job state is: " + stateString + "\n";
         }
         return res;
     }
@@ -74,22 +74,23 @@ public class ComputeResource {
     }
 
     public synchronized Job removeJob() {
-        if (jobList.size() == 0) return null;
-        Job js = jobList.remove(jobList.size()-1);
+        if (jobList.size() == 0)
+            return null;
+        Job js = jobList.remove(jobList.size() - 1);
         return js;
     }
 
     public synchronized int getJobCount() {
         return jobList.size();
     }
-        
+
     public synchronized int getJobID() {
         return nextID++;
     }
-    
+
     public synchronized void killAllJobs() {
-        for(Job js : jobList) { 
- //           js.kill();
+        for (Job js : jobList) {
+            // js.kill();
         }
     }
 
@@ -108,23 +109,26 @@ public class ComputeResource {
     public Grid getGrid() {
         return grid;
     }
-    
-    public SubJob getSubJob(Application app, String startupScript) { 
+
+    public SubJob getSubJob(Application app, String startupScript) {
 
         SubJob job = new SubJob(app.getName());
         job.setApplication(app);
-      
+
         job.setGrid(grid);
         job.setCluster(cluster);
         job.setNodes(cluster.getNodes());
-        
+        job.setMulticore(cluster.getMulticore());
+
         // FIXME !!!
         // serverJob.setWrapperExecutable(cluster.getWrapperExecutable());
         // serverJob.setWrapperArguments(cluster.getWrapperArguments());
 
-        job.setWrapperExecutable("/bin/sh");
-        job.setWrapperArguments(new File(startupScript).getName());
-        
+        if (startupScript != null) {
+            job.setWrapperExecutable("/bin/sh");
+            job.setWrapperArguments(new File(startupScript).getName());
+        }
+
         return job;
     }
 
