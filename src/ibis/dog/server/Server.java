@@ -45,20 +45,8 @@ public class Server implements Upcall {
 
             // TODO: get decent name here!!!
             me = new ServerDescription(comm.getMachineDescription(),
-                    getHostname());
+                    comm.getLocation());
         }
-    }
-
-    private String getHostname() { 
-        
-        try { 
-            return NetworkUtils.getHostname();
-        } catch (Exception e) {
-            System.out.println("Failed to get hostname!");
-            e.printStackTrace();
-        }
-        
-        return "Unknown host";        
     }
 
     private synchronized void registered(boolean value) {

@@ -228,5 +228,9 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         
         System.out.println("Communication done");
     }
+
+    public String getLocation() {
+        return ibis.identifier().location().toString();
+    }
     
 }
