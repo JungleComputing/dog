@@ -9,7 +9,7 @@ ARGS=$*
 
 for i in `seq 1 $NR_NODES`; do
     read node
-    ssh -x -x $node "cd $PWD && $JAVA $ARGS $NR_NODES" &
+    ssh -x -x $node "cd $PWD && $JAVA $ARGS" &
 done < $HOME/nodes
 
 wait

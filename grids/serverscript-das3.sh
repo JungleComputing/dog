@@ -10,4 +10,4 @@ shift
 ARGS=$*
 
 echo prun -1 -no-panda $JAVA $NR_NODES $ARGS $NR_NODES
-/usr/local/VU/reserve.sge/bin/prun -1 -asocial -t 4:00:00 -no-panda $JAVA $NR_NODES $ARGS $NR_NODES
+/usr/local/VU/reserve.sge/bin/prun -1 -asocial -t 4:00:00 -no-panda $JAVA $NR_NODES $ARGS

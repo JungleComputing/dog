@@ -6,7 +6,11 @@ import ibis.dog.shared.ServerDescription;
 
 import java.util.HashMap;
 
+import org.apache.log4j.Logger;
+
 public class Servers implements Runnable {
+	
+	private static final Logger logger = Logger.getLogger(Servers.class); 
 
     public static final int UPDATE_INTERVAL = 5000;
 
@@ -30,16 +34,16 @@ public class Servers implements Runnable {
         for (ServerDescription s : descriptions) {
             ServerData sd = null;
             if (oldservers.containsKey(s)) {
-                System.err.println("Keeping server: " + s.getName());
+                logger.debug("Keeping server: " + s.getName());
                 sd = oldservers.remove(s);
             } else {
-                System.err.println("Adding server: " + s.getName());
+                logger.info("Adding server: " + s.getName());
                 sd = new ServerData(s, comm);
             }
             servers.put(s, sd);
         }
         for (ServerData s : oldservers.values()) {
-            System.err.println("Removing server: " + s.getName());
+            logger.info("Removing server: " + s.getName());
             s.done();
         }
     }
@@ -67,7 +71,7 @@ public class Servers implements Runnable {
 
     private void requestServers() {
         
-        System.out.println("Client requesting servers from broker...");
+        logger.debug("Client requesting servers from broker...");
 
         // Try and find the broker. 
         MachineDescription broker = comm.findMachine("Broker", "Broker");

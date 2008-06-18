@@ -1,5 +1,7 @@
 package ibis.dog.client;
 
+import org.apache.log4j.Logger;
+
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
@@ -12,6 +14,8 @@ import ibis.dog.shared.Upcall;
 import ibis.video4j.VideoConsumer;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
+	
+	private static final Logger logger = Logger.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -69,19 +73,19 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             notifyAll();
         }
         
-        System.out.println("$$$$$$$$$$$$ comm");
+        logger.debug("$$$$$$$$$$$$ comm");
         
         comm = new Communication("Client", this);
         
-        System.out.println("$$$$$$$$$$$$ me");
+        logger.debug("$$$$$$$$$$$$ me");
         
         me = comm.getMachineDescription();
         
-        System.out.println("$$$$$$$$$$$$ server");
+        logger.debug("$$$$$$$$$$$$ server");
         
         servers = new Servers(comm);
    
-        System.out.println("$$$$$$$$$$$$ init");
+        logger.debug("$$$$$$$$$$$$ init");
          
         synchronized (this) {
             initialized = true;
@@ -218,7 +222,13 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             data.hasFrame(false);
             if (r.operation == Request.OPERATION_RECOGNISE) {
                 setFeatureVector((FeatureVector) r.result);
-                System.out.println("Feature Vector received");
+                String server = r.server.getName();
+                String result = recognition.recognize((FeatureVector) r.result);
+                if (result == null) {
+                	logger.info(server + " doesn't recognize this object");
+                } else {
+                	logger.info(server + " says this is a " + result);
+                }
                 //			} else if (r.operation == Request.OPERATION_LABELING) { 
                 //				RGB24Image image = (RGB24Image) r.result;        
                 //				forwardFrameToListnener(image, 1);
@@ -274,7 +284,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         ServerData target = servers.findIdleServer();
        
         if (target != null) {
-            System.out.println("Sending frame to " + target.getName());
+            logger.debug("Sending frame to " + target.getName());
             
             target.send(new Request(getCurrentOperation(), 0L,
                     new CompressedImage(image), me));

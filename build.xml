@@ -3,7 +3,7 @@
     default="all"
     basedir=".">
 
-    <property name="version" value="ccgrid08-scale-0.5"/>
+    <property name="version" value="dog-0.6"/>
     <property name="jar" value="${version}.jar"/>
 
     <property name="srcdir" value="./src"/>
@@ -12,7 +12,7 @@
 
 
     <property name="external"
-	value="./external/ibis/ipl-2.1.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar"/>
+	value="./external/ibis/ipl-2.1.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar:./external/ibis/log4j-1.2.13.jar"/>
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 

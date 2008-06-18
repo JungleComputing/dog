@@ -25,8 +25,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import org.apache.log4j.Logger;
+
 public class ClientPanel extends JPanel 
     implements ActionListener, WindowListener {
+	
+	private static Logger logger = Logger.getLogger(ClientPanel.class);
 
     // Generated
     private static final long serialVersionUID = 7697445736367043254L;
@@ -134,7 +138,7 @@ public class ClientPanel extends JPanel
         
         String cmd = e.getActionCommand();
         
-        System.out.println("GOT CLICK "+ cmd);
+       logger.debug("GOT CLICK "+ cmd);
         
         if (cmd.equals(GRID_MANAGER)) { 
             

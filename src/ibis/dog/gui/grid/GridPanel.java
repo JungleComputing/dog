@@ -17,8 +17,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import org.apache.log4j.Logger;
+
 public class GridPanel extends JPanel implements ActionListener {
 
+	private static final Logger logger = Logger.getLogger(GridPanel.class);
+	
     // Generated
     private static final long serialVersionUID = 1L;
 
@@ -82,24 +86,24 @@ public class GridPanel extends JPanel implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        System.out.println("Got event: " + e);        
+        logger.debug("Got event: " + e);        
         
         if (e.getSource() == add) { 
-            System.out.println("Must ADD grid");  
+        	logger.debug("Must ADD grid");  
             
             int returnVal = chooser.showOpenDialog(this);
 
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = chooser.getSelectedFile();
                 //This is where a real application would open the file.
-                System.out.println("Must ADD grid " + file.getName());                      
+                logger.debug("Must ADD grid " + file.getName());                      
                 deploy.loadGrid(file.getAbsolutePath());
                 
                 map.repaint();
             } 
             
         } else if (e.getSource() == remove) { 
-            System.out.println("Must REMOVE grid");        
+        	logger.debug("Must REMOVE grid");        
         }
     }
 }

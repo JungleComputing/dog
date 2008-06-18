@@ -8,6 +8,7 @@ import ibis.deploy.Job;
 import ibis.deploy.SubJob;
 import ibis.smartsockets.direct.DirectSocketAddress;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +16,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
+
 public class Deployment {
+	
+	private static final Logger logger = Logger.getLogger(Deployment.class);
 
     private final static String SUPPORT_FILE = "grids/support.properties";
 
@@ -67,6 +72,9 @@ public class Deployment {
 
         // stuff all log files in a seperate dir
         global.setOutputDirectory("logs");
+        
+        //create log dir
+        new File("logs").mkdirs();
 
         this.password = password;
 
@@ -179,7 +187,7 @@ public class Deployment {
 
             synchronized (this) {
                 if (!resources.containsKey(tmp)) {
-                    System.out.println("Storing cluster: " + tmp);
+                    logger.debug("Storing cluster: " + tmp);
                     resources.put(tmp, new ComputeResource(grid, c));
                 } else {
                     System.out.println("Cluster " + tmp + " already known");
@@ -197,7 +205,7 @@ public class Deployment {
         
             String name = target.getFriendlyName() + "-" + target.getJobID();
             
-            System.out.println("Creating application description: " + name);
+            logger.debug("Creating application description: " + name);
             
             
             ArrayList<String> prestage = new ArrayList<String>();
@@ -208,14 +216,17 @@ public class Deployment {
             if (target.getCluster().getStartupScript() != null) {
                 prestage.add(target.getCluster().getStartupScript());
             }
-            
+
+            //FIXME: think about how to _realy_ solve the node/core/
+            //processor/machine/bla specification problem
+            String size = Integer.toString(target.getCluster().getNodes());
             
             Application application = new Application(name,
                     "ibis.dog.server.Server",                // main class
                     null,                                    // java options
                     null,                                    // java system
                                                              // properties
-                    new String[] { name },                   // main
+                    new String[] { name, size },             // main
                                                              // arguments
                     prestage.toArray(new String[0]),         // pre stage
                     null,                                    // post stage

@@ -9,7 +9,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+import org.apache.log4j.Logger;
+
 public class ObjectRecognition {
+	
+	private static Logger logger = Logger.getLogger(ObjectRecognition.class);
     
     // Should be dynamic ?
     public static final int NR_INVARS = 6;
@@ -135,7 +139,7 @@ public class ObjectRecognition {
             inFile.close();
 
         } catch (IOException ioe) {
-            System.err.println("IOException thrown");
+            logger.debug("unable to recognize object", ioe);
         }
         return result;
     }

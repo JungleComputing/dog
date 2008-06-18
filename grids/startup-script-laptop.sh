@@ -8,4 +8,4 @@ shift
 ARGS=$*
 
 echo $JAVA $NR_NODES $ARGS $NR_NODES
-$JAVA $ARGS $NR_NODES
+$JAVA $ARGS

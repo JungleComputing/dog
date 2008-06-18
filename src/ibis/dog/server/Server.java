@@ -280,6 +280,7 @@ public class Server implements Upcall {
             PxSystem.initParallelSystem(args[0], args[1]);
         } catch (Exception e) {
             System.err.println("Could not initialize Parallel system");
+            e.printStackTrace(System.err);
             System.exit(1);
         }
 

@@ -37,6 +37,8 @@ public class Broker implements Upcall {
             try { 
                 communication.send(s, Communication.SERVER_REGISTERED);
             } catch (Exception cre) {
+            	System.err.println("removing server");
+            	cre.printStackTrace(System.err);
                 removeServer(s);
             }
         }
