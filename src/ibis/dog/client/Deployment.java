@@ -62,12 +62,18 @@ public class Deployment {
     public Deployment(String password) throws Exception {
 
         deployer = new Deployer(SUPPORT_FILE, SUPPORT_CLUSTER);
-
+        
         // By default we load the support grid (local laptop, etc).
         // deployer.addGrid(SUPPORT_FILE);
 
         supportGrid = deployer.getGrid(SUPPORT_GRID);
 
+        //FIXME: support server on non localhost
+        Cluster supportCluster = supportGrid.getCluster(SUPPORT_CLUSTER);
+
+        //FIXME: hack to auto-set windows propery of localhost
+        supportCluster.setWindows(File.separator.equals("\\"));
+        
         global = new Job("support");
 
         // stuff all log files in a seperate dir
