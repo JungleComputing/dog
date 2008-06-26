@@ -18,7 +18,7 @@ import java.io.IOException;
 
 public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
     
-    public static final int DEFAULT_TIMEOUT = 5000;
+    public static final int DEFAULT_TIMEOUT = 30000;
     
     public static final byte BROKER_REQ_REGISTER       = 0;
     public static final byte BROKER_REQ_GET_SERVERS    = 1;

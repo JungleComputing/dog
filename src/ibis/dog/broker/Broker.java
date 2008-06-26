@@ -37,9 +37,10 @@ public class Broker implements Upcall {
             try { 
                 communication.send(s, Communication.SERVER_REGISTERED);
             } catch (Exception cre) {
-            	System.err.println("removing server");
+            	System.err.println("warning: cannot reach server: " + s.getName());
             	cre.printStackTrace(System.err);
-                removeServer(s);
+                //FIXME: ignore errors for now
+                //removeServer(s);
             }
         }
     }
