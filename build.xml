@@ -10,9 +10,22 @@
     <property name="builddir" value="./build"/>
     <property name="distdir" value="./jars"/>
 
+  <path id="default.classpath">
+            <fileset dir="external/freetts">
+                <include name="*.jar" />
+            </fileset>
+            <fileset dir="external/ipl">
+                <include name="*.jar" />
+            </fileset>
+            <fileset dir="external/jfreechart">
+                <include name="*.jar" />
+            </fileset>
+            <fileset dir="external/video4J">
+                <include name="*.jar" />
+            </fileset>
+            <pathelement path="tmp" />
+        </path>
 
-    <property name="external"
-	value="./external/ibis/ipl-2.1.1.jar:./external/freetts/freetts.jar:./external/ibis/TGGraphLayout-JM.jar:./external/ibis/smartsockets-1.11.jar:./external/deploy/ibis-deploy.jar:./external/deploy/GAT-API.jar:./external/ibis/ibis-util-2.1.jar:./external/video4J/v4j-0.1.jar:./external/jfreechart/jfreechart-1.0.9.jar:./external/jfreechart/jcommon-1.0.12.jar:./external/ibis/log4j-1.2.13.jar"/>
 
     <!-- Internal target - Preparations for building. -->
     <target name="prepare"> 
@@ -26,7 +39,7 @@
 
     <target name="compile" depends="prepare">
 	
-	<javac 	classpath="${external}"
+	<javac 	classpathref="default.classpath"
 		destdir="${builddir}"
                 srcdir="${srcdir}"
                 debug="true"
@@ -53,11 +66,11 @@
     <!-- Internal target - Perpares the stageing directories -->
     <target name="stage" depends="jar">
 	<copy todir="prestage-hub">
-	    <fileset dir="external/ibis"/>
+	    <fileset dir="external/ipl"/>
 	</copy>
 
 	<copy todir="prestage-app">
-	    <fileset dir="external/ibis"/>
+	    <fileset dir="external/ipl"/>
 	</copy>
 
 	<copy todir="prestage-app">
@@ -65,7 +78,7 @@
 	</copy>
 
 	<copy todir="prestage-server">
-	    <fileset dir="external/ibis"/>
+	    <fileset dir="external/ipl"/>
 	</copy>
 
 	<copy todir="prestage-server">

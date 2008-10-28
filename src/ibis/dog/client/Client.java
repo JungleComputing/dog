@@ -2,6 +2,7 @@ package ibis.dog.client;
 
 import org.apache.log4j.Logger;
 
+import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
@@ -52,6 +53,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     // Link to the GUI.
     private ClientListener listener;
+
+    private OutputPanel outputPanel = null;;
 
     public Client() {
         super("CLIENT");
@@ -137,7 +140,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private synchronized FeatureVector getFeatureVector() {
         FeatureVector v = vector;
-        vector = null;
+        //vector = null;
         return v;
     }
 
@@ -198,8 +201,10 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                 String result = recognition.recognize((FeatureVector) r.result);
                 if (result == null) {
                     logger.info(server + " doesn't recognize this object");
+                    log(server + " doesn't recognize this object");
                 } else {
                     logger.info(server + " says this is a " + result);
+                    log(server + " says this is a " + result);
                 }
                 // } else if (r.operation == Request.OPERATION_LABELING) {
                 // RGB24Image image = (RGB24Image) r.result;
@@ -287,6 +292,17 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         // communication.
         servers.done();
         comm.exit();
+    }
+
+    public synchronized void setOutputPanel(OutputPanel outputPanel) {
+        this.outputPanel  = outputPanel;
+    }
+    
+    private synchronized void log(String text) {
+        if (outputPanel == null) {
+            return;
+        }
+        outputPanel.write(text, false);
     }
 
 }

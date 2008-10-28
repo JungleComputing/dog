@@ -61,6 +61,9 @@ public class ClientPanel extends JPanel implements ActionListener,
         createMenuBar();
 
         outputPanel = new OutputPanel("Application Output");
+        
+        application.setOutputPanel(outputPanel);
+        
         controlPanel = new ControlPanel(outputPanel, client);
 
         applicationInfo = new ApplicationInfo();
