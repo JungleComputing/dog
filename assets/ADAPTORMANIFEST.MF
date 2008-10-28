@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.0
+Created-By: 10.0-b22 (Sun Microsystems Inc.)
+FileCpi-class: org.gridlab.gat.io.cpi.local.LocalFileAdaptor,org.gridl
+ ab.gat.io.cpi.srcToLocalToDestCopy.SrcToLocalToDestCopyFileAdaptor,or
+ g.gridlab.gat.io.cpi.streaming.StreamingFileAdaptor
+FileInputStreamCpi-class: org.gridlab.gat.io.cpi.local.LocalFileInputS
+ treamAdaptor
+FileOutputStreamCpi-class: org.gridlab.gat.io.cpi.local.LocalFileOutpu
+ tStreamAdaptor
+RandomAccessFileCpi-class: org.gridlab.gat.io.cpi.local.LocalRandomAcc
+ essFileAdaptor
+ResourceBrokerCpi-class: org.gridlab.gat.resources.cpi.local.LocalReso
+ urceBrokerAdaptor
+EndpointCpi-class: org.gridlab.gat.io.cpi.sockets.SocketEndpointAdapto
+ r
+
