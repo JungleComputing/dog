@@ -1,0 +1,24 @@
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN No appenders could be found for logger (ibis.satin.comm).
+log4j:WARN Please initialize the log4j system properly.
+start: free = 751 max = 757 total = 757
+query loaded: free = 751 max = 757 total = 757
+database loaded: free = 751 max = 757 total = 757
+done: free = 742 max = 752 total = 752
