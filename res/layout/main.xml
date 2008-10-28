@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<LinearLayout android:id="@+id/deploy"
+		android:orientation="vertical" android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+
+		<TextView android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:gravity="center"
+			android:textSize="25px" android:textStyle="bold"
+			android:background="#444444" android:text="deploy" />
+
+
+		<ScrollView android:id="@+id/ScrollView01"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+			<LinearLayout android:id="@+id/LinearLayout01"
+				android:orientation="vertical" android:layout_width="wrap_content"
+				android:layout_height="wrap_content">
+			</LinearLayout>
+
+
+		</ScrollView>
+
+
+
+	</LinearLayout>
+
+	<LinearLayout android:id="@+id/monitor"
+		android:orientation="vertical" android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+
+		<TextView android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:gravity="center"
+			android:textSize="25px" android:textStyle="bold"
+			android:background="#444444" android:text="monitoring" />
+
+		<ScrollView android:id="@+id/ScrollView02"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+			<LinearLayout android:id="@+id/LinearLayout02"
+				android:orientation="vertical" android:layout_width="wrap_content"
+				android:layout_height="wrap_content">
+			</LinearLayout>
+
+
+		</ScrollView>
+
+
+	</LinearLayout>
+
+	<LinearLayout android:id="@+id/apps" android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+
+		<TextView android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:gravity="center"
+			android:textSize="25px" android:textStyle="bold"
+			android:background="#444444" android:text="application editor" />
+
+		<ExpandableListView android:id="@+id/appslist"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+		</ExpandableListView>
+	</LinearLayout>
+
+	<LinearLayout android:id="@+id/grids" android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+
+		<TextView android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:gravity="center"
+			android:textSize="25px" android:textStyle="bold"
+			android:background="#444444" android:text="grid editor" />
+
+		<ExpandableListView android:id="@+id/gridlist"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+		</ExpandableListView>
+
+	</LinearLayout>
+
+</FrameLayout>
