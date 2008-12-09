@@ -1,107 +1,102 @@
-<project
-    name="CCGrid08 Scale Challenge Demo"
-    default="all"
-    basedir=".">
+<project name="Dog Demo" default="all" basedir=".">
 
-    <property name="version" value="dog-0.6"/>
-    <property name="jar" value="${version}.jar"/>
+	<property name="version" value="dog-0.7" />
+	<property name="jar" value="${version}.jar" />
 
-    <property name="srcdir" value="./src"/>
-    <property name="builddir" value="./build"/>
-    <property name="distdir" value="./jars"/>
+	<property name="srcdir" value="./src" />
+	<property name="builddir" value="./build" />
+	<property name="distdir" value="./jars" />
 
-  <path id="default.classpath">
-            <fileset dir="external/freetts">
-                <include name="*.jar" />
-            </fileset>
-            <fileset dir="external/ipl">
-                <include name="*.jar" />
-            </fileset>
-            <fileset dir="external/jfreechart">
-                <include name="*.jar" />
-            </fileset>
-            <fileset dir="external/video4J">
-                <include name="*.jar" />
-            </fileset>
-            <pathelement path="tmp" />
-        </path>
+	<path id="default.classpath">
+		<fileset dir="external/freetts">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="external/ipl">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="external/jfreechart">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="external/video4J">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="tmp" />
+	</path>
 
 
-    <!-- Internal target - Preparations for building. -->
-    <target name="prepare"> 
-    	<mkdir dir="${distdir}" />
-        <mkdir dir="${builddir}" />
-        <mkdir dir="${builddir}/headers" />
-        <mkdir dir="prestage-hub" />
-        <mkdir dir="prestage-app" />
-        <mkdir dir="prestage-server" />
-    </target>
+	<!-- Internal target - Preparations for building. -->
+	<target name="prepare">
+		<mkdir dir="${distdir}" />
+		<mkdir dir="${builddir}" />
+		<mkdir dir="${builddir}/headers" />
+		<mkdir dir="prestage-client" />
+		<mkdir dir="prestage-server" />
+	</target>
 
-    <target name="compile" depends="prepare">
-	
-	<javac 	classpathref="default.classpath"
-		destdir="${builddir}"
-                srcdir="${srcdir}"
-                debug="true"
-		target="1.5"
-                includes="**/*.java"/>
-    </target>
+	<target name="compile" depends="prepare">
 
-    <!-- Internal target - Builds the JAR file -->
-    <target name="jar" depends="compile">
+		<javac classpathref="default.classpath" destdir="${builddir}" srcdir="${srcdir}" debug="true" target="1.5" includes="**/*.java" />
+	</target>
 
-	<delete failonerror="false" file="${distdir}/${jar}" />
+	<!-- Internal target - Builds the JAR file -->
+	<target name="jar" depends="compile">
 
-	<jar 	jarfile="${distdir}/${jar}"
-                basedir="${builddir}"
-		includes="**">
-       		<manifest>
-			<attribute name="Built-By" value="${user.name}"/>
-		</manifest>
-	</jar>
+		<delete failonerror="false" file="${distdir}/${jar}" />
 
-    </target>
+		<jar jarfile="${distdir}/${jar}" basedir="${builddir}" includes="**">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+		</jar>
+
+	</target>
 
 
-    <!-- Internal target - Perpares the stageing directories -->
-    <target name="stage" depends="jar">
-	<copy todir="prestage-hub">
-	    <fileset dir="external/ipl"/>
-	</copy>
+	<!-- Internal target - Perpares the stageing directories -->
+	<target name="stage" depends="jar">
+		<copy todir="prestage-server">
+			<fileset dir="jars" />
+		</copy>
+		<copy todir="prestage-server">
+			<fileset dir="external/ipl" />
+		</copy>
 
-	<copy todir="prestage-app">
-	    <fileset dir="external/ipl"/>
-	</copy>
+		<copy todir="prestage-client">
+			<fileset dir="external/ipl" />
+		</copy>
+		<copy todir="prestage-client">
+			<fileset dir="jars" />
+		</copy>
+		<copy todir="prestage-client">
+			<fileset dir="external/freetts" />
+		</copy>
+		<copy todir="prestage-client">
+			<fileset dir="external/video4J" />
+		</copy>
+		<copy todir="prestage-client">
+			<fileset dir="external/native_libraries" />
+		</copy>
+		<copy todir="prestage-client">
+			<fileset dir="external/jfreechart" />
+		</copy>
 
-	<copy todir="prestage-app">
-	    <fileset dir="jars"/>
-	</copy>
+	</target>
 
-	<copy todir="prestage-server">
-	    <fileset dir="external/ipl"/>
-	</copy>
+	<target name="all" depends="clean,prepare,compile,jar,stage">
+	</target>
 
-	<copy todir="prestage-server">
-	    <fileset dir="jars"/>
-	</copy>
-    </target>
+	<!-- remove all generated code -->
+	<target name="clean" description="Removes the ${distdir} directory">
+		<delete failonerror="false" dir="${builddir}" />
+		<delete failonerror="false" dir="${distdir}" />
+		<delete failonerror="false" dir="prestage-client" />
+		<delete failonerror="false" dir="prestage-server" />
+	</target>
 
-    <target name="all" depends="clean,prepare,compile,jar,stage">
-    </target>
-
-    <!-- remove all generated code -->
-    <target name="clean" description="Removes the ${distdir} directory">
-        <delete failonerror="false" dir="${builddir}" />
-        <delete failonerror="false" dir="${distdir}" />
-        <delete failonerror="false" dir="prestage-app" />
-        <delete failonerror="false" dir="prestage-hub" />
-        <delete failonerror="false" dir="prestage-server" />
-    </target>
-
-    <target name="distclean" depends="clean">
-         <delete failonerror="false" dir="./build-eclipse" />
- 	 <delete failonerror="false" file="${version}.zip"/>
-    </target>
+	<target name="distclean" depends="clean">
+		<delete failonerror="false" dir="./build-eclipse" />
+		<delete failonerror="false" file="${version}.zip" />
+	</target>
 
 
 </project>
