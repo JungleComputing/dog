@@ -353,7 +353,7 @@ public class Main {
             // Create GUI and Application
             Client c = new Client();
             ClientPanel.createGUI(c);
-
+            
             // Activate the application
             c.start();
 

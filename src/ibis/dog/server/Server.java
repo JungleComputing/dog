@@ -20,7 +20,7 @@ import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
-    
+
     public static final int DEFAULT_TIMEOUT = 5000;
 
     private ServerDescription me;
@@ -44,8 +44,8 @@ public class Server implements Upcall {
             comm = new Communication("Server", this);
 
             // TODO: get decent name here!!!
-            me = new ServerDescription(comm.getMachineDescription(),
-                    comm.getLocation());
+            me = new ServerDescription(comm.getMachineDescription(), comm
+                    .getLocation());
         }
     }
 
@@ -76,31 +76,24 @@ public class Server implements Upcall {
     }
 
     /*
-     private void unregister() {
-     
-     System.out.println("Server unregistering with broker...");
-
-     // Try and find the broker. 
-     MachineDescription broker = comm.findMachine("Broker","Broker");
-     
-     if (broker == null) { 
-     System.err.println("Failed to find broker!");
-     return;            
-     }
-     
-     try {
-     comm.send(broker, Communication.BROKER_REQ_UNREGISTER, me);
-     } catch (Exception e) {
-     System.err.println("Problem while contacting broker!");
-     e.printStackTrace(System.err);
-     }       
-     }
+     * private void unregister() {
+     * 
+     * System.out.println("Server unregistering with broker..."); // Try and
+     * find the broker. MachineDescription broker =
+     * comm.findMachine("Broker","Broker");
+     * 
+     * if (broker == null) { System.err.println("Failed to find broker!");
+     * return; }
+     * 
+     * try { comm.send(broker, Communication.BROKER_REQ_UNREGISTER, me); } catch
+     * (Exception e) { System.err.println("Problem while contacting broker!");
+     * e.printStackTrace(System.err); } }
      */
 
     private boolean register(long timeout) {
         System.out.println("Server registering with broker...");
 
-        // Try and find the broker. 
+        // Try and find the broker.
         MachineDescription broker = comm.findMachine("Broker", "Broker");
 
         if (broker == null) {
@@ -149,7 +142,7 @@ public class Server implements Upcall {
     }
 
     public void upcall(byte opcode, Object... objects) throws IOException {
-        // We can get messages here from both clients and the broker. 
+        // We can get messages here from both clients and the broker.
 
         switch (opcode) {
         case Communication.SERVER_REGISTERED: {
@@ -180,7 +173,7 @@ public class Server implements Upcall {
 
         if (master) {
 
-            // The master should dequeue a request and broadcast 
+            // The master should dequeue a request and broadcast
             // the details.
 
             r = getRequest(DEFAULT_TIMEOUT);
@@ -220,11 +213,11 @@ public class Server implements Upcall {
             reply = v;
             break;
         }
-            //		case Request.OPERATION_LABELING: {
-            //			pxhi.doTrecLabeling(img.width, img.height, img.pixels);
-            //			reply = img;
-            //			break;
-            //		}   
+            // case Request.OPERATION_LABELING: {
+            // pxhi.doTrecLabeling(img.width, img.height, img.pixels);
+            // reply = img;
+            // break;
+            // }
         case Request.OPERATION_DUMMY: {
             reply = new Integer(123);
             break;
@@ -240,7 +233,7 @@ public class Server implements Upcall {
             System.err.println("Sending reply....");
             try {
                 comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
-                        new Reply(me, r.sequenceNumber, r.operation, reply));
+                          new Reply(me, r.sequenceNumber, r.operation, reply));
             } catch (Exception e) {
                 System.err.println("Failed to return reply to "
                         + r.replyAddress);
@@ -257,7 +250,7 @@ public class Server implements Upcall {
                     try {
                         Thread.sleep(DEFAULT_TIMEOUT);
                     } catch (InterruptedException e) {
-                        //  ignored
+                        // ignored
                     }
                 }
             } else {
@@ -267,17 +260,29 @@ public class Server implements Upcall {
     }
 
     public static void main(String[] args) {
-        
+        String poolName = null;
+        String poolSize = null;
+
         System.out.println("Server: " + Arrays.toString(args));
+
+        if (args.length == 0) {
+            poolName = System.getProperty("ibis.deploy.job.id", null);
+            poolSize = System.getProperty("ibis.deploy.job.size", null);
+        } else if (args.length == 2) {
+            poolName = args[0];
+            poolSize = args[1];
+        }
         
-        if (args.length != 2) {
-            System.err.println("USAGE: Server poolname poolsize");
+        if (poolName == null || poolSize == null) {
+
+            System.err
+                    .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
             System.exit(1);
         }
 
         System.out.println("Initializing Parallel System...");
         try {
-            PxSystem.initParallelSystem(args[0], args[1]);
+            PxSystem.initParallelSystem(poolName, poolSize);
         } catch (Exception e) {
             System.err.println("Could not initialize Parallel system");
             e.printStackTrace(System.err);

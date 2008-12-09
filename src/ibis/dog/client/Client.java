@@ -2,6 +2,7 @@ package ibis.dog.client;
 
 import org.apache.log4j.Logger;
 
+import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
@@ -14,8 +15,8 @@ import ibis.dog.shared.Upcall;
 import ibis.video4j.VideoConsumer;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
-	
-	private static final Logger logger = Logger.getLogger(Client.class);
+
+    private static final Logger logger = Logger.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -29,7 +30,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     // Local machine description (used as reply address for servers).
     private MachineDescription me;
 
-    // Object resposible for the recognition 
+    // Object resposible for the recognition
     private final ObjectRecognition recognition;
 
     // Current operation
@@ -39,23 +40,22 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     private Servers servers;
 
     // Current input media, pixels size, and input frame.
-    
+
     private RGB32Image image;
+
     private boolean imageValid = false;
 
     private boolean done = false;
-    
+
     private int frameNumber = 0;
 
     private FeatureVector vector;
-    
-    private Deployment deployment;
-    
+
     // Link to the GUI.
     private ClientListener listener;
-    
-    private boolean initialized = false;
-    
+
+    private OutputPanel outputPanel = null;;
+
     public Client() {
         super("CLIENT");
         recognition = new ObjectRecognition();
@@ -63,71 +63,46 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private void init() throws Exception {
 
-        // This may take a while, since it will deploy the server, hub and 
+        // This may take a while, since it will deploy the server, hub and
         // broker for us...
-        
-        Deployment d = new Deployment(null);
-        
-        synchronized (this) {
-            deployment = d;
-            notifyAll();
-        }
-        
+
         logger.debug("$$$$$$$$$$$$ comm");
-        
+
         comm = new Communication("Client", this);
-        
+
         logger.debug("$$$$$$$$$$$$ me");
-        
+
         me = comm.getMachineDescription();
-        
+
         logger.debug("$$$$$$$$$$$$ server");
-        
+
         servers = new Servers(comm);
-   
+
         logger.debug("$$$$$$$$$$$$ init");
-         
-        synchronized (this) {
-            initialized = true;
-            notifyAll();
-        }
+
     }
 
-    public synchronized Deployment getDeployment() {
+    public synchronized int[] getBuffer(int width, int heigth, int index) {
 
-        while (deployment == null) { 
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        }
-        
-        return deployment;
-    }
-
-    
-    public synchronized int [] getBuffer(int width, int heigth, int index) {
-        
         if (image == null || image.width != width || image.height != heigth) {
             image = new RGB32Image(width, heigth);
-        } 
-        
+        }
+
         imageValid = false;
         return image.pixels;
     }
 
-    public synchronized void gotImage(int [] image, int index) {
-        imageValid= true;
+    public synchronized void gotImage(int[] image, int index) {
+        imageValid = true;
         notifyAll();
     }
-    
+
     private synchronized void returnImage(RGB32Image image) {
-        if (image == null) { 
+        if (image == null) {
             this.image = image;
         }
     }
-    
+
     public boolean learn(String name) {
 
         FeatureVector v = getFeatureVector();
@@ -148,7 +123,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
         return null;
     }
-    
+
     public synchronized void registerListener(ClientListener l) {
         this.listener = l;
     }
@@ -165,7 +140,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private synchronized FeatureVector getFeatureVector() {
         FeatureVector v = vector;
-        vector = null;
+        //vector = null;
         return v;
     }
 
@@ -176,19 +151,19 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     public synchronized void setCurrentOperation(byte operation) {
         this.operation = operation;
     }
-    
-    public synchronized void done() { 
+
+    public synchronized void done() {
         System.out.println("Client done!");
         done = true;
         notifyAll();
     }
-    
-    private RGB32Image getFrame() {
-    
-        synchronized (this) { 
-            while (!done && !imageValid) { 
 
-                try { 
+    private RGB32Image getFrame() {
+
+        synchronized (this) {
+            while (!done && !imageValid) {
+
+                try {
                     wait(DEFAULT_TIMEOUT);
                 } catch (InterruptedException e) {
                     // ignore
@@ -198,7 +173,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             if (done || !imageValid) {
                 return null;
             }
-            
+
             RGB32Image result = image;
             image = null;
             imageValid = false;
@@ -210,9 +185,9 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     public void serverConnected(ServerData server, boolean connected) {
         server.setConnected(connected);
     }
-    
+
     private void processReply(Reply r) {
-        //System.err.println("Got reply from " + r.server);
+        // System.err.println("Got reply from " + r.server);
 
         ServerData data = servers.findServer(r.server);
         if (data == null) {
@@ -225,13 +200,15 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                 String server = r.server.getName();
                 String result = recognition.recognize((FeatureVector) r.result);
                 if (result == null) {
-                	logger.info(server + " doesn't recognize this object");
+                    logger.info(server + " doesn't recognize this object");
+                    log(server + " doesn't recognize this object");
                 } else {
-                	logger.info(server + " says this is a " + result);
+                    logger.info(server + " says this is a " + result);
+                    log(server + " says this is a " + result);
                 }
-                //			} else if (r.operation == Request.OPERATION_LABELING) { 
-                //				RGB24Image image = (RGB24Image) r.result;        
-                //				forwardFrameToListnener(image, 1);
+                // } else if (r.operation == Request.OPERATION_LABELING) {
+                // RGB24Image image = (RGB24Image) r.result;
+                // forwardFrameToListnener(image, 1);
             } else if (r.operation == Request.OPERATION_DUMMY) {
                 System.out
                         .println("Dummy reply received " + (Integer) r.result);
@@ -279,30 +256,30 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             System.exit(1);
         }
     }
-    
+
     private void sendFrameToServer(RGB32Image image) {
         ServerData target = servers.findIdleServer();
-       
+
         if (target != null) {
             logger.debug("Sending frame to " + target.getName());
-            
+
             target.send(new Request(getCurrentOperation(), 0L,
                     new CompressedImage(image), me));
-        } else { 
+        } else {
             // System.out.println("Dropping frame");
         }
     }
 
     public void run() {
- 
-        try { 
+
+        try {
             init();
         } catch (Exception e) {
             System.out.println("Failed to init client!");
             e.printStackTrace();
             return;
         }
-        
+
         RGB32Image image = getFrame();
 
         while (image != null) {
@@ -310,12 +287,22 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             returnImage(image);
             image = getFrame();
         }
- 
-        // We are done, so kill the servers polling, deployment and 
+
+        // We are done, so kill the servers polling, deployment and
         // communication.
         servers.done();
-        deployment.done();
         comm.exit();
     }
+
+    public synchronized void setOutputPanel(OutputPanel outputPanel) {
+        this.outputPanel  = outputPanel;
+    }
     
+    private synchronized void log(String text) {
+        if (outputPanel == null) {
+            return;
+        }
+        outputPanel.write(text, false);
+    }
+
 }
