@@ -7,7 +7,7 @@ set PROG_NAME="ibis.dog.client.Main"
 
 rem %~dp0 is expanded pathname of the current script under NT
 rem set CLIENT_HOME=%~dp0
-set CLIENT_HOME=E:\ccgrid08-copy
+rem set CLIENT_HOME=E:\ccgrid08-copy
 echo "%CLIENT_HOME%"
 
 set JAVA_EXEC=java
