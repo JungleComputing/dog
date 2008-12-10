@@ -14,8 +14,6 @@ package jorus.weibull;
 
 import jorus.array.*;
 import jorus.pixel.*;
-import jorus.parallel.*;
-import jorus.operations.*;
 import jorus.patterns.*;
 
 

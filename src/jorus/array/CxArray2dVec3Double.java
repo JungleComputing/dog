@@ -14,7 +14,6 @@ package jorus.array;
 import jorus.operations.*;
 import jorus.patterns.*;
 import jorus.pixel.*;
-import java.util.Arrays;
 
 
 public class CxArray2dVec3Double extends CxArray2dDoubles

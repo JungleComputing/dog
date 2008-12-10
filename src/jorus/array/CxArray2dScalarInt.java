@@ -11,8 +11,6 @@
 package jorus.array;
 
 
-import jorus.operations.*;
-import jorus.patterns.*;
 import jorus.pixel.*;
 
 

@@ -12,7 +12,6 @@ package jorus.operations;
 
 
 import jorus.parallel.PxSystem;
-import ibis.ipl.*;
 
 
 public class CxSetBorderMirrorDouble extends CxSetBorder<double[]>

@@ -9,8 +9,6 @@ import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 import ibis.ipl.IbisCreationFailedException;
-import ibis.smartsockets.util.NetworkUtils;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
