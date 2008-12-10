@@ -180,6 +180,7 @@ grid.Grommit.job.wrapper.script = demo/multicore.script
 grid.Grommit.user.name = ndrost
 grid.Grommit.cache.dir = dog-demo-cache
 #grid.Grommit.server.output.files =
+grid.Grommit.server.system.properties = smartsockets.external.upnp=true,smartsockets.external.stun=true
 grid.Grommit.nodes = 1
 grid.Grommit.cores = 2
 grid.Grommit.latitude = 52.33350342763307
@@ -294,9 +295,9 @@ experiment.job-1.pool.name = demo
 
 # Details of job "job-2"
 experiment.job-2.application.name = image-compute
-experiment.job-2.process.count = 8
-experiment.job-2.cluster.name = VU
-experiment.job-2.resource.count = 8
+experiment.job-2.process.count = 4
+experiment.job-2.cluster.name = Ceres
+experiment.job-2.resource.count = 1
 #experiment.job-2.runtime =
 experiment.job-2.pool.name = demo
 #experiment.job-2.pool.size =
@@ -304,9 +305,9 @@ experiment.job-2.pool.name = demo
 
 # Details of job "job-3"
 experiment.job-3.application.name = image-compute
-experiment.job-3.process.count = 8
-experiment.job-3.cluster.name = Delft
-experiment.job-3.resource.count = 8
+experiment.job-3.process.count = 4
+experiment.job-3.cluster.name = Venus
+experiment.job-3.resource.count = 1
 #experiment.job-3.runtime =
 experiment.job-3.pool.name = demo
 #experiment.job-3.pool.size =
@@ -315,29 +316,19 @@ experiment.job-3.pool.name = demo
 # Details of job "job-4"
 experiment.job-4.application.name = image-compute
 experiment.job-4.process.count = 8
-experiment.job-4.cluster.name = UvA
-experiment.job-4.resource.count = 8
+experiment.job-4.cluster.name = Dutify
+experiment.job-4.resource.count = 1
 #experiment.job-4.runtime =
 experiment.job-4.pool.name = demo
 #experiment.job-4.pool.size =
 #experiment.job-4.shared.hub =
 
 # Details of job "job-5"
-experiment.job-5.application.name = image-compute
-experiment.job-5.process.count = 8
-experiment.job-5.cluster.name = Leiden
-experiment.job-5.resource.count = 8
-#experiment.job-5.runtime =
-experiment.job-5.pool.name = demo
-#experiment.job-5.pool.size =
-#experiment.job-5.shared.hub =
-
-# Details of job "job-6"
-experiment.job-6.application.name = image-compute
-experiment.job-6.process.count = 8
-experiment.job-6.cluster.name = MultimediaN
-experiment.job-6.resource.count = 8
-#experiment.job-6.runtime =
-experiment.job-6.pool.name = demo
-#experiment.job-6.pool.size =
-#experiment.job-6.shared.hub =
+# experiment.job-5.application.name = image-compute
+# experiment.job-5.process.count = 2
+# experiment.job-5.cluster.name = Grommit
+# experiment.job-5.resource.count = 1
+# #experiment.job-5.runtime =
+# experiment.job-5.pool.name = demo
+# #experiment.job-5.pool.size =
+# #experiment.job-5.shared.hub =
