@@ -121,22 +121,6 @@ grid.Leiden.cores = 64
 grid.Leiden.latitude = 52.16
 grid.Leiden.longitude = 4.49
 
-# Details of cluster "local"
-grid.local.server.adaptor = Local
-grid.local.server.uri = any://localhost
-grid.local.job.adaptor = Local
-grid.local.job.uri = any://localhost
-grid.local.file.adaptors = Local
-grid.local.java.path = java
-#grid.local.job.wrapper.script = 
-#grid.local.user.name = 
-#grid.local.cache.dir = 
-#grid.local.server.output.files =
-grid.local.nodes = 1
-grid.local.cores = 2
-grid.local.latitude = 52.332933
-grid.local.longitude = 4.866064
-
 ################ Application settings ###############
 
 # Valid keys for applications:
@@ -161,13 +145,13 @@ applications.default.libs = prestage-server
 #applications.default.output.files =
 #applications.default.system.properties =
 #applications.default.java.options =
-#applications.default.log4j.file =
+applications.default.log4j.file = log4j.properties
 
 # Application "client"
 applications.client.main.class = ibis.dog.client.Main
 #applications.client.arguments =
 applications.client.libs = prestage-client
-#applications.client.input.files =
+applications.client.input.files = images
 #applications.client.output.files =
 applications.client.system.properties = java.library.path=lib,
 #applications.client.java.options =

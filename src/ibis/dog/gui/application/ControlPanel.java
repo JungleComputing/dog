@@ -39,18 +39,18 @@ public class ControlPanel extends JPanel implements ItemListener, ActionListener
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Control"));
-             
+
         inputField = new JTextField("");
         inputField.setMinimumSize(new Dimension(0, 25));
         inputField.setMaximumSize(new Dimension(Short.MAX_VALUE, 25));
         
         add(inputField);
-        add(Box.createRigidArea(new Dimension(0,5)));
-        
+        add(Box.createRigidArea(new Dimension(5,5)));
+
         // Create the buttons
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        
+
         learnButton = new JButton("Learn");
         learnButton.addActionListener(this);
         
@@ -68,7 +68,7 @@ public class ControlPanel extends JPanel implements ItemListener, ActionListener
         add(buttonPanel);
     }
     
-    // Listnens to checkbox
+    // Listens to checkbox
     public void itemStateChanged(ItemEvent e) {
 
         Object source = e.getItemSelectable();

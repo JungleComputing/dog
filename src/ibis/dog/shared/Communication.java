@@ -5,6 +5,7 @@ import ibis.ipl.IbisCapabilities;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisFactory;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.Location;
 import ibis.ipl.MessageUpcall;
 import ibis.ipl.PortType;
 import ibis.ipl.ReadMessage;
@@ -71,18 +72,16 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         receive.enableConnections();
         receive.enableMessageUpcalls();
         
-        // Install a shutdown hook that terminates ibis. 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                try {
-                    receive.close(DEFAULT_TIMEOUT);
-                    System.err.println(myName + " terminating");
-                    ibis.end();
-                } catch (IOException e) {
-                    // Ignored
-                }
-            }
-        });
+    }
+    
+    public void end() {
+        try {
+            receive.close(DEFAULT_TIMEOUT);
+            System.err.println(myName + " terminating");
+            ibis.end();
+        } catch (IOException e) {
+            // Ignored
+        }
     }
     
     public void elect(String name) throws IOException 
@@ -230,7 +229,14 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
     }
 
     public String getLocation() {
-        return ibis.identifier().location().toString();
+        Location location = ibis.identifier().location();
+        
+        if (location.numberOfLevels() == 0) {
+            return "unknown";
+                       
+        }
+        
+        return location.getLevel(location.numberOfLevels() - 1);
     }
     
 }

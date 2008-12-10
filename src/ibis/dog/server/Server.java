@@ -18,6 +18,8 @@ import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
+    
+    
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -37,14 +39,24 @@ public class Server implements Upcall {
 
         if (master = (PxSystem.myCPU() == 0)) {
 
-            // TODO: get poolname from somewhere...!
-
             comm = new Communication("Server", this);
+            
+            // Install a shutdown hook that terminates ibis.
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    end();
+                }
+            });
 
-            // TODO: get decent name here!!!
             me = new ServerDescription(comm.getMachineDescription(), comm
                     .getLocation());
         }
+    }
+    
+    private void end() {
+        System.out.println("Ending server");
+        unregister();
+        comm.end();
     }
 
     private synchronized void registered(boolean value) {
@@ -73,20 +85,24 @@ public class Server implements Upcall {
         return registered;
     }
 
-    /*
-     * private void unregister() {
-     * 
-     * System.out.println("Server unregistering with broker..."); // Try and
-     * find the broker. MachineDescription broker =
-     * comm.findMachine("Broker","Broker");
-     * 
-     * if (broker == null) { System.err.println("Failed to find broker!");
-     * return; }
-     * 
-     * try { comm.send(broker, Communication.BROKER_REQ_UNREGISTER, me); } catch
-     * (Exception e) { System.err.println("Problem while contacting broker!");
-     * e.printStackTrace(System.err); } }
-     */
+    private void unregister() {
+
+        System.out.println("Server unregistering with broker...");
+        // Try and find the broker.
+        MachineDescription broker = comm.findMachine("Broker", "Broker");
+
+        if (broker == null) {
+            System.err.println("Failed to find broker!");
+            return;
+        }
+
+        try {
+            comm.send(broker, Communication.BROKER_REQ_UNREGISTER, me);
+        } catch (Exception e) {
+            System.err.println("Problem while contacting broker!");
+            e.printStackTrace(System.err);
+        }
+    }
 
     private boolean register(long timeout) {
         System.out.println("Server registering with broker...");
@@ -231,7 +247,7 @@ public class Server implements Upcall {
             System.err.println("Sending reply....");
             try {
                 comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
-                          new Reply(me, r.sequenceNumber, r.operation, reply));
+                    new Reply(me, r.sequenceNumber, r.operation, reply));
             } catch (Exception e) {
                 System.err.println("Failed to return reply to "
                         + r.replyAddress);
@@ -270,7 +286,7 @@ public class Server implements Upcall {
             poolName = args[0];
             poolSize = args[1];
         }
-        
+
         if (poolName == null || poolSize == null) {
 
             System.err

@@ -3,7 +3,9 @@ package ibis.dog.gui.application;
 import ibis.dog.client.Client;
 import ibis.dog.gui.console.OutputFrame;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -31,7 +34,7 @@ public class ClientPanel extends JPanel implements ActionListener,
 
     private static final String CONSOLE_OUTPUT = "Console Output";
 
-    private static final int MAX_SERVERS = 10;
+    private static final int MAX_SERVERS = 12;
 
     private final Client client;
 
@@ -67,6 +70,7 @@ public class ClientPanel extends JPanel implements ActionListener,
         controlPanel = new ControlPanel(outputPanel, client);
 
         applicationInfo = new ApplicationInfo();
+        
         serverInfo = new ServerInfo(MAX_SERVERS, applicationInfo);
 
         JPanel IOPanel = new JPanel();
@@ -74,21 +78,39 @@ public class ClientPanel extends JPanel implements ActionListener,
         IOPanel.add(controlPanel);
         IOPanel.add(outputPanel);
 
-        // Combine video and IOPanel into 1 panel
-        JPanel videoAndInfo = new JPanel();
-        videoAndInfo.setLayout(new GridLayout(1, 3));
-        videoAndInfo.add(new VideoPanel(applicationInfo, application));
-        videoAndInfo.add(IOPanel);
-        videoAndInfo.add(serverInfo);
+        JPanel videoIO = new JPanel();
+        videoIO.setLayout(new BoxLayout(videoIO, BoxLayout.X_AXIS));
+        videoIO.add(new VideoPanel(applicationInfo, application));
+        videoIO.add(IOPanel);
 
-        add(videoAndInfo);
+        JPanel serverPanel = new JPanel();
+        serverPanel.setLayout(new BorderLayout());
+        serverPanel.add(serverInfo, BorderLayout.NORTH);
+        serverPanel.setBorder(BorderFactory.createTitledBorder("Servers"));
+        
+        
+        // Combine videoIO Panel and Server Info into 1 panel
+        JPanel top = new JPanel();
+        top.setLayout(new BorderLayout());
+        top.add(videoIO, BorderLayout.WEST);
+        top.add(serverPanel, BorderLayout.CENTER);
+
+        add(top);
         add(Box.createRigidArea(new Dimension(0, 5)));
 
         // Create the info panel
-        add(new InfoPanel(applicationInfo));
-        add(Box.createRigidArea(new Dimension(0, 5)));
-        add(new LogoPanel());
-
+        
+        JPanel bottom = new JPanel();
+        bottom.setLayout(new BorderLayout());
+        bottom.add(new InfoPanel(applicationInfo), BorderLayout.CENTER);
+        bottom.add(new LogoPanel(), BorderLayout.EAST);
+        
+        add(bottom);
+        
+//        add(new InfoPanel(applicationInfo));
+//        add(Box.createRigidArea(new Dimension(0, 5)));
+//        add(new LogoPanel());
+        
         outputPanel.write("Voice initialized", true);
 
         // output = new OutputFrame();

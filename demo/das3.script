@@ -10,23 +10,19 @@ JAVA=$1
 shift
 ARGS=$*
 
+OPTION=-1
+RUNTIME=0:15:00
+
 if [ `expr $NR_NODES \* 4` = "$NR_PROCS" ]; then
 
-echo /usr/local/VU/reserve.sge/bin/prun -4 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
-/usr/local/VU/reserve.sge/bin/prun -4 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
+	OPTION=-4
 
 elif [ `expr $NR_NODES \* 2` = "$NR_PROCS" ]; then
 
-echo /usr/local/VU/reserve.sge/bin/prun -2 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
-/usr/local/VU/reserve.sge/bin/prun -2 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
-
-else
-
-echo /usr/local/VU/reserve.sge/bin/prun -1 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
-/usr/local/VU/reserve.sge/bin/prun -1 -asocial -t 1:00:00 -np $NR_NODES $JAVA $ARGS
-
-
-
+	OPTION=-2
 
 fi
+
+echo /usr/local/VU/reserve.sge/bin/prun $OPTION -asocial -t $RUNTIME -np $NR_NODES $JAVA $ARGS
+exec /usr/local/VU/reserve.sge/bin/prun $OPTION -asocial -t $RUNTIME -np $NR_NODES $JAVA $ARGS
 

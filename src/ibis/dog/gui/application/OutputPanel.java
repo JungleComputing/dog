@@ -24,6 +24,7 @@ public class OutputPanel extends JPanel implements SpeechInterface {
         textOutput.setLineWrap(true);
         textOutput.setWrapStyleWord(true);
         textOutput.setEditable(false);
+        textOutput.setColumns(40);
         
         JScrollPane textScroll = new JScrollPane(textOutput,
                             JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -44,7 +45,7 @@ public class OutputPanel extends JPanel implements SpeechInterface {
         if (speak) {
             speech.speak(text);
         }
-        textOutput.append(text + "\n");
+        textOutput.insert(text + "\n", 0);
     }
 
     public synchronized void setSpeech(boolean on) {

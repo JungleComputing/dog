@@ -14,15 +14,15 @@ public class LogoPanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
     public LogoPanel() { 
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-   
-        add(new JLabel(new ImageIcon("Images/ibis-logo.png")));
-        add(Box.createRigidArea(new Dimension(5,0)));
-        add(new JLabel(new ImageIcon("Images/JavaGAT.png")));
-        add(Box.createRigidArea(new Dimension(5,0)));
-        add(new JLabel(new ImageIcon("Images/vu.png")));
-        add(Box.createRigidArea(new Dimension(5,0)));
-        add(new JLabel(new ImageIcon("Images/MultimediaN.gif")));        
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(Box.createRigidArea(new Dimension(5,50)));
+        add(new JLabel(new ImageIcon("images/ibis-logo.png")));
+        add(Box.createRigidArea(new Dimension(5,5)));
+        add(new JLabel(new ImageIcon("images/JavaGAT.png")));
+        add(Box.createRigidArea(new Dimension(5,5)));
+        add(new JLabel(new ImageIcon("images/vu.png")));
+        add(Box.createRigidArea(new Dimension(5,5)));
+        add(new JLabel(new ImageIcon("images/MultimediaN.gif")));        
     }
     
     

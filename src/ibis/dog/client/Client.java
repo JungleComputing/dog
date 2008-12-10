@@ -1,5 +1,7 @@
 package ibis.dog.client;
 
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import ibis.dog.gui.application.OutputPanel;
@@ -69,6 +71,14 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         logger.debug("$$$$$$$$$$$$ comm");
 
         comm = new Communication("Client", this);
+        
+        // Install a shutdown hook that terminates ibis. 
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                comm.end();
+            }
+        });
+
 
         logger.debug("$$$$$$$$$$$$ me");
 
