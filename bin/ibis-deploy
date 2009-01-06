@@ -1,1 +1,0 @@
-java -classpath external/deploy/*:external/deploy/javagat/*:external/ipl/*:external/deploy/javagat/castor-1.1.1-xml.jar -Dlog4j.configuration=file:log4j.properties -Dgat.adaptor.path=external/deploy/javagat/adaptors deployer.ibis.IbisDeploy $*
