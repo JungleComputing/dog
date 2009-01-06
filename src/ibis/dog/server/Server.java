@@ -18,8 +18,6 @@ import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
-    
-    
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -40,7 +38,7 @@ public class Server implements Upcall {
         if (master = (PxSystem.myCPU() == 0)) {
 
             comm = new Communication("Server", this);
-            
+
             // Install a shutdown hook that terminates ibis.
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -52,7 +50,7 @@ public class Server implements Upcall {
                     .getLocation());
         }
     }
-    
+
     private void end() {
         System.out.println("Ending server");
         unregister();
@@ -184,6 +182,7 @@ public class Server implements Upcall {
 
         int operation = -1;
         RGB24Image img = null;
+        int id;
 
         if (master) {
 
@@ -196,7 +195,8 @@ public class Server implements Upcall {
                 return;
             }
             operation = r.operation;
-            img = r.image.uncompress();
+            img = r.image.toRGB24();
+            id = r.id;
 
             try {
                 PxSystem.broadcastValue(img.width);
@@ -219,7 +219,7 @@ public class Server implements Upcall {
         }
 
         switch (operation) {
-        case Request.OPERATION_RECOGNISE: {
+        case Request.OPERATION_RECOGNIZE: {
 
             FeatureVector v = new FeatureVector(CxWeibull.getNrInvars(),
                     CxWeibull.getNrRfields());
@@ -247,7 +247,8 @@ public class Server implements Upcall {
             System.err.println("Sending reply....");
             try {
                 comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
-                    new Reply(me, r.sequenceNumber, r.operation, reply));
+                        new Reply(me, r.sequenceNumber, r.id, r.operation,
+                                reply));
             } catch (Exception e) {
                 System.err.println("Failed to return reply to "
                         + r.replyAddress);
