@@ -22,5 +22,5 @@
 	</string>
 	<string name="name">Naam:</string>
 	<string name="author">Auteur:</string>
-	<string name="initializing">Initialiseren van het oog</string>
+	<string name="recognition_failed">Niets herkend</string>
 </resources>

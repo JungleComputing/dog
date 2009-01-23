@@ -35,6 +35,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -64,6 +65,10 @@ public class DogActivityStandalone extends Activity {
 
     private static final int IMAGE_SIZE_SUB = 3;
 
+    private static final int PREFERENCES = 4;
+
+    private static final int ABOUT = 5;
+
     private static final int LEARN_DIALOG = 0;
 
     private static final int LEARNING_DIALOG = 1;
@@ -73,6 +78,8 @@ public class DogActivityStandalone extends Activity {
     private static final int RECOGNIZING_DIALOG = 3;
 
     private static final int RECOGNIZING_DONE_DIALOG = 4;
+
+    private static final int RECOGNIZING_FAILED_DIALOG = 5;
 
     private enum Mode {
         /**
@@ -102,6 +109,10 @@ public class DogActivityStandalone extends Activity {
     protected long mStartOperation;
 
     int mImageSize;
+
+    private boolean mInitializing;
+
+    private double mThreshold = 0.4;
 
     // onPrepareDialog is called each time a dialog appears, whereas
     // onCreateDialog is created once per dialog id. So in this method we've to
@@ -221,6 +232,22 @@ public class DogActivityStandalone extends Activity {
             return new AlertDialog.Builder(DogActivityStandalone.this)
                     .setTitle(R.string.recognition_done).setView(
                             recognizingDoneView).create();
+        case RECOGNIZING_FAILED_DIALOG:
+            final View recognizingFailedView = factory.inflate(
+                    R.layout.recognizingfaileddialog, null);
+            final ImageButton recognizingFailedButton = (ImageButton) recognizingFailedView
+                    .findViewById(R.id.closeButton);
+            recognizingFailedButton
+                    .setOnClickListener(new View.OnClickListener() {
+
+                        public void onClick(View view) {
+                            DogActivityStandalone.this
+                                    .dismissDialog(RECOGNIZING_FAILED_DIALOG);
+                        }
+                    });
+            return new AlertDialog.Builder(DogActivityStandalone.this)
+                    .setTitle(R.string.recognition_failed).setView(
+                            recognizingFailedView).create();
 
         }
 
@@ -238,10 +265,23 @@ public class DogActivityStandalone extends Activity {
         mPreview = new Preview(DogActivityStandalone.this);
         final LinearLayout main = (LinearLayout) findViewById(R.id.top);
         main.addView(mPreview);
+        final Handler handler = new Handler() {
 
-        CxWeibull.initialize(128, 96);
+            public void handleMessage(Message msg) {
+                ((FrameLayout) findViewById(R.id.frame))
+                        .removeView(findViewById(R.id.splashscreen));
+                mInitializing = false;
+            }
 
-        main.removeView(findViewById(R.id.splashscreen));
+        };
+
+        new Thread() {
+            public void run() {
+                CxWeibull.initialize(128, 96);
+                handler.sendEmptyMessage(0);
+            }
+        }.start();
+
     }
 
     @Override
@@ -254,10 +294,12 @@ public class DogActivityStandalone extends Activity {
         switch (keyCode) {
         case KeyEvent.KEYCODE_DPAD_CENTER:
         case KeyEvent.KEYCODE_CAMERA:
-            if (mMode == Mode.LEARN) {
-                doLearn();
-            } else if (mMode == Mode.RECOGNIZE) {
-                doRecognize();
+            if (!mInitializing) {
+                if (mMode == Mode.LEARN) {
+                    doLearn();
+                } else if (mMode == Mode.RECOGNIZE) {
+                    doRecognize();
+                }
             }
             return true;
         }
@@ -341,8 +383,16 @@ public class DogActivityStandalone extends Activity {
                     public void handleMessage(Message msg) {
                         DogActivityStandalone.this
                                 .dismissDialog(RECOGNIZING_DIALOG);
-                        DogActivityStandalone.this
-                                .showDialog(RECOGNIZING_DONE_DIALOG);
+                        switch (msg.what) {
+                        case 0:
+                            DogActivityStandalone.this
+                                    .dismissDialog(RECOGNIZING_DIALOG);
+                            break;
+                        case 1:
+                            DogActivityStandalone.this
+                                    .showDialog(RECOGNIZING_FAILED_DIALOG);
+                            break;
+                        }
                     }
 
                 };
@@ -364,10 +414,9 @@ public class DogActivityStandalone extends Activity {
                 // loop over existing feature vectors
                 try {
                     mCursor = new ObjectRecognition().recognize(v,
-                            DogActivityStandalone.this);
+                            DogActivityStandalone.this, mThreshold);
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    dialogHandler.sendEmptyMessage(1);
                 }
                 dialogHandler.sendEmptyMessage(0);
             }
@@ -454,7 +503,11 @@ public class DogActivityStandalone extends Activity {
         // mOptionsMenu.add(0, IMAGE_SIZE_ADD, 0, "+");
         // mOptionsMenu.add(0, IMAGE_SIZE_SUB, 0, "-");
         mOptionsMenu.add(0, CHANGE_MODE_ID, 0, R.string.change_mode).setIcon(
-                R.drawable.switch_mode);
+                R.drawable.learn_to_rec);
+        // mOptionsMenu.add(0, PREFERENCES, 0,
+        // R.string.preferences).setIcon(R.drawable.preferences);
+        // mOptionsMenu.add(0, ABOUT, 0,
+        // R.string.about).setIcon(R.drawable.about);
         return true;
     }
 
@@ -466,9 +519,11 @@ public class DogActivityStandalone extends Activity {
             if (mMode == Mode.LEARN) {
                 mMode = Mode.RECOGNIZE;
                 view.setImageResource(R.drawable.recognize);
+                item.setIcon(R.drawable.rec_to_learn);
             } else {
                 mMode = Mode.LEARN;
                 view.setImageResource(R.drawable.learn);
+                item.setIcon(R.drawable.learn_to_rec);
             }
             return true;
         case LEARNED_OBJECTS:

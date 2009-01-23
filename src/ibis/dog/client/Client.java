@@ -329,8 +329,9 @@ public class Client extends Thread implements Upcall {
                     Cursor cursor = null;
                     try {
                         System.out.println("before recognition.recognize");
+                        // TODO add decent threshold here!
                         cursor = recognition.recognize(
-                                (FeatureVector) r.result, mActivity);
+                                (FeatureVector) r.result, mActivity, 0.0);
                     } catch (Exception e) {
                         // TODO Auto-generated catch block
                         System.out.println("recognition gave an exception!");

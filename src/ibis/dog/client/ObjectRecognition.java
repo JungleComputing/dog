@@ -12,6 +12,7 @@ import jorus.weibull.CxWeibull;
 
 import org.apache.log4j.Logger;
 
+import android.R;
 import android.app.Activity;
 import android.database.Cursor;
 
@@ -93,14 +94,13 @@ public class ObjectRecognition {
      * null; }
      */
 
-    public synchronized Cursor recognize(FeatureVector source, Activity activity)
-            throws Exception {
+    public synchronized Cursor recognize(FeatureVector source,
+            Activity activity, double threshold) throws Exception {
         long start = System.currentTimeMillis();
-        String result = null;
         double[] weibulls = source.vector;
 
         if (weibulls == null) {
-            throw new Exception("invalid Feature Vector");
+            throw new Exception("Calculation failed");
         }
 
         int MAX_OBJ = 100;
@@ -151,6 +151,9 @@ public class ObjectRecognition {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+        }
+        if (minScore < threshold) {
+            throw new Exception("Below Threshold");
         }
         cursor.moveToPosition(idx);
         System.out.println("objectrecognition.recognize took: "
