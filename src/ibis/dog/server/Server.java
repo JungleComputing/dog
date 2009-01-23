@@ -183,20 +183,20 @@ public class Server implements Upcall {
         int operation = -1;
         RGB24Image img = null;
         int id;
+        long start = 0;
 
         if (master) {
-
             // The master should dequeue a request and broadcast
             // the details.
 
             r = getRequest(DEFAULT_TIMEOUT);
-            System.err.println(PxSystem.myCPU() + " Got request " + r);
             if (r == null) {
                 return;
             }
             operation = r.operation;
             img = r.image.toRGB24();
             id = r.id;
+            start = System.currentTimeMillis();
 
             try {
                 PxSystem.broadcastValue(img.width);
@@ -219,6 +219,7 @@ public class Server implements Upcall {
         }
 
         switch (operation) {
+        case Request.OPERATION_LABELING:
         case Request.OPERATION_RECOGNIZE: {
 
             FeatureVector v = new FeatureVector(CxWeibull.getNrInvars(),
@@ -244,7 +245,10 @@ public class Server implements Upcall {
         }
 
         if (master) {
-            System.err.println("Sending reply....");
+            System.out.println("Calculated Feature Vector for image: "
+                    + img.width + "x" + img.height + " in "
+                    + ((System.currentTimeMillis() - start) / 1000.0)
+                    + " seconds");
             try {
                 comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
                         new Reply(me, r.sequenceNumber, r.id, r.operation,
@@ -253,7 +257,6 @@ public class Server implements Upcall {
                 System.err.println("Failed to return reply to "
                         + r.replyAddress);
             }
-            System.err.println("Reply send....");
         }
     }
 
