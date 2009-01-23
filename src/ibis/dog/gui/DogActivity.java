@@ -27,19 +27,18 @@ public class DogActivity extends DogActivityStandalone {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle extras = getIntent().getExtras();
-        System.setProperty("ibis.server.address", extras
-                .getString("ibis.server.address"));
-        System.setProperty("ibis.server.hub.addresses", extras
-                .getString("ibis.server.hub.addresses"));
-        System
-                .setProperty("ibis.pool.name", extras
-                        .getString("ibis.pool.name"));
-        System.setProperty("ibis.location", extras.getString("ibis.location"));
-        System.setProperty("ibis.deploy.job.id", extras
-                .getString("ibis.deploy.job.id"));
-        System.setProperty("ibis.deploy.job.size", extras
-                .getString("ibis.deploy.job.size"));
+
+        // TODO hardcode these Strings
+        String ibisServerAddress = "";
+        String ibisHubAddresses = "";
+        String ibisPoolName = "";
+        String ibisLocation = "";
+
+        System.setProperty("ibis.server.address", ibisServerAddress);
+        System.setProperty("ibis.server.hub.addresses", ibisHubAddresses);
+        System.setProperty("ibis.pool.name", ibisPoolName);
+        System.setProperty("ibis.location", ibisLocation);
+
         mClient = new Client(this, mPreview.getCamera());
         // make a listener for the client, that shows updates of compute servers
         // on the screen.
@@ -51,6 +50,9 @@ public class DogActivity extends DogActivityStandalone {
                         Toast.LENGTH_LONG).show();
             }
         };
+
+        // TODO show some message until we're initialized instead of this Toast
+        // update
         mClient.registerListener(new ClientListener() {
 
             public void updateServers(ServerData[] servers) {
