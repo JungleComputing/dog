@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<LinearLayout android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+		<LinearLayout android:orientation="horizontal"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:gravity="center">
+			<ImageView android:id="@+id/editImageView"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="0"
+				android:adjustViewBounds="true" android:scaleType="fitCenter"
+				android:padding="5px">
+				<!--  android:maxHeight="300px" android:maxWidth="300px"-->
+			</ImageView>
+		</LinearLayout>
+		<LinearLayout android:orientation="horizontal"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<TextView android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:text="@string/name">
+			</TextView>
+			<EditText android:id="@+id/nameEditText"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</EditText>
+		</LinearLayout>
+		<LinearLayout android:orientation="horizontal"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<TextView android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/author">
+			</TextView>
+			<EditText android:id="@+id/authorEditText"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</EditText>
+		</LinearLayout>
+		<Button android:id="@+id/editButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="OK">
+		</Button>
+	</LinearLayout>
+</ScrollView>

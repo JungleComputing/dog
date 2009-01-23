@@ -1,26 +1,28 @@
 package ibis.dog.client;
 
+import ibis.dog.gui.LearnedObjects.LearnedObject;
 import ibis.dog.shared.FeatureVector;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.ObjectInputStream;
+import java.io.StreamCorruptedException;
+
+import jorus.weibull.CxWeibull;
 
 import org.apache.log4j.Logger;
+
+import android.app.Activity;
+import android.database.Cursor;
 
 public class ObjectRecognition {
 
     private static Logger logger = Logger.getLogger(ObjectRecognition.class);
 
     // Should be dynamic ?
-    public static final int NR_INVARS = 6;
+    public static final int NR_INVARS = CxWeibull.getNrInvars();
 
-    public static final int NR_RFIELDS = 37;
-
-    public static final String OBJFILE = "/data/local/out/ObjRec.out";
+    public static final int NR_RFIELDS = CxWeibull.getNrRfields();
 
     private double weibullDiff(double gam1, double bet1, double gam2,
             double bet2) {
@@ -91,80 +93,78 @@ public class ObjectRecognition {
      * null; }
      */
 
-    public synchronized String recognize(FeatureVector vector) {
+    public synchronized Cursor recognize(FeatureVector source, Activity activity)
+            throws Exception {
+        long start = System.currentTimeMillis();
         String result = null;
-        double[] weibulls = vector.vector;
+        double[] weibulls = source.vector;
 
         if (weibulls == null) {
-            return null;
+            throw new Exception("invalid Feature Vector");
         }
 
-        try {
-            // FIXME: we open a file on every recognize! FIXME!
-            FileInputStream inFile = new FileInputStream(OBJFILE);
-            InputStreamReader in = new InputStreamReader(inFile);
-            BufferedReader buf = new BufferedReader(in);
+        int MAX_OBJ = 100;
+        double[] scores = new double[MAX_OBJ];
 
-            int MAX_OBJ = 100;
-            String[] objNames = new String[MAX_OBJ];
-            double[] scores = new double[MAX_OBJ];
+        int j = 0;
+        int idx = 0;
 
-            int j = 0;
-            int idx = 0;
+        double minScore = 1000.;
 
-            double minScore = 1000.;
+        System.out.println("before recognition.recognize: query");
+        Cursor cursor = activity.managedQuery(LearnedObject.CONTENT_URI,
+                PROJECTION, null, null, LearnedObject.DEFAULT_SORT_ORDER);
 
-            while ((objNames[j] = buf.readLine()) != null) {
-                double[] oldWeibs = new double[2 * NR_INVARS * NR_RFIELDS];
-
-                for (int i = 0; i < oldWeibs.length; i++) {
-                    oldWeibs[i] = (Double.valueOf(buf.readLine()).doubleValue());
-                }
-                scores[j] = getScore(weibulls, oldWeibs);
-
+        for (int i = 0; i < cursor.getCount(); i++) {
+            cursor.moveToPosition(i);
+            int id = cursor.getInt(0); // the id
+            try {
+                ObjectInputStream in = new ObjectInputStream(activity
+                        .getContentResolver().openInputStream(
+                                LearnedObject.getFeatureVectorUri(id)));
+                Object obj = in.readObject();
+                FeatureVector target = (FeatureVector) obj;
+                in.close();
+                System.out.println("done reading feature vector from file: "
+                        + target);
+                scores[j] = getScore(weibulls, target.vector);
+                System.out.println("score for '"
+                        + cursor.getString(cursor
+                                .getColumnIndex(LearnedObject.OBJECT_NAME))
+                        + "': " + scores[j]);
                 if (scores[j] < minScore) {
                     minScore = scores[j];
                     idx = j;
                 }
                 j += 1;
+
+            } catch (StreamCorruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
-
-            result = objNames[idx];
-
-            buf.close();
-            in.close();
-            inFile.close();
-
-        } catch (IOException ioe) {
-            logger.debug("unable to recognize object", ioe);
         }
-        return result;
+        cursor.moveToPosition(idx);
+        System.out.println("objectrecognition.recognize took: "
+                + (System.currentTimeMillis() - start) / 1000.0 + " sec.");
+        return cursor;
     }
 
-    public synchronized boolean learn(String name, FeatureVector vector) {
+    /**
+     * The columns we are interested in from the database
+     */
+    private static final String[] PROJECTION = new String[] {
+            LearnedObject._ID, // 0
+            LearnedObject.OBJECT_NAME, // 1
+            LearnedObject.AUTHOR, // 2
+    };
 
-        double[] weibulls = vector.vector;
-
-        if (weibulls == null) {
-            return false;
-        }
-
-        // Write learned object parameters to file...
-
-        try {
-            FileOutputStream outFile = new FileOutputStream(OBJFILE, true);
-            OutputStreamWriter out = new OutputStreamWriter(outFile, "US-ASCII");
-            out.write(name + "\n");
-
-            for (int i = 0; i < weibulls.length; i++) {
-                out.write(String.valueOf(weibulls[i]) + "\n");
-            }
-            out.close();
-            outFile.close();
-        } catch (IOException ioe) {
-            System.err.println("IOException thrown");
-            return false;
-        }
-        return true;
-    }
 }

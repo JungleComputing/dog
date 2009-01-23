@@ -2,16 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="external/ipl/ibis-io-2.2.jar"/>
-	<classpathentry kind="lib" path="external/ipl/ibis-util-2.2.jar"/>
-	<classpathentry kind="lib" path="external/ipl/ipl-2.2.jar"/>
-	<classpathentry kind="lib" path="external/ipl/ipl-impl-2.2.jar"/>
-	<classpathentry kind="lib" path="external/ipl/ipl-impl-tcp-2.2.jar"/>
-	<classpathentry kind="lib" path="external/ipl/jstun-0.6.1.jar"/>
-	<classpathentry kind="lib" path="external/ipl/sbbi-upnplib-1.0.2.jar"/>
-	<classpathentry kind="lib" path="external/log4j-1.2.13.jar"/>
-	<classpathentry kind="lib" path="external/ipl/smartsockets-1.22.jar"/>
-	<classpathentry kind="lib" path="external/ipl/trilead-ssh2-build213.jar"/>
-	<classpathentry kind="lib" path="external/ipl/ibis-server-2.2.jar"/>
+	<classpathentry kind="lib" path="external/ibis-allinone-2.2.jar"/>
+	<classpathentry kind="lib" path="external/jstun-0.6.1.jar"/>
+	<classpathentry kind="lib" path="external/log4j-over-slf4j-1.5.6.jar"/>
+	<classpathentry kind="lib" path="external/sbbi-upnplib-1.0.2.jar"/>
+	<classpathentry kind="lib" path="external/slf4j-api-1.5.3.jar"/>
+	<classpathentry kind="lib" path="external/trilead-ssh2-build213.jar"/>
+	<classpathentry kind="lib" path="external/smartsockets-1.44.jar"/>
+	<classpathentry kind="lib" path="external/slf4j-on-android-1.5.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

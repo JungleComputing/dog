@@ -1,16 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ibis.dog.gui">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity android:name=".DogActivity" android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-<uses-permission android:name="android.permission.INTERNET"></uses-permission>
-<uses-permission android:name="android.permission.CAMERA"></uses-permission>
-<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"></uses-permission>
-<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
-</manifest> 
+	package="ibis.dog.gui">
+	<provider android:name="LearnedObjectsProvider"
+		android:authorities="ibis.dog.learnedobjects.provider" />
+
+	<application android:icon="@drawable/icon"
+		android:label="@string/app_name">
+		<provider android:name="LearnedObjectsProvider"
+			android:authorities="ibis.dog.learnedobjects.provider" />
+		<activity android:name=".DogActivity"
+			android:label="@string/app_name_grid"
+			android:screenOrientation="landscape"
+			android:configChanges="keyboardHidden|orientation">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category
+					android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".DogActivityStandalone"
+			android:label="@string/app_name"
+			android:screenOrientation="landscape"
+			android:configChanges="keyboardHidden|orientation">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category
+					android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".LearnedObjectsList"
+			android:label="@string/learned_objects">
+		</activity>
+		<activity android:name=".LearnedObjectEditor"
+			android:label="@string/edit_learned_object">
+		</activity>
+	</application>
+	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
+	<uses-permission android:name="android.permission.CAMERA"></uses-permission>
+	<uses-permission
+		android:name="android.permission.CHANGE_NETWORK_STATE">
+	</uses-permission>
+	<uses-permission
+		android:name="android.permission.CHANGE_WIFI_STATE">
+	</uses-permission>
+</manifest>

@@ -1,54 +1,32 @@
 package ibis.dog.gui;
 
 import ibis.dog.client.Client;
+import ibis.dog.client.ClientActionListener;
 import ibis.dog.client.ClientListener;
 import ibis.dog.client.ServerData;
+import ibis.dog.shared.JPEGImage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
+import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class DogActivity extends Activity {
-    private static final CharSequence CHANGE_MODE = "Change mode to ";
-
-    private enum Mode {
-        LEARN, RECOGNIZE
-    };
-
-    private Mode mMode = Mode.LEARN;
-
-    private Menu mOptionsMenu;
+public class DogActivity extends DogActivityStandalone {
 
     private Client mClient;
+
+    private JPEGImage mJPEGImage;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Logger.getRootLogger().addAppender(new AndroidAppender("Dog"));
-        Logger.getRootLogger().setLevel(Level.DEBUG);
-
         Bundle extras = getIntent().getExtras();
         System.setProperty("ibis.server.address", extras
                 .getString("ibis.server.address"));
@@ -57,19 +35,22 @@ public class DogActivity extends Activity {
         System
                 .setProperty("ibis.pool.name", extras
                         .getString("ibis.pool.name"));
+        System.setProperty("ibis.location", extras.getString("ibis.location"));
+        System.setProperty("ibis.deploy.job.id", extras
+                .getString("ibis.deploy.job.id"));
+        System.setProperty("ibis.deploy.job.size", extras
+                .getString("ibis.deploy.job.size"));
+        mClient = new Client(this, mPreview.getCamera());
+        // make a listener for the client, that shows updates of compute servers
+        // on the screen.
 
-        setContentView(R.layout.main);
-
+        final List<Integer> knownServerIDs = new ArrayList<Integer>();
         final Handler statusHandler = new Handler() {
             public void handleMessage(Message msg) {
                 Toast.makeText(DogActivity.this, msg.obj.toString(),
                         Toast.LENGTH_LONG).show();
             }
         };
-
-        final List<Integer> knownServerIDs = new ArrayList<Integer>();
-
-        mClient = new Client();
         mClient.registerListener(new ClientListener() {
 
             public void updateServers(ServerData[] servers) {
@@ -116,150 +97,82 @@ public class DogActivity extends Activity {
                 if (!updateReportBody.equals("")) {
                     statusHandler.sendMessage(Message.obtain(statusHandler, 0,
                             updateReportHeader + updateReportBody));
-                } else {
+                    System.out.println("update: " + updateReportBody);
                 }
             }
         });
         mClient.start();
-        Preview preview = new Preview(this);
-        preview.setMinimumHeight(144);
-        preview.setMinimumWidth(176);
-        LinearLayout main = (LinearLayout) findViewById(R.id.top);
-        main.addView(preview);
     }
 
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-        case KeyEvent.KEYCODE_DPAD_CENTER:
-            if (mMode == Mode.LEARN) {
-                doLearn();
-            } else if (mMode == Mode.RECOGNIZE) {
-                doRecognize();
-            }
-            return true;
-        }
-        return super.onKeyUp(keyCode, event);
-    }
+    void takePicture(final PictureHandler pictureHandler) {
+        mPreview.getCamera().stopPreview();
+        Camera.Parameters params = mPreview.getCamera().getParameters();
+        System.out.println(params.getPictureSize().width + "x"
+                + params.getPictureSize().height);
+        params.setPictureSize(
+                2048 / (int) Math.pow(2, Math.min(mImageSize, 2)),
+                1536 / (int) Math.pow(2, Math.min(mImageSize, 2)));
+        System.out.println(params.getPictureSize().width + "x"
+                + params.getPictureSize().height);
+        mPreview.getCamera().setParameters(params);
+        mPreview.getCamera().takePicture(null, null,
+                new Camera.PictureCallback() {
 
-    private void doLearn() {
-        final LinearLayout learnPopupView = new LinearLayout(this);
-        final TextView learnPopupTextView = new TextView(this);
-        final EditText learnPopupEditText = new EditText(this);
-        learnPopupTextView.setText("This object is a:");
-        learnPopupEditText.setHint("object name");
-        learnPopupView.addView(learnPopupTextView);
-        learnPopupView.addView(learnPopupEditText);
-
-        new AlertDialog.Builder(this).setTitle("Enter object name").setView(
-                learnPopupView).setPositiveButton("OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        if (mClient.learn(learnPopupEditText.getText()
-                                .toString())) {
-                            Toast.makeText(
-                                    DogActivity.this,
-                                    "I just learned a new object: "
-                                            + learnPopupEditText.getText(),
-                                    Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(
-                                    DogActivity.this,
-                                    "I failed to learn a new object: "
-                                            + learnPopupEditText.getText(),
-                                    Toast.LENGTH_LONG).show();
-                        }
+                    public void onPictureTaken(byte[] data, Camera camera) {
+                        mStartPreviewHandler.sendEmptyMessage(1);
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = Math.max(1, (int) Math.pow(2,
+                                (mImageSize - 2)));
+                        mThumb = BitmapFactory.decodeByteArray(data, 0,
+                                data.length, options);
+                        System.out.println("thumb: " + mThumb.getWidth() + "x"
+                                + mThumb.getHeight() + " for imagesize: "
+                                + mImageSize);
+                        mJPEGImage = new JPEGImage(camera.getParameters()
+                                .getPictureSize().width, camera.getParameters()
+                                .getPictureSize().height, data);
+                        pictureHandler.pictureTaken();
                     }
-                })
+                });
 
-        .create().show();
     }
 
-    private void doRecognize() {
-        String recognizedObject = mClient.recognize();
-        Toast.makeText(
-                DogActivity.this,
-                recognizedObject == null ? "I don't recognize this object!"
-                        : recognizedObject, Toast.LENGTH_LONG).show();
-    }
+    protected void learn(final Handler dialogHandler, final String name,
+            final String author, final long createdDate) {
+        try {
+            mStartOperation = System.currentTimeMillis();
+            mClient.learn(name, author, mJPEGImage, new ClientActionListener() {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        mOptionsMenu = menu;
-        mOptionsMenu.add(CHANGE_MODE.toString()
-                + (mMode == Mode.LEARN ? Mode.RECOGNIZE : Mode.LEARN));
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getTitle().toString().startsWith(CHANGE_MODE.toString())) {
-            if (mMode == Mode.LEARN) {
-                mMode = Mode.RECOGNIZE;
-
-            } else {
-                mMode = Mode.LEARN;
-            }
-            mOptionsMenu.clear();
-            mOptionsMenu.add(CHANGE_MODE.toString()
-                    + (mMode == Mode.LEARN ? Mode.RECOGNIZE : Mode.LEARN));
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    class Preview extends SurfaceView implements SurfaceHolder.Callback {
-        SurfaceHolder mHolder;
-
-        Camera mCamera;
-
-        Preview(Context context) {
-            super(context);
-
-            // Install a SurfaceHolder.Callback so we get notified when the
-            // underlying surface is created and destroyed.
-            mHolder = getHolder();
-            mHolder.addCallback(this);
-            mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        }
-
-        public void surfaceCreated(SurfaceHolder holder) {
-            // The Surface has been created, acquire the camera and tell it
-            // where
-            // to draw.
-            mCamera = Camera.open();
-            Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setPreviewFrameRate(1);
-            mCamera.setParameters(parameters);
-            mCamera.setPreviewCallback(new Camera.PreviewCallback() {
-                public void onPreviewFrame(byte[] data, Camera camera) {
-                    mClient.gotImage(data, mCamera.getParameters()
-                            .getPreviewSize().width, mCamera.getParameters()
-                            .getPreviewSize().height);
+                public void replyReceived(Cursor cursor) {
+                    mCursor = cursor;
+                    dialogHandler.sendEmptyMessage(0);
                 }
+
             });
-            mCamera.setPreviewDisplay(holder);
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to learn: " + e, Toast.LENGTH_LONG);
+            e.printStackTrace();
         }
+    }
 
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            // Surface will be destroyed when we return, so stop the preview.
-            // Because the CameraDevice object is not a shared resource, it's
-            // very
-            // important to release it when the activity is paused.
-            mCamera.stopPreview();
-            mCamera = null;
-        }
+    protected void recognize(final Handler dialogHandler) {
+        try {
+            mStartOperation = System.currentTimeMillis();
+            mClient.recognize(mJPEGImage, new ClientActionListener() {
 
-        public void surfaceChanged(SurfaceHolder holder, int format, int w,
-                int h) {
-            // Now that the size is known, set up the camera parameters and
-            // begin
-            // the preview.
-            Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setPreviewSize(w, h);
-            mCamera.setParameters(parameters);
-            mCamera.startPreview();
+                public void replyReceived(Cursor cursor) {
+                    mCursor = cursor;
+                    dialogHandler.sendEmptyMessage(0);
+                }
+
+            });
+        } catch (Exception e) {
+            Toast
+                    .makeText(this, "Failed to recognize: " + e,
+                            Toast.LENGTH_LONG);
+            e.printStackTrace();
         }
 
     }
+
 }

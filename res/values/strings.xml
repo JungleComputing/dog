@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, DogActivity</string>
-    <string name="app_name">Dog</string>
+	<string name="app_name_grid">Grid eyeDentify</string>
+	<string name="app_name">eyeDentify</string>
+	<string name="change_mode">Change Mode to</string>
+	<string name="recognize">Recognize</string>
+	<string name="recognizing">Recognizing ...</string>
+	<string name="recognizing_done">Recognizing Done</string>
+	<string name="learn">Learn</string>
+	<string name="learning">Learning ...</string>
+	<string name="learning_done">Learning Done</string>
+	<string name="learned_objects">Learned Objects</string>
+	<string name="edit_learned_object">Edit Learned Object</string>
+	<string name="enter_name">Enter Name</string>
+	<string name="recognition_results">
+		This Object is a:\nTaught by:\nRecognition Time:
+	</string>
+	<string name="no_items_yet">
+		No items taught to EyeDentify. You can teach objects in learning
+		mode.
+	</string>
+	<string name="name">Name: </string>
+	<string name="author">Author: </string>
+
 </resources>
