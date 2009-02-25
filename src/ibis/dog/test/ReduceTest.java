@@ -12,15 +12,15 @@ public class ReduceTest {
 		throws Exception { 
 		
 		for (int c=0;c<count;c++) { 
-			PxSystem.reduceArrayToAllOFT(array, op);					
+			PxSystem.reduceArrayToAllOFT_Flat_Orig(array, op);					
 		}
 	}
-
+	
 	private static final void testAlg2(final int count, final double [] array, final CxRedOpArray op)
 		throws Exception { 
 
 		for (int c=0;c<count;c++) { 
-			PxSystem.reduceArrayToAllOFT_JASON(array, op);					
+			PxSystem.reduceArrayToAllOFT_Flat_ReceiveAny(array, op);					
 		}
 	}
 
@@ -28,7 +28,7 @@ public class ReduceTest {
 		throws Exception { 
 
 		for (int c=0;c<count;c++) { 
-			PxSystem.reduceArrayToAllOFT_JASON2(array, op);					
+			PxSystem.reduceArrayToAllOFT_Flat_Upcalls(array, op);					
 		}
 		
 	}
@@ -37,11 +37,9 @@ public class ReduceTest {
 		throws Exception { 
 
 		for (int c=0;c<count;c++) { 
-			PxSystem.reduceArrayToAllOFT_JASON3(array, op);					
+			PxSystem.reduceArrayToAllOFT_Ring(array, op);					
 		}
-
 	}
-
 	
 	public static void main(String [] args) { 
 

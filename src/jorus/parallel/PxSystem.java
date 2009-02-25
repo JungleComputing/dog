@@ -335,7 +335,7 @@ public class PxSystem {
 		return a;
 	}
 
-	public static double[] reduceArrayToAllOFT_JASON(double [] a, CxRedOpArray op) throws Exception {
+	public static double[] reduceArrayToAllOFT_Flat_ReceiveAny(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 		long start = System.nanoTime();
 
@@ -393,7 +393,7 @@ public class PxSystem {
 		return a;
 	}
 
-	public static double[] reduceArrayToAllOFT_JASON2(double [] a, CxRedOpArray op) throws Exception {
+	public static double[] reduceArrayToAllOFT_Flat_Upcalls(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 		long start = System.nanoTime();
 
@@ -464,7 +464,7 @@ public class PxSystem {
 		return a;
 	}
 
-	public static double[] reduceArrayToAllOFT_JASON3(double [] a, CxRedOpArray op) throws Exception {
+	public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 
 		if (nrCPUs > 1) { 
@@ -607,7 +607,7 @@ public class PxSystem {
 
 	
 	
-	public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
+	public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
 	throws Exception {
 //		Added -- J
 		long start = System.nanoTime();
@@ -658,8 +658,10 @@ public class PxSystem {
 		return a;
 	}
 
-
-
+	public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
+		throws Exception {
+		return reduceArrayToAllOFT_Ring(a, op);
+	}	
 
 	public static void scatterOFT(CxArray2d a) throws Exception {
 		// Added -- J
