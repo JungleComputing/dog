@@ -19,7 +19,15 @@ public class CxSetBorderMirrorDouble extends CxSetBorder<double[]>
 	public void doIt(double[] dst, int numX, int numY)
 	{
 		if (doParallel) {
+			
+		//	long start = System.currentTimeMillis();
+			
 			doItParallel(dst, numX, numY);
+			
+		//	long end = System.currentTimeMillis();
+
+		//	System.out.println("Exchange time " + (end-start));
+			
 		} else {
 			doItSequential(dst, numX, numY);
 		}

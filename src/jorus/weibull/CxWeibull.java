@@ -12,6 +12,10 @@
 package jorus.weibull;
 
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+
 import jorus.array.*;
 import jorus.pixel.*;
 import jorus.patterns.*;
@@ -24,7 +28,7 @@ public class CxWeibull
 	private static String OUTFILE =
 						"/home/fjseins/Java/SCALE/Images/outfile.jpg";
 
-	private static double	M_PI = 3.14159265358979323846;
+	//private static double	M_PI = 3.14159265358979323846;
 	private static int		NR_INVAR_IMS = 13;
 	private static int		NR_INVARS	 = 6;
 	private static int		NR_RFIELDS	 = 37;
@@ -85,8 +89,16 @@ public class CxWeibull
 
 	private static void initialize(int inImW, int inImH)
 	{
+		MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+		
 		// Create central Gaussian at high resolution
 
+		MemoryUsage mu = mbean.getHeapMemoryUsage();
+		
+		System.out.println("Memory used: " + mu.getUsed());
+		
+		long start = System.currentTimeMillis();
+		
 		double	sigma = 30.0 * (double)inImH / 576;
 		int		centerx = inImW/2;
 		int		centery = inImH/2;
@@ -102,7 +114,12 @@ public class CxWeibull
 		rfIm[0] = pntIm.gaussDerivative(sigma, 0, 0, 5.);
 		pntIm.setSingleValue(zero, centerx, centery, true);
 
-
+		mu = mbean.getHeapMemoryUsage();
+		System.out.println("Memory used: " + mu.getUsed());
+		
+		
+		long init = System.currentTimeMillis();
+		
 		// Create remaining Gaussians in circular fashion around center
 
 		int		idx = 1;
@@ -114,8 +131,8 @@ public class CxWeibull
 		for (int n=1; n<=order; n++) {
 			r += dens*sigma;
 			for (int phi=0; phi<n*radialdens; phi++) {
-				double xp = r*Math.cos(2*M_PI*phi/(n*radialdens));
-				double yp = -r*Math.sin(2*M_PI*phi/(n*radialdens));
+				double xp = r*Math.cos(2*Math.PI*phi/(n*radialdens));
+				double yp = -r*Math.sin(2*Math.PI*phi/(n*radialdens));
 				int x = (int)(centerx + xp);
 				int y = (int)(centery + yp);
 				if (x >= sigma && y >= sigma &&
@@ -125,9 +142,26 @@ public class CxWeibull
 					pntIm.setSingleValue(zero, x, y, true);
 					idx++;
 				}
+				
+				mu = mbean.getHeapMemoryUsage();
+				System.out.println("Memory used after " + n + ", " + phi + ": " + mu.getUsed());
 			}
+			
+			mu = mbean.getHeapMemoryUsage();
+			System.out.println("Memory used after " + n + ": " + mu.getUsed());
+			
 			r += dens*sigma;
 		}
+		
+		long end = System.currentTimeMillis();
+
+		mu = mbean.getHeapMemoryUsage();
+		System.out.println("Memory used (END): " + mu.getUsed());
+		
+		System.out.println("Initialization took " + (end-start));
+		System.out.println("     hi-res         " + (init-start));
+		System.out.println("     circles        " + (end-init));
+				
 		initialized = true;
 	}
 
@@ -209,12 +243,16 @@ public class CxWeibull
 	public static void doRecognize(int width, int height,
 								   byte[] bArray, double[] vector)
 	{
+		
+		long start = System.currentTimeMillis();
+		
 		if (!initialized) {
 //			System.out.println("Creating Gaussian images...");
 			initialize(width, height);
 //			System.out.println("Done.");
 		}
 
+		long init = System.currentTimeMillis();
 
 		// Create CxArray2d from file image data
 
@@ -222,12 +260,15 @@ public class CxWeibull
 								height, CxConvert.toDoubles(bArray));
 
 
+		long createInput = System.currentTimeMillis();
+		
 		// Create all invariant images
 
 //		System.out.println("Building invariant images...");
 		buildInvariantImages(input);
 //		System.out.println("Done.");
 
+		long buildInvar = System.currentTimeMillis();
 
 		// Initialize histos, betas, and gammas
 
@@ -281,6 +322,8 @@ public class CxWeibull
 		}
 //		System.out.println("Done.");
 
+		long createHistos = System.currentTimeMillis();
+		
 
 		// Calculate all Weibull fits
 
@@ -387,6 +430,15 @@ public class CxWeibull
 //}
 			}
 		}
+		
+		long doWeibuls = System.currentTimeMillis();
+		
+		System.out.println("     Total weibul time " + (doWeibuls-start));
+		System.out.println("            init       " + (init-start));
+		System.out.println("            input      " + (createInput-init));
+		System.out.println("            invar      " + (buildInvar-createInput));
+		System.out.println("            histos     " + (createHistos-buildInvar));
+		System.out.println("            weibul     " + (doWeibuls-createHistos));
 	}
 
 

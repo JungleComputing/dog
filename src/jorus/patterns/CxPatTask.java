@@ -32,6 +32,9 @@ public class CxPatTask
 								PxSystem.nrCPUs() == PxSystem.myCPU()) {
 							task.doIt(i, j);
 						}
+						
+						// Added -- Jason
+						taskNr++;						
 					}
 				}
 				for (int j=0; j<jMax; j++) {

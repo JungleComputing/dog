@@ -19,4 +19,12 @@ public class CxRedOpAddIntArray extends CxRedOpArray<int[]>
 			src1[i] += src2[i];
 		}
 	}
+	
+	@Override
+	public void doItRange(int[] src1, int[] src2, int startIndex, int length) {
+		for (int i=0; i<length; i++) {
+			src1[startIndex+i] += src2[i];
+		}
+	}
+
 }

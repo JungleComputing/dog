@@ -185,12 +185,22 @@ public class Server implements Upcall {
         int operation = -1;
         RGB24Image img = null;
 
+        long start = System.currentTimeMillis();
+        long request = start;
+        long decompress = start;
+        long endop;
+        long commdone;
+        long end;
+         
         if (master) {
 
             // The master should dequeue a request and broadcast
             // the details.
 
             r = getRequest(DEFAULT_TIMEOUT);
+        
+            request = System.currentTimeMillis();
+            
             System.err.println(PxSystem.myCPU() + " Got request " + r);
             if (r == null) {
                 return;
@@ -198,6 +208,8 @@ public class Server implements Upcall {
             operation = r.operation;
             img = r.image.uncompress();
 
+            decompress = System.currentTimeMillis();
+            
             try {
                 PxSystem.broadcastValue(img.width);
                 PxSystem.broadcastValue(img.height);
@@ -218,6 +230,8 @@ public class Server implements Upcall {
             }
         }
 
+        commdone = System.currentTimeMillis();
+        
         switch (operation) {
         case Request.OPERATION_RECOGNISE: {
 
@@ -225,6 +239,8 @@ public class Server implements Upcall {
                     CxWeibull.getNrRfields());
             CxWeibull.doRecognize(img.width, img.height, img.pixels, v.vector);
             reply = v;
+            
+            
             break;
         }
             // case Request.OPERATION_LABELING: {
@@ -243,6 +259,8 @@ public class Server implements Upcall {
         }
         }
 
+        endop = System.currentTimeMillis();
+        
         if (master) {
             System.err.println("Sending reply....");
             try {
@@ -254,6 +272,18 @@ public class Server implements Upcall {
             }
             System.err.println("Reply send....");
         }
+        
+        end = System.currentTimeMillis();
+        
+        System.out.println("Total time   " + (end-start) + " ms.");
+        System.out.println("  request    " + (request-start) + " ms.");
+        System.out.println("  decompress " + (decompress-request) + " ms.");
+        System.out.println("  bcast      " + (commdone-decompress) + " ms.");
+        System.out.println("  op         " + (endop-commdone) + " ms.");
+        System.out.println("  reply      " + (end-endop) + " ms.");
+        
+        PxSystem.printStatistics();
+        
     }
 
     private void run() {

@@ -108,7 +108,9 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
 					byte opcode, Object ... objects) throws IOException
 	{ 
         // Create a sendport and connect to the target
-        SendPort sp = ibis.createSendPort(portType);
+     
+    	// NOTE: This may be expensive !!! -- Jason
+    	SendPort sp = ibis.createSendPort(portType);
         
         if (target.receiveID != null) { 
             sp.connect(target.receiveID, DEFAULT_TIMEOUT, true);

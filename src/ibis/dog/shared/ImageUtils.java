@@ -5,7 +5,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import com.sun.image.codec.jpeg.ImageFormatException;
 import com.sun.image.codec.jpeg.JPEGCodec;
@@ -90,4 +93,36 @@ public class ImageUtils {
 
         return bdest;
     }
+    
+    public static RGB32Image load(File file) throws IOException { 
+		
+		BufferedImage image = ImageIO.read(file);
+
+		final int width = image.getWidth();
+		final int height = image.getHeight();
+		
+		int [] argbs = new int[width*height];
+		
+		image.getRGB(0, 0, width, height, argbs, 0, width);
+		
+		return new RGB32Image(width,height,argbs);
+	}
+		
+	public static RGB24Image convertRGB24toRGB32(RGB32Image input) { 
+		
+		final int width = input.width;
+		final int height = input.height;
+		
+		final int [] argbs = input.pixels; 
+		
+		byte [] data = new byte[width*height*3];
+		
+		for (int i=0; i<width*height; i++) {
+			data[i*3]   = (byte)((argbs[i] & 0x00FF0000) >> 16);
+			data[i*3+1] = (byte)((argbs[i] & 0x0000FF00) >> 8);
+			data[i*3+2] = (byte)((argbs[i] & 0x000000FF));
+		}
+
+		return new RGB24Image(width, height, data);
+	}
 }

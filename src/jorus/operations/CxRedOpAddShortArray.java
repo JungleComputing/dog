@@ -19,4 +19,12 @@ public class CxRedOpAddShortArray extends CxRedOpArray<short[]>
 			src1[i] += src2[i];
 		}
 	}
+	
+	@Override
+	public void doItRange(short[] src1, short[] src2, int startIndex, int length) {
+		for (int i=0; i<length; i++) {
+			src1[startIndex+i] += src2[i];
+		}
+	}
+
 }
