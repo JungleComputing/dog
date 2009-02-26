@@ -521,6 +521,8 @@ public class PxSystem {
 		final int size = a.length / nrCPUs; 
 		final int left = a.length % nrCPUs; 
 		
+	//	System.out.println("Data size: " + a.length + " div: " + size + " mod: " + left);
+		
 		for (int i=0;i<nrCPUs;i++) { 
 			
 			if (left > 0) {
@@ -529,14 +531,14 @@ public class PxSystem {
 					index[i] = size * i + i;
 				} else { 
 					sizes[i] = size;
-					index[i] = size * i + nrCPUs;
+					index[i] = size * i + left;
 				}
 			} else { 
 				sizes[i] = size;
 				index[i] = size * i;
 			}
 			
-			//System.out.println(i + " index: " + index[i] + " size: " + sizes[i]);
+	//		System.out.println(i + " index: " + index[i] + " size: " + sizes[i]);
 		}
 		
 		// Create a temporary array for recieving data
@@ -545,8 +547,8 @@ public class PxSystem {
 		final int sendPartner = (myCPU + 1) % nrCPUs;
 		final int receivePartner = (myCPU + nrCPUs - 1) % nrCPUs;
 
-		//System.out.println("Send partner: " + sendPartner);
-		//System.out.println("Receive partner: " + receivePartner);
+	//	System.out.println("Send partner: " + sendPartner);
+	//	System.out.println("Receive partner: " + receivePartner);
 		
 		if (rps[receivePartner] == null) {
 			rps[receivePartner] = ibis.createReceivePort(portType, COMM_ID
@@ -563,6 +565,20 @@ public class PxSystem {
 	
 		final SendPort sp = sps[sendPartner];
 		
+		SendPortIdentifier [] s = rp.connectedTo();
+		
+		while (s.length == 0) { 
+			//System.out.println("EEP: no connections to RP yet!");
+			
+			try { 
+				Thread.sleep(10);
+			} catch (Exception e) {
+				// ignore
+			}
+			
+			s = rp.connectedTo();			
+		}
+		
 		// Determine the starting partition for this node.
 		int sendPartition = myCPU;
 		int receivePartition = (myCPU + nrCPUs - 1) % nrCPUs;
@@ -573,7 +589,7 @@ public class PxSystem {
 		// Perform nrCPUs-1 rounds of the algorithm
 		for (int i=0;i<nrCPUs-1;i++) { 
 
-			//System.out.println("Iteration: " + i);
+	//		System.out.println("Iteration: " + i);
 			
 			if ((myCPU & 1) == 0) { 
 				
@@ -603,8 +619,8 @@ public class PxSystem {
 			sendPartition = receivePartition;
 			receivePartition = (receivePartition + nrCPUs - 1) % nrCPUs;
 
-			//System.out.println("Send partition: " + sendPartition);
-			//System.out.println("Receive partition: " + receivePartition);
+		//	System.out.println("Send partition: " + sendPartition);
+		//	System.out.println("Receive partition: " + receivePartition);
 
 		}
 		
@@ -755,6 +771,100 @@ public class PxSystem {
 	}
 
 	public static void borderExchange(double[] a, int width, int height,
+			int off, int stride, int ySize) throws Exception {	
+		borderExchange_Orig(a, width, height, off, stride, ySize);		
+	}
+	
+	public static void borderExchange_Jason(double[] a, int width, int height,
+			int off, int stride, int ySize) throws Exception {
+
+		// Added -- J
+		long start = System.nanoTime();
+
+		// Border exchange in vertical direction (top <---> bottom)
+		int part1 = myCPU - 1;
+		int part2 = myCPU + 1;
+		int xSize = width + stride;
+
+		// Do some necessary initialisations. Note that these are only performed
+		// the first time the operation is used. 		
+		if (rps[part1] == null) {
+			rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
+			rps[part1].enableConnections();
+		}
+
+		if (rps[part2] == null) {
+			rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
+			rps[part2].enableConnections();
+		}
+
+		if (sps[part1] == null) {
+			sps[part1] = ibis.createSendPort(portType);
+			sps[part1].connect(world[part1], COMM_ID + myCPU);
+		}
+
+		if (sps[part2] == null) {
+			sps[part2] = ibis.createSendPort(portType);
+			sps[part2].connect(world[part2], COMM_ID + myCPU);
+		}
+		
+		if ((myCPU & 1) == 0) { 
+
+			if (part1 >= 0) {
+				
+				WriteMessage w = sps[part1].newMessage();
+				w.writeArray(a, off - stride / 2, xSize * ySize);
+				w.finish();
+			
+				ReadMessage r = rps[part1].receive();
+				r.readArray(a, 0, xSize * ySize);
+				r.finish();				
+			}
+			
+			if (part2 < PxSystem.nrCPUs()) {
+				
+				ReadMessage r = rps[part2].receive();
+				r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
+				r.finish();
+
+				WriteMessage w = sps[part2].newMessage();
+				w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
+				w.finish();
+			}
+			
+		} else { 
+
+			if (part2 < PxSystem.nrCPUs()) {
+				
+				ReadMessage r = rps[part2].receive();
+				r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
+				r.finish();
+
+				WriteMessage w = sps[part2].newMessage();
+				w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
+				w.finish();
+			}
+			
+			if (part1 >= 0) {
+			
+				WriteMessage w = sps[part1].newMessage();
+				w.writeArray(a, off - stride / 2, xSize * ySize);
+				w.finish();			
+			
+				ReadMessage r = rps[part1].receive();
+				r.readArray(a, 0, xSize * ySize);
+				r.finish();
+			}
+
+		}
+		
+		// Added -- J
+		timeBorderExchange += System.nanoTime() - start;
+	}
+
+	
+	
+	public static void borderExchange_Orig(double[] a, int width, int height,
 			int off, int stride, int ySize) throws Exception {
 		// Added -- J
 		long start = System.nanoTime();
@@ -775,6 +885,7 @@ public class PxSystem {
 			w.writeArray(a, off - stride / 2, xSize * ySize);
 			w.finish();
 		}
+		
 		if (part2 < PxSystem.nrCPUs()) {
 			if (rps[part2] == null) {
 				rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);

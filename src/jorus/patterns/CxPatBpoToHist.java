@@ -51,7 +51,8 @@ if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 2...");
 										new CxRedOpAddDoubleArray());
 
 			} catch (Exception e) {
-				//
+				System.err.println("Failed to perform operation!");
+				e.printStackTrace(System.err);
 			}
 
 		} else {									// run sequential
