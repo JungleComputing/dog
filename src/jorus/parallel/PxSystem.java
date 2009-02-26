@@ -9,15 +9,25 @@
 
 package jorus.parallel;
 
-import ibis.ipl.*;
-import jorus.array.*;
-import jorus.operations.*;
+import ibis.ipl.Ibis;
+import ibis.ipl.IbisCapabilities;
+import ibis.ipl.IbisFactory;
+import ibis.ipl.IbisIdentifier;
+import ibis.ipl.MessageUpcall;
+import ibis.ipl.PortType;
+import ibis.ipl.ReadMessage;
+import ibis.ipl.ReceivePort;
+import ibis.ipl.SendPort;
+import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import com.sun.org.apache.bcel.internal.generic.CPInstruction;
+import jorus.array.CxArray2d;
+import jorus.array.CxArray2dDoubles;
+import jorus.operations.CxRedOp;
+import jorus.operations.CxRedOpArray;
 
 public class PxSystem {
 	/** * Ibis Capabilities & PortTypes ******************************* */
@@ -97,23 +107,33 @@ public class PxSystem {
 
 	private static boolean initialized = false;
 
+	
 	private static long timeBarrierSBT;
-
+	private static long countBarrierSBT;
+	
 	private static long timeReduceValueToRoot0FT;
+	private static long countReduceValueToRoot0FT;
 
 	private static long timeReduceArrayToRoot0FT;
+	private static long countReduceArrayToRoot0FT;
 
 	private static long timeReduceArrayToAll0FT;
+	private static long countReduceArrayToAll0FT;
 
 	private static long timeScatter0FT;
-
+	private static long countScatter0FT;
+	
 	private static long timeGather0FT;
+	private static long countGather0FT;
 
 	private static long timeBroadcastSBT;
+	private static long countBroadcastSBT;
 
 	private static long timeBroadcastValue;
+	private static long countBroadcastValue;
 
 	private static long timeBorderExchange;
+	private static long countBorderExchange;
 
 	/** * Public Methods ********************************************** */
 
@@ -159,21 +179,26 @@ public class PxSystem {
 
 	public static void printStatistics() {
 
-		long total = timeBarrierSBT + timeReduceValueToRoot0FT
-		+ timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
-		+ timeScatter0FT + timeGather0FT + timeBroadcastSBT
-		+ timeBroadcastValue + timeBorderExchange;
+		long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
+			+ timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
+			+ timeScatter0FT + timeGather0FT + timeBroadcastSBT
+			+ timeBroadcastValue + timeBorderExchange;
 
-		System.out.printf("Total communication time %.2f usec\n", (total / 1000.0));
-		System.out.printf("            barrier time %.2f usec\n", (timeBarrierSBT / 1000.0));
-		System.out.printf("          reduceV2R time %.2f usec\n", (timeReduceValueToRoot0FT / 1000.0));
-		System.out.printf("          reduceA2R time %.2f usec\n", (timeReduceArrayToRoot0FT / 1000.0));
-		System.out.printf("          reduceA2A time %.2f usec\n", (timeReduceArrayToAll0FT / 1000.0));
-		System.out.printf("            scatter time %.2f usec\n", (timeScatter0FT / 1000.0));
-		System.out.printf("             gather time %.2f usec\n", (timeGather0FT / 1000.0));
-		System.out.printf("       broadcastSBT time %.2f usec\n", (timeBroadcastSBT / 1000.0));
-		System.out.printf("     broadcastValue time %.2f usec\n", (timeBroadcastValue / 1000.0));
-		System.out.printf("     borderExchange time %.2f usec\n", (timeBorderExchange / 1000.0));
+		long totalCount = countBarrierSBT + countReduceValueToRoot0FT
+			+ countReduceArrayToRoot0FT + countReduceArrayToAll0FT
+			+ countScatter0FT + countGather0FT + countBroadcastSBT
+			+ countBroadcastValue + countBorderExchange;
+		
+		System.out.printf("Total communication time %.2f usec, count %d\n", (totalTime / 1000.0), totalCount);
+		System.out.printf("            barrier time %.2f usec, count %d\n", (timeBarrierSBT / 1000.0), countBarrierSBT);
+		System.out.printf("          reduceV2R time %.2f usec, count %d\n", (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
+		System.out.printf("          reduceA2R time %.2f usec, count %d\n", (timeReduceArrayToRoot0FT / 1000.0), countReduceArrayToRoot0FT);
+		System.out.printf("          reduceA2A time %.2f usec, count %d\n", (timeReduceArrayToAll0FT / 1000.0), countReduceArrayToAll0FT);
+		System.out.printf("            scatter time %.2f usec, count %d\n", (timeScatter0FT / 1000.0), countScatter0FT);
+		System.out.printf("             gather time %.2f usec, count %d\n", (timeGather0FT / 1000.0), countGather0FT);
+		System.out.printf("       broadcastSBT time %.2f usec, count %d\n", (timeBroadcastSBT / 1000.0), countBroadcastSBT);
+		System.out.printf("     broadcastValue time %.2f usec, count %d\n", (timeBroadcastValue / 1000.0), countBroadcastValue);
+		System.out.printf("     borderExchange time %.2f usec, count %d\n", (timeBorderExchange / 1000.0), countBorderExchange);
 
 		timeBarrierSBT = 0;
 		timeReduceValueToRoot0FT = 0;
@@ -185,6 +210,15 @@ public class PxSystem {
 		timeBroadcastValue = 0;
 		timeBorderExchange = 0;
 
+		countBarrierSBT = 0;
+		countReduceValueToRoot0FT = 0;
+		countReduceArrayToRoot0FT = 0;
+		countReduceArrayToAll0FT = 0;
+		countScatter0FT = 0;
+		countGather0FT = 0;
+		countBroadcastSBT = 0;
+		countBroadcastValue = 0;
+		countBorderExchange = 0;
 	}
 
 	public static void exitParallelSystem() throws Exception {
@@ -263,6 +297,7 @@ public class PxSystem {
 
 		// Added -- J
 		timeBarrierSBT += System.nanoTime() - start;
+		countBarrierSBT++;
 	}
 
 	public static double reduceValueToRootOFT(double val, CxRedOp op)
@@ -296,7 +331,8 @@ public class PxSystem {
 
 		// Added -- J
 		timeReduceValueToRoot0FT += System.nanoTime() - start;
-
+		countReduceValueToRoot0FT++;
+		
 		return result;
 	}
 
@@ -331,7 +367,8 @@ public class PxSystem {
 
 		// Added -- J
 		timeReduceArrayToRoot0FT += System.nanoTime() - start;
-
+		countReduceArrayToRoot0FT++;
+		
 		return a;
 	}
 
@@ -389,7 +426,8 @@ public class PxSystem {
 
 		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
-
+		countReduceArrayToAll0FT++;
+		
 		return a;
 	}
 
@@ -460,14 +498,15 @@ public class PxSystem {
 
 		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
-
+		countReduceArrayToAll0FT++;
+		
 		return a;
 	}
 
 	public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 
-		if (nrCPUs > 1) { 
+		if (nrCPUs == 1) { 
 			return a;
 		}
 		
@@ -601,7 +640,8 @@ public class PxSystem {
 
 		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
-
+		countReduceArrayToAll0FT++;
+		
 		return a;
 	}
 
@@ -652,9 +692,10 @@ public class PxSystem {
 			r.finish();
 		}
 
-//		Added -- J
+		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
-
+		countReduceArrayToAll0FT++;
+		
 		return a;
 	}
 
@@ -677,6 +718,7 @@ public class PxSystem {
 
 		// Added -- J
 		timeScatter0FT += System.nanoTime() - start;
+		countScatter0FT++;
 	}
 
 	public static void gatherOFT(CxArray2d a) throws Exception {
@@ -692,6 +734,7 @@ public class PxSystem {
 
 		// Added -- J
 		timeGather0FT += System.nanoTime() - start;
+		countGather0FT++;
 	}
 
 	public static void broadcastSBT(CxArray2d a) throws Exception {
@@ -708,6 +751,7 @@ public class PxSystem {
 
 		// Added -- J
 		timeBroadcastSBT += System.nanoTime() - start;
+		countBroadcastSBT++;
 	}
 
 	public static void borderExchange(double[] a, int width, int height,
@@ -763,6 +807,7 @@ public class PxSystem {
 
 		// Added -- J
 		timeBorderExchange += System.nanoTime() - start;
+		countBorderExchange++;
 	}
 
 	private static int getPartHeight(int height, int CPUnr) {
@@ -799,9 +844,7 @@ public class PxSystem {
 		int bHeight = a.getBorderHeight();
 		double[] pData = new double[(pWidth + bWidth * 2)
 		                            * (pHeight + bHeight * 2) * extent];
-		a
-		.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE,
-				CxArray2d.NONE);
+		a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
 
 		int xSize = (pWidth + bWidth * 2) * extent;
 		if (myCPU == 0) {
