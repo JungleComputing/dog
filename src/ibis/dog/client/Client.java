@@ -2,7 +2,8 @@ package ibis.dog.client;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
@@ -18,7 +19,7 @@ import ibis.video4j.VideoConsumer;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
 
-    private static final Logger logger = Logger.getLogger(Client.class);
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
 

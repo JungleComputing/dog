@@ -22,12 +22,14 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class ClientPanel extends JPanel implements ActionListener,
         WindowListener {
 
-    private static Logger logger = Logger.getLogger(ClientPanel.class);
+    private static Logger logger = LoggerFactory.getLogger(ClientPanel.class);
 
     // Generated
     private static final long serialVersionUID = 7697445736367043254L;

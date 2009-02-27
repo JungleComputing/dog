@@ -9,11 +9,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ObjectRecognition {
 	
-	private static Logger logger = Logger.getLogger(ObjectRecognition.class);
+	private static Logger logger = LoggerFactory.getLogger(ObjectRecognition.class);
     
     // Should be dynamic ?
     public static final int NR_INVARS = 6;

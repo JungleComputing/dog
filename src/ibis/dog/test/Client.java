@@ -10,11 +10,12 @@ import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Client extends Thread implements Upcall {
 
-    private static final Logger logger = Logger.getLogger(Client.class);
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
 

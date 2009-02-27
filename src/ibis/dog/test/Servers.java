@@ -6,11 +6,12 @@ import ibis.dog.shared.ServerDescription;
 
 import java.util.HashMap;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Servers implements Runnable {
 	
-	private static final Logger logger = Logger.getLogger(Servers.class); 
+	private static final Logger logger = LoggerFactory.getLogger(Servers.class); 
 
     public static final int UPDATE_INTERVAL = 5000;
 
