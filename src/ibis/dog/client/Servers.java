@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class Servers implements Runnable {
 	
-	private static final Logger logger = LoggerFactory.getLogger(Servers.class); 
+    private static final Logger logger = LoggerFactory.getLogger(Servers.class); 
 
     public static final int UPDATE_INTERVAL = 5000;
 
