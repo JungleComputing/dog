@@ -3,4 +3,6 @@
 #defaults to current directory, edit if necessary
 DEPLOY_HOME=external/deploy
 
-java -classpath .:$DEPLOY_HOME/lib/*:$DEPLOY_HOME/lib/javagat/*:$DEPLOY_HOME/lib/ipl/*:$DEPLOY_HOME/lib/javagat -Dgat.adaptor.path=$DEPLOY_HOME/lib/javagat/adaptors -Dibis.deploy.home=$DEPLOY_HOME ibis.deploy.gui.GUI -w demo/demo.workspace
+exec java -classpath $DEPLOY_HOME:$DEPLOY_HOME/lib/*:$DEPLOY_HOME/lib/javagat/*:$DEPLOY_HOME/lib/ipl/*:$DEPLOY_HOME/lib/javagat/castor-1.1.1-xml.jar -Dgat.adaptor.path=$DEPLOY_HOME/lib/javagat/adaptors -Dibis.deploy.home=$DEPLOY_HOME ibis.deploy.gui.GUI demo $@
+
+

@@ -1,0 +1,12 @@
+default.libs = prestage-server
+default.log4j.file = log4j.properties
+
+client.main.class = ibis.dog.client.Main
+client.libs = prestage-client
+client.input.files = images
+client.system.properties = java.library.path=lib,
+
+image-compute.main.class = ibis.dog.server.Server
+image-compute.jvm.options = -Xmx512M,-Xms512M
+
+broker.main.class = ibis.dog.broker.Broker

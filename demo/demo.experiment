@@ -1,0 +1,48 @@
+# Details of job "job-0"
+job-0.application.name = client
+job-0.process.count = 1
+job-0.cluster.name = local
+job-0.resource.count = 1
+job-0.pool.name = demo
+
+# Details of job "job-1"
+job-1.application.name = broker
+job-1.process.count = 1
+job-1.cluster.name = local
+job-1.resource.count = 1
+job-1.pool.name = demo
+
+# Details of job "job-2"
+job-2.application.name = image-compute
+job-2.process.count = 8
+job-2.cluster.name = VU
+job-2.resource.count = 8
+job-2.pool.name = demo
+
+# Details of job "job-3"
+job-3.application.name = image-compute
+job-3.process.count = 8
+job-3.cluster.name = Delft
+job-3.resource.count = 8
+job-3.pool.name = demo
+
+# Details of job "job-4"
+job-4.application.name = image-compute
+job-4.process.count = 8
+job-4.cluster.name = UvA
+job-4.resource.count = 8
+job-4.pool.name = demo
+
+# Details of job "job-5"
+job-5.application.name = image-compute
+job-5.process.count = 8
+job-5.cluster.name = Leiden
+job-5.resource.count = 8
+job-5.pool.name = demo
+
+# Details of job "job-6"
+job-6.application.name = image-compute
+job-6.process.count = 8
+job-6.cluster.name = MultimediaN
+job-6.resource.count = 8
+job-6.pool.name = demo
