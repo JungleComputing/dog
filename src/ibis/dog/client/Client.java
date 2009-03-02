@@ -1,10 +1,10 @@
 package ibis.dog.client;
 
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ibis.dog.broker.Item;
 import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
@@ -33,9 +33,6 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     // Local machine description (used as reply address for servers).
     private MachineDescription me;
 
-    // Object resposible for the recognition
-    private final ObjectRecognition recognition;
-
     // Current operation
     private byte operation = Request.OPERATION_RECOGNISE;
 
@@ -52,6 +49,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private int frameNumber = 0;
 
+    private Item[] currentResults = null;
+
     private FeatureVector vector;
 
     // Link to the GUI.
@@ -61,7 +60,6 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     public Client() {
         super("CLIENT");
-        recognition = new ObjectRecognition();
     }
 
     private void init() throws Exception {
@@ -72,14 +70,13 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         logger.debug("$$$$$$$$$$$$ comm");
 
         comm = new Communication("Client", this);
-        
-        // Install a shutdown hook that terminates ibis. 
+
+        // Install a shutdown hook that terminates ibis.
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 comm.end();
             }
         });
-
 
         logger.debug("$$$$$$$$$$$$ me");
 
@@ -115,24 +112,36 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     }
 
     public boolean learn(String name) {
+        FeatureVector vector = getFeatureVector();
 
-        FeatureVector v = getFeatureVector();
+        // create new database item
+        Item item = new Item(vector, name, System.getProperty("user.name"), null);
 
-        if (v != null) {
-            return recognition.learn(name, v);
+        // send item to broker
+
+        MachineDescription broker = comm.findMachine("Broker", "Broker");
+
+        if (broker == null) {
+            return false;
         }
 
-        return false;
+        try {
+            comm.send(broker, Communication.BROKER_REQ_LEARN, item);
+        } catch (Exception e) {
+            logger.error("Could not send item to database@broker", e);
+            return false;
+        }
+
+        return true;
     }
 
-    public String recognize() {
-        FeatureVector v = getFeatureVector();
-
-        if (v != null) {
-            return recognition.recognize(v);
+    public synchronized String recognize() {
+        if (currentResults == null || currentResults.length == 0) {
+            return null;
         }
 
-        return null;
+        return currentResults[0].getName();
+
     }
 
     public synchronized void registerListener(ClientListener l) {
@@ -151,7 +160,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private synchronized FeatureVector getFeatureVector() {
         FeatureVector v = vector;
-        //vector = null;
+        // vector = null;
         return v;
     }
 
@@ -197,7 +206,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         server.setConnected(connected);
     }
 
-    private void processReply(Reply r) {
+    private void processServerReply(Reply r) {
         // System.err.println("Got reply from " + r.server);
 
         ServerData data = servers.findServer(r.server);
@@ -207,19 +216,30 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         } else {
             data.hasFrame(false);
             if (r.operation == Request.OPERATION_RECOGNISE) {
+                // feature vector received from server, set "last known vector"
+                // and send a database lookup request to the broker.
+
                 setFeatureVector((FeatureVector) r.result);
-                String server = r.server.getName();
-                String result = recognition.recognize((FeatureVector) r.result);
-                if (result == null) {
-                    logger.info(server + " doesn't recognize this object");
-                    log(server + " doesn't recognize this object");
-                } else {
-                    logger.info(server + " says this is a " + result);
-                    log(server + " says this is a " + result);
+
+                String serverName = r.server.getName();
+                FeatureVector vector = (FeatureVector) r.result;
+
+                MachineDescription broker = comm
+                        .findMachine("Broker", "Broker");
+
+                if (broker == null) {
+                    return;
                 }
-                // } else if (r.operation == Request.OPERATION_LABELING) {
-                // RGB24Image image = (RGB24Image) r.result;
-                // forwardFrameToListnener(image, 1);
+
+                try {
+                    comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm.getMachineDescription(),
+                        vector, 3, serverName);
+                } catch (Exception e) {
+                    logger.error(
+                        "Could not send recognize request to database@broker",
+                        e);
+                }
+
             } else if (r.operation == Request.OPERATION_DUMMY) {
                 System.out
                         .println("Dummy reply received " + (Integer) r.result);
@@ -230,11 +250,25 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         }
     }
 
+    private synchronized void processDatabaseLookup(Item[] items,
+            String serverName) {
+        this.currentResults = items;
+
+        if (items == null || items.length == 0) {
+            logger.info(serverName + " doesn't recognize this object");
+            log(serverName + " doesn't recognize this object");
+        } else {
+            logger.info(serverName + " says this is a " + items[0].getName());
+            log(serverName + " says this is a " + items[0].getName());
+        }
+
+    }
+
     public void upcall(byte opcode, Object... objects) throws Exception {
         try {
             switch (opcode) {
             case Communication.CLIENT_REPLY_GETSERVERS: {
-                // It a reply to a lookup request.
+                // It a reply to a server lookup request.
 
                 ServerDescription[] s = null;
                 if (objects != null) {
@@ -252,12 +286,13 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             }
                 break;
 
-            case Communication.CLIENT_REPLY_REQUEST: {
+            case Communication.CLIENT_REPLY_REQUEST:
                 // It is a reply to a server request.
-                processReply((Reply) objects[0]);
-            }
+                processServerReply((Reply) objects[0]);
                 break;
-
+            case Communication.CLIENT_REPLY_RECOGNIZE:
+                processDatabaseLookup((Item[]) objects[0], (String) objects[1]);
+                break;
             default:
                 System.err.println("Received unknown opcode: " + opcode);
             }
@@ -306,9 +341,9 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     }
 
     public synchronized void setOutputPanel(OutputPanel outputPanel) {
-        this.outputPanel  = outputPanel;
+        this.outputPanel = outputPanel;
     }
-    
+
     private synchronized void log(String text) {
         if (outputPanel == null) {
             return;

@@ -1,6 +1,7 @@
 package ibis.dog.broker;
 
 import ibis.dog.shared.Communication;
+import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.MachineDescription;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
@@ -11,9 +12,11 @@ import java.util.HashSet;
 
 public class Broker implements Upcall {
 
-    public static final int UPDATE_INTERVAL = 5000;
+    public static final int UPDATE_INTERVAL = 10000;
 
-    private Communication communication;
+    private final Communication communication;
+
+    private final Database database;
 
     private final HashSet<ServerDescription> servers = new HashSet<ServerDescription>();
 
@@ -21,6 +24,8 @@ public class Broker implements Upcall {
 
         // Create an Communication object
         communication = new Communication("Broker", this);
+
+        database = new Database();
 
         // Install a shutdown hook that terminates ibis.
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -55,7 +60,6 @@ public class Broker implements Upcall {
     }
 
     private synchronized boolean addServer(ServerDescription s) {
-
         if (servers.contains(s)) {
             return false;
         }
@@ -75,14 +79,12 @@ public class Broker implements Upcall {
     public void upcall(byte opcode, Object... objects) throws IOException {
 
         switch (opcode) {
-        case Communication.BROKER_REQ_GET_SERVERS: {
+        case Communication.BROKER_REQ_GET_SERVERS:
             // It a lookup request from a client.
             communication.send((MachineDescription) objects[0],
                 Communication.CLIENT_REPLY_GETSERVERS, (Object[]) getServers());
-        }
             break;
-
-        case Communication.BROKER_REQ_REGISTER: {
+        case Communication.BROKER_REQ_REGISTER:
             // It is a registration request from a server.
             ServerDescription s = (ServerDescription) objects[0];
 
@@ -91,16 +93,31 @@ public class Broker implements Upcall {
             if (accept) {
                 communication.send(s, Communication.SERVER_REGISTERED);
             }
-        }
-            break;
 
-        case Communication.BROKER_REQ_UNREGISTER: {
-            // It is a deregistration request from a server
-            ServerDescription s = (ServerDescription) objects[0];
-            removeServer(s);
-        }
             break;
-
+        case Communication.BROKER_REQ_UNREGISTER:
+            // It is a de-registration request from a server
+            ServerDescription server = (ServerDescription) objects[0];
+            removeServer(server);
+            break;
+        case Communication.BROKER_REQ_LEARN:
+            // Request to add something to database
+            Item item = (Item) objects[0];
+            
+            database.learn(item);
+        case Communication.BROKER_REQ_RECOGNIZE:
+            // Request to add something to database
+            
+            MachineDescription machineDescription = (MachineDescription) objects[0];
+            FeatureVector vector = (FeatureVector) objects[1];
+            Integer nrOfResults = (Integer) objects[2];
+            //random object useful for clients
+            Object tag = objects[3];
+            
+            Item[] results = database.recognize(vector, nrOfResults);
+            
+            communication.send(machineDescription,
+                Communication.CLIENT_REPLY_RECOGNIZE, results, tag);
         default:
             System.err.println("Received unknown opcode: " + opcode);
         }
@@ -112,6 +129,7 @@ public class Broker implements Upcall {
             while (true) {
                 Thread.sleep(UPDATE_INTERVAL);
                 pingServers();
+                database.save();
             }
         } catch (Throwable e) {
             System.err.println("Broker died unexpectedly!");
