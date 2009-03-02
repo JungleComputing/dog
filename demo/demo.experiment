@@ -1,48 +1,45 @@
 # Details of job "job-0"
-job-0.application.name = client
-job-0.process.count = 1
-job-0.cluster.name = local
-job-0.resource.count = 1
-job-0.pool.name = demo
+Broker.application.name = broker
+Broker.process.count = 1
+Broker.cluster.name = local
+Broker.resource.count = 1
 
-# Details of job "job-1"
-job-1.application.name = broker
-job-1.process.count = 1
-job-1.cluster.name = local
-job-1.resource.count = 1
-job-1.pool.name = demo
+Client.application.name = client
+Client.process.count = 1
+Client.cluster.name = local
+Client.resource.count = 1
 
-# Details of job "job-2"
-job-2.application.name = image-compute
-job-2.process.count = 8
-job-2.cluster.name = VU
-job-2.resource.count = 8
-job-2.pool.name = demo
+VU.application.name = image-compute
+VU.process.count = 8
+VU.cluster.name = VU
+VU.resource.count = 8
 
-# Details of job "job-3"
-job-3.application.name = image-compute
-job-3.process.count = 8
-job-3.cluster.name = Delft
-job-3.resource.count = 8
-job-3.pool.name = demo
+Delft.application.name = image-compute
+Delft.process.count = 8
+Delft.cluster.name = Delft
+Delft.resource.count = 8
 
-# Details of job "job-4"
-job-4.application.name = image-compute
-job-4.process.count = 8
-job-4.cluster.name = UvA
-job-4.resource.count = 8
-job-4.pool.name = demo
+Uva.application.name = image-compute
+Uva.process.count = 8
+Uva.cluster.name = UvA
+Uva.resource.count = 8
 
-# Details of job "job-5"
-job-5.application.name = image-compute
-job-5.process.count = 8
-job-5.cluster.name = Leiden
-job-5.resource.count = 8
-job-5.pool.name = demo
+Leiden.application.name = image-compute
+Leiden.process.count = 8
+Leiden.cluster.name = Leiden
+Leiden.resource.count = 8
 
-# Details of job "job-6"
-job-6.application.name = image-compute
-job-6.process.count = 8
-job-6.cluster.name = MultimediaN
-job-6.resource.count = 8
-job-6.pool.name = demo
+MultimediaN.application.name = image-compute
+MultimediaN.process.count = 8
+MultimediaN.cluster.name = MultimediaN
+MultimediaN.resource.count = 8
+
+DesktopGrid.application.name = image-compute
+DesktopGrid.process.count = 6
+DesktopGrid.cluster.name = DesktopGrid
+DesktopGrid.resource.count = 6
+
+Chiba.application.name = image-compute
+Chiba.process.count = 8
+Chiba.cluster.name = Chiba
+Chiba.resource.count = 8

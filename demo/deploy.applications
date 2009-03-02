@@ -1,5 +1,6 @@
 default.libs = prestage-server
 default.log4j.file = log4j.properties
+default.system.properties=ibis.implementation=smartsockets
 
 client.main.class = ibis.dog.client.Main
 client.libs = prestage-client
