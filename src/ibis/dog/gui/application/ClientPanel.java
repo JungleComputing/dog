@@ -36,7 +36,7 @@ public class ClientPanel extends JPanel implements ActionListener,
 
     private static final String CONSOLE_OUTPUT = "Console Output";
 
-    private static final int MAX_SERVERS = 12;
+    private static final int MAX_SERVERS = 10;
 
     private final Client client;
 
