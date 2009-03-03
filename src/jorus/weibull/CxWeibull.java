@@ -15,6 +15,7 @@ package jorus.weibull;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.Arrays;
 
 import jorus.array.*;
 import jorus.pixel.*;
@@ -273,7 +274,9 @@ public class CxWeibull
 		// Initialize histos, betas, and gammas
 
 //		System.out.println("Initializing histos, betas, and gammas...");
-		for (int j=0; j<NR_INVAR_IMS; j++) {
+		
+		/*
+		 for (int j=0; j<NR_INVAR_IMS; j++) {
 			for (int i=0; i<NR_RFIELDS; i++) {
 				betas[j][i] = 0.;
 				gammas[j][i] = 0.;
@@ -282,12 +285,27 @@ public class CxWeibull
 				}
 			}
 		}
+		*/
+		
+		for (int j=0; j<NR_INVAR_IMS; j++) {
+			Arrays.fill(betas[j], 0.);
+			Arrays.fill(gammas[j], 0.);
+			
+			for (int i=0; i<NR_RFIELDS; i++) {
+				Arrays.fill(histos[j][i], 0.);
+			}
+		}
+		
+		long initHistos = System.currentTimeMillis();
+		
 //		System.out.println("Done.");
 
 
 		// Calculate all histograms
 
 //		System.out.println("Calculating all histograms...");
+		
+		/*
 		for (int i=0; i<NR_RFIELDS; i++) {
 
 			histos[EX2EY2][i] =
@@ -320,6 +338,24 @@ public class CxWeibull
 			histos[CLLR2][i] =
 					Cll135.impreciseHistogram(rfIm[i], NR_BINS, -1.,1.);
 		}
+		*/
+		
+
+		histos[EX2EY2] = Ex2Ey2.impreciseHistograms(rfIm, NR_BINS, 0., 1.);
+		histos[WX]     = Wx.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[WR1]    = W45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[WY]     = Wy.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[WR2]    = W135.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLX]    = Clx.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLR1]   = Cl45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLY]    = Cly.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLR2]   = Cl135.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLLX]   = Cllx.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLLR1]  = Cll45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLLY]   = Clly.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
+		histos[CLLR2]  = Cll135.impreciseHistograms(rfIm, NR_BINS, -1.,1.);
+
+		
 //		System.out.println("Done.");
 
 		long createHistos = System.currentTimeMillis();
@@ -437,7 +473,8 @@ public class CxWeibull
 		System.out.println("            init       " + (init-start));
 		System.out.println("            input      " + (createInput-init));
 		System.out.println("            invar      " + (buildInvar-createInput));
-		System.out.println("            histos     " + (createHistos-buildInvar));
+		System.out.println("            inithistos " + (initHistos-buildInvar));
+		System.out.println("            histos     " + (createHistos-initHistos));
 		System.out.println("            weibul     " + (doWeibuls-createHistos));
 	}
 

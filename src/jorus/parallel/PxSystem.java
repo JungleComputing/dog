@@ -40,7 +40,7 @@ public class PxSystem {
 
 	
 	// These are experimental to see which reduce to all implementation performs best -- J.
-	private static PortType portTypeOneToMany = new PortType(
+/*	private static PortType portTypeOneToMany = new PortType(
 			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
 			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_MANY);
 	
@@ -51,7 +51,7 @@ public class PxSystem {
 	private static PortType portTypeManyToOneUpcalls = new PortType(
 			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_OBJECT_IBIS,
 			PortType.RECEIVE_AUTO_UPCALLS, PortType.CONNECTION_MANY_TO_ONE);
-		
+	*/	
 	// End -- J
 	
 
@@ -148,7 +148,7 @@ public class PxSystem {
 
 		// ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
 		ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
-				portType, portTypeOneToMany, portTypeManyToOne, portTypeManyToOneUpcalls);
+				portType); // portTypeOneToMany, portTypeManyToOne, portTypeManyToOneUpcalls);
 		nrCPUs = ibis.registry().getPoolSize();
 		myCPU = (int) ibis.registry().getSequenceNumber("counter");
 		logCPUs = (int) (Math.log((double) nrCPUs) / Math.log(2.0));
@@ -372,7 +372,7 @@ public class PxSystem {
 		
 		return a;
 	}
-
+/*
 	public static double[] reduceArrayToAllOFT_Flat_ReceiveAny(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 		long start = System.nanoTime();
@@ -503,7 +503,7 @@ public class PxSystem {
 		
 		return a;
 	}
-
+*/
 	public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 
@@ -719,6 +719,7 @@ public class PxSystem {
 	public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
 		throws Exception {
 		return reduceArrayToAllOFT_Ring(a, op);
+		//return reduceArrayToAllOFT_Flat_Orig(a, op);
 	}	
 
 	public static void scatterOFT(CxArray2d a) throws Exception {

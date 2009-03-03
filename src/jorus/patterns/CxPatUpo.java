@@ -46,7 +46,7 @@ if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 2...");
 //PxSystem.gatherOFT(dst);
 
 			} catch (Exception e) {
-				//
+				e.printStackTrace(System.err);
 			}
 
 		} else {									// run sequential

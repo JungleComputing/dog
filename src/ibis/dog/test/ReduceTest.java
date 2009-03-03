@@ -16,6 +16,7 @@ public class ReduceTest {
 		}
 	}
 	
+	/*
 	private static final void testAlg2(final int count, final double [] array, final CxRedOpArray op)
 		throws Exception { 
 
@@ -30,9 +31,8 @@ public class ReduceTest {
 		for (int c=0;c<count;c++) { 
 			PxSystem.reduceArrayToAllOFT_Flat_Upcalls(array, op);					
 		}
-		
 	}
-	
+*/	
 	private static final void testAlg4(final int count, final double [] array, final CxRedOpArray op) 
 		throws Exception { 
 
@@ -43,7 +43,7 @@ public class ReduceTest {
 	
 	public static void main(String [] args) { 
 
-		int count = 100;
+		int count = 2000;
 		int repeat = 10;
 		
 		if (args.length != 4) { 
@@ -71,13 +71,13 @@ public class ReduceTest {
 				case 1: 
 					testAlg1(count, array, op);
 					break;
-				case 2: 
+	/*			case 2: 
 					testAlg2(count, array, op);
 					break;
 				case 3: 
 					testAlg3(count, array, op);
 					break;
-				case 4: 
+		*/		case 4: 
 					testAlg4(count, array, op);
 					break;	
 				default: 
@@ -88,6 +88,8 @@ public class ReduceTest {
 				long end = System.currentTimeMillis();				
 			
 				System.out.println(count + " reduceArrayToAll took " + (end-start) + " ms.");
+				
+				PxSystem.printStatistics();
 	
 				//PxSystem.printStatistics();
 			}

@@ -128,6 +128,25 @@ public class CxArray2dScalarDouble extends CxArray2dDoubles
 									   new CxBpoToHistDouble());
 	}
 
+	public double[][] impreciseHistograms(CxArray2dScalarDouble [] a,
+			int nBins, double minVal, double maxVal)
+	{
+		if (!equalSignature(a[0])) return null;
+	
+		/* FIXME: This is still slow -- J!
+		double [][] result = new double[a.length][];
+		
+		for (int i=0;i<a.length;i++) { 
+			result[i] = CxPatBpoToHist.dispatch(this, a[i], nBins, minVal, maxVal,
+								new CxBpoToHistDouble());
+		}
+		
+		return result;
+		*/
+		
+		return CxPatBpoArrayToHistArray.dispatch(this, a, nBins, minVal, maxVal, new CxBpoToHistDouble());
+	}
+	
 
 	/*** Pixel Manipulation (NOT PARALLEL) ****************************/
 

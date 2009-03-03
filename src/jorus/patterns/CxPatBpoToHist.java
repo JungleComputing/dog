@@ -24,10 +24,7 @@ public class CxPatBpoToHist
 									double maxVal, CxBpoToHist bpo)
 	{
 		double [] dst = new double[nBins];
-		for (int i=0; i<nBins; i++) {
-			dst[i] = 0.;
-		}
-
+		
 		if (PxSystem.initialized()) {				// run parallel
 			try {
 
@@ -43,6 +40,7 @@ if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 2...");
 				}
 
 				bpo.init(s1, s2, true);
+				
 				bpo.doIt(dst, s1.getPartialData(),
 						 s2.getPartialData(), nBins, minVal, maxVal);
 
