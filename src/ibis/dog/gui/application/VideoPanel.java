@@ -26,7 +26,7 @@ public class VideoPanel extends JPanel implements ActionListener {
     
     private VideoStream videoStream;
     
-    public VideoPanel(FrameRateConsumer f, VideoConsumer v) {
+    public VideoPanel(FramerateConsumer f, VideoConsumer v) {
         
         videoStream = new VideoStream(352, 288, f, v);
         

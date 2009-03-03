@@ -122,6 +122,10 @@ public class ClientPanel extends JPanel implements ActionListener,
 
         client.registerListener(serverInfo);
     }
+    
+    public FramerateConsumer getFrameRateConsumer() {
+        return applicationInfo;
+    }
 
     private void createMenuBar() {
 
@@ -220,7 +224,8 @@ public class ClientPanel extends JPanel implements ActionListener,
         // Display the window.
         frame.pack();
         frame.setVisible(true);
-
+        
+        app.setFrameRateConsumer(content.getFrameRateConsumer());
     }
 
     public static void createGUI(final Client app) {

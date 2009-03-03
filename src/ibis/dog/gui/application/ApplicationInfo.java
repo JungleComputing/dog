@@ -17,7 +17,7 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-public class ApplicationInfo extends JPanel implements FrameRateConsumer, ServerCountConsumer {
+public class ApplicationInfo extends JPanel implements FramerateConsumer, ServerCountConsumer {
 
     private static final long serialVersionUID = 1L;
 
@@ -26,7 +26,9 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
 
     private CombinedDomainXYPlot plot;
     
-    private double currentFrameRate = 0.0;
+    private double currentInFrameRate = Double.MIN_VALUE;
+    
+    private double currentProcessedFrameRate = Double.MIN_VALUE;
     
     private int currentServers = 0;
     
@@ -53,7 +55,8 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
                     // TODO: handle exception
                 }
                 
-                datasets[0].getSeries(0).add(new Millisecond(), getFramerate());
+                datasets[0].getSeries(0).add(new Millisecond(), getInFramerate());
+                datasets[0].getSeries(1).add(new Millisecond(), getProcessedFramerate());
              
                 datasets[1].getSeries(0).add(new Millisecond(), getServers());
                 datasets[1].getSeries(1).add(new Millisecond(), getActiveServers());
@@ -77,15 +80,16 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
         TimeSeries series = new TimeSeries("in", Millisecond.class);        
         datasets[0].addSeries(series);
         
-        NumberAxis rangeAxis = new NumberAxis("Frames/sec.");
+        series = new TimeSeries("processed", Millisecond.class);
+        datasets[0].addSeries(series);
         
-        rangeAxis.setAutoRangeIncludesZero(false);
-        rangeAxis.setAutoRange(true);
-        rangeAxis.setLowerBound(0.0);
-        rangeAxis.setUpperBound(40.0);
+        NumberAxis frameYAxis = new NumberAxis("Frames/sec.");
+        
+        frameYAxis.setAutoRangeIncludesZero(false);
+        frameYAxis.setAutoRange(true);
         
         XYPlot subplot = new XYPlot(
-                datasets[0], null, rangeAxis, new StandardXYItemRenderer()
+                datasets[0], null, frameYAxis, new StandardXYItemRenderer()
         );
         
         subplot.setForegroundAlpha(0.75f);
@@ -100,12 +104,10 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
         series = new TimeSeries("active", Millisecond.class);        
         datasets[1].addSeries(series);
         
-        rangeAxis = new NumberAxis("Servers");
+        NumberAxis rangeAxis = new NumberAxis("Servers");
         
         rangeAxis.setAutoRangeIncludesZero(false);
         rangeAxis.setAutoRange(true);
-        rangeAxis.setLowerBound(0.0);
-        rangeAxis.setUpperBound(10.0);
         
         subplot = new XYPlot(
                 datasets[1], null, rangeAxis, new StandardXYItemRenderer()
@@ -154,8 +156,12 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
         currentServers = servers;
     }
     
-    public synchronized void setFramerate(double fps) {
-        currentFrameRate = fps;
+    public synchronized void setInFramerate(double fps) {
+        currentInFrameRate = fps;
+    }
+    
+    public synchronized void setProcessedFramerate(double fps) {
+        currentProcessedFrameRate = fps;
     }
     
     private synchronized int getServers() { 
@@ -167,8 +173,12 @@ public class ApplicationInfo extends JPanel implements FrameRateConsumer, Server
     }
     
     
-    private synchronized double getFramerate() { 
-        return currentFrameRate;
+    private synchronized double getInFramerate() { 
+        return currentInFrameRate;
+    }
+    
+    private synchronized double getProcessedFramerate() { 
+        return currentProcessedFrameRate;
     }
 
     public synchronized void addActiveServer() {

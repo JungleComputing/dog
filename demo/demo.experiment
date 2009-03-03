@@ -35,11 +35,11 @@ MultimediaN.cluster.name = MultimediaN
 MultimediaN.resource.count = 8
 
 DesktopGrid.application.name = image-compute
-DesktopGrid.process.count = 6
+DesktopGrid.process.count = 8
 DesktopGrid.cluster.name = DesktopGrid
-DesktopGrid.resource.count = 6
+DesktopGrid.resource.count = 8
 
-Chiba.application.name = image-compute
-Chiba.process.count = 8
-Chiba.cluster.name = Chiba
-Chiba.resource.count = 8
+#Chiba.application.name = image-compute
+#Chiba.process.count = 8
+#Chiba.cluster.name = Chiba
+#Chiba.resource.count = 8

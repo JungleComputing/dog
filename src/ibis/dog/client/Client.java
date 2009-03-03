@@ -1,10 +1,10 @@
 package ibis.dog.client;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibis.dog.broker.Item;
+import ibis.dog.gui.application.FramerateConsumer;
 import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.CompressedImage;
@@ -52,6 +52,14 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     private Item[] currentResults = null;
 
     private FeatureVector vector;
+
+    // statistics for vector framerate
+
+    private long start;
+
+    private int vectorCount = 0;
+
+    private FramerateConsumer framerateConsumer;
 
     // Link to the GUI.
     private ClientListener listener;
@@ -115,7 +123,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         FeatureVector vector = getFeatureVector();
 
         // create new database item
-        Item item = new Item(vector, name, System.getProperty("user.name"), null);
+        Item item = new Item(vector, name, System.getProperty("user.name"),
+                null);
 
         // send item to broker
 
@@ -156,6 +165,20 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private synchronized void setFeatureVector(FeatureVector vector) {
         this.vector = vector;
+        
+        long now = System.currentTimeMillis();
+
+        if (vectorCount == 0) {
+            start = System.currentTimeMillis();
+        } else if (now >= start + 2500) {
+            if (framerateConsumer != null) {
+                framerateConsumer
+                        .setProcessedFramerate(vectorCount * 1000.0 / (now - start));
+            }
+            start = now;
+            vectorCount = 0;
+        }
+        vectorCount++;
     }
 
     private synchronized FeatureVector getFeatureVector() {
@@ -232,8 +255,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                 }
 
                 try {
-                    comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm.getMachineDescription(),
-                        vector, 3, serverName);
+                    comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm
+                            .getMachineDescription(), vector, 3, serverName);
                 } catch (Exception e) {
                     logger.error(
                         "Could not send recognize request to database@broker",
@@ -349,6 +372,10 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             return;
         }
         outputPanel.write(text, false);
+    }
+
+    public void setFrameRateConsumer(FramerateConsumer frameRateConsumer) {
+        framerateConsumer = frameRateConsumer;
     }
 
 }

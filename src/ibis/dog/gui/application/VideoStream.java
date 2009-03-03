@@ -40,11 +40,11 @@ class VideoStream extends JPanel implements VideoConsumer {
     
     private String message = "No webcam selected";
     
-    private FrameRateConsumer framerate;
+    private FramerateConsumer framerate;
     
     private VideoConsumer nextConsumer;
     
-    public VideoStream(int width, int height, FrameRateConsumer f, 
+    public VideoStream(int width, int height, FramerateConsumer f, 
             VideoConsumer nextConsumer) { 
         setBackground(Color.white);
         
@@ -84,7 +84,7 @@ class VideoStream extends JPanel implements VideoConsumer {
             message = "No webcam selected";
         }
    
-        framerate.setFramerate(0.0);
+        framerate.setInFramerate(0.0);
         
         repaint();
     }
@@ -101,7 +101,7 @@ class VideoStream extends JPanel implements VideoConsumer {
             start = System.currentTimeMillis();
         } else if (image >= 25) {
             long now = System.currentTimeMillis();
-            framerate.setFramerate(25 * 1000.0 / (now-start));
+            framerate.setInFramerate(25 * 1000.0 / (now-start));
             start = now;
             image = 0;
         }
