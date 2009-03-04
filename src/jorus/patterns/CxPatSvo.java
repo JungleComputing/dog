@@ -56,7 +56,7 @@ public class CxPatSvo
 
         } else {									// run sequential
             svo.init(s1, false);
-            svo.doIt(dst.getData(), x, y);
+            svo.doIt(dst.getDataWriteOnly(), x, y);
         }
 
         return dst;

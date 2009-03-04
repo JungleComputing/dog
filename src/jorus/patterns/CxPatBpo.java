@@ -78,7 +78,7 @@ public class CxPatBpo
 
         } else {									// run sequential
             bpo.init(s1, s2, false);
-            bpo.doIt(dst.getData(), s2.getData());
+            bpo.doIt(dst.getDataReadWrite(), s2.getDataReadOnly());
         }
 
         return dst;

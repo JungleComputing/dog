@@ -1127,7 +1127,7 @@ public class PxSystem {
     //                sps[partner].connect(world[partner], COMM_ID + 0);
     //            }
                 WriteMessage w = sps[partner].newMessage();
-                w.writeArray(a.getData(), offset, xSize * ySize);
+                w.writeArray(a.getDataReadOnly(), offset, xSize * ySize);
                 w.finish();
 
                 // Added-- J
@@ -1136,7 +1136,7 @@ public class PxSystem {
         
             int start = xSize * bHeight;
             
-            System.arraycopy(a.getData(), start, pData, start, pData.length - 2
+            System.arraycopy(a.getDataReadOnly(), start, pData, start, pData.length - 2
                     * start);
         } else {
             int ySize = getPartHeight(globH, myCPU);
@@ -1178,14 +1178,14 @@ public class PxSystem {
 //                    rps[partner].enableConnections();
 //                }
                 ReadMessage r = rps[partner].receive();
-                r.readArray(a.getData(), offset, xSize * ySize);
+                r.readArray(a.getDataWriteOnly(), offset, xSize * ySize);
                 r.finish();
 
                 // Added -- J.
                 dataInGather0FT += 8 * xSize * ySize;
             }
             int start = xSize * bHeight;
-            System.arraycopy(a.getPartialData(), start, a.getData(), start, a
+            System.arraycopy(a.getPartialData(), start, a.getDataWriteOnly(), start, a
                     .getPartialData().length
                     - 2 * start);
 
@@ -1213,7 +1213,7 @@ public class PxSystem {
         int globW = a.getWidth();
         int globH = a.getHeight();
 
-        double[] pData = a.getData().clone();
+        double[] pData = a.getDataReadOnly().clone();
 
         a.setPartialData(globW, globH, pData, CxArray2d.NONE, CxArray2d.NONE);
 

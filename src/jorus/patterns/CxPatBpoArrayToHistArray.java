@@ -62,8 +62,8 @@ public class CxPatBpoArrayToHistArray {
                 CxArray2d s2 = a2[i];
 
                 bpo.init(s1, s2, false);
-                bpo.doIt(result[i], s1.getData(),
-                        s2.getData(), nBins, minVal, maxVal);
+                bpo.doIt(result[i], s1.getDataReadOnly(),
+                        s2.getDataReadOnly(), nBins, minVal, maxVal);
             }
         }
 

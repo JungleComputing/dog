@@ -54,7 +54,7 @@ public class CxPatUpo
 
         } else {									// run sequential
             upo.init(s1, false);
-            upo.doIt(dst.getData());
+            upo.doIt(dst.getDataReadWrite());
         }
 
         return dst;

@@ -26,7 +26,7 @@ public class CxPatSetBorder
             sbo.doIt(s1.getPartialData(), numX, numY);
         } else {									// run sequential
             sbo.init(s1, false);
-            sbo.doIt(s1.getData(), numX, numY);
+            sbo.doIt(s1.getDataReadWrite(), numX, numY);
         }
     }
 }

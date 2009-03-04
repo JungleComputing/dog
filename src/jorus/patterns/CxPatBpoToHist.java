@@ -55,8 +55,8 @@ public class CxPatBpoToHist
 
         } else {									// run sequential
             bpo.init(s1, s2, false);
-            bpo.doIt(dst, s1.getData(),
-                    s2.getData(), nBins, minVal, maxVal);
+            bpo.doIt(dst, s1.getDataReadOnly(),
+                    s2.getDataReadOnly(), nBins, minVal, maxVal);
         }
         return dst;
     }

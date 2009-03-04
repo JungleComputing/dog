@@ -74,7 +74,7 @@ public class CxGaussian1d {
        
         CxArray2dScalarDouble tmp = new CxArray2dScalarDouble(fsize, 1, 0, 0, null);
         
-        makeFilter(tmp.getData(), sigma, deri, acc, fsize, maxfsize);
+        makeFilter(tmp.getDataWriteOnly(), sigma, deri, acc, fsize, maxfsize);
     
         return tmp;
     }
