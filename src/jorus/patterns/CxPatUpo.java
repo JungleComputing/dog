@@ -18,42 +18,45 @@ import jorus.parallel.PxSystem;
 
 public class CxPatUpo
 {
-	public static CxArray2d dispatch(CxArray2d s1,
-									 boolean inplace, CxUpo upo)
-	{
-		CxArray2d dst = s1;
-		if (!inplace) dst = s1.clone();
+    public static CxArray2d dispatch(CxArray2d s1,
+            boolean inplace, CxUpo upo)
+    {
+        CxArray2d dst = s1;
+        
+        if (!inplace) dst = s1.clone();
 
-		if (PxSystem.initialized()) {				// run parallel
-			try {
+        if (PxSystem.initialized()) {				// run parallel
+            try {
 
-				if (s1.getLocalState() != CxArray2d.VALID ||
-							s1.getDistType() != CxArray2d.PARTIAL) {
-if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 1...");
-					PxSystem.scatterOFT(s1);
-				}
-				if (dst.getLocalState() != CxArray2d.VALID ||
-							dst.getDistType() != CxArray2d.PARTIAL) {
-if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 2...");
-					PxSystem.scatterOFT(dst);
-				}
+                if (s1.getLocalState() != CxArray2d.VALID ||
+                        s1.getDistType() != CxArray2d.PARTIAL) {
+                    if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 1...");
+                    PxSystem.scatterOFT(s1);
+                }
 
-				upo.init(s1, true);
-				upo.doIt(dst.getPartialData());
-				dst.setGlobalState(CxArray2d.INVALID);
+                if (dst.getLocalState() != CxArray2d.VALID ||
+                        dst.getDistType() != CxArray2d.PARTIAL) {
+                    if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 2...");
+                    PxSystem.scatterOFT(dst);
+                }
 
-//if (PxSystem.myCPU() == 0) System.out.println("UPO GATHER...");
-//PxSystem.gatherOFT(dst);
+                upo.init(s1, true);
+                upo.doIt(dst.getPartialData());
+                dst.setGlobalState(CxArray2d.INVALID);
 
-			} catch (Exception e) {
-				e.printStackTrace(System.err);
-			}
+//              if (PxSystem.myCPU() == 0) System.out.println("UPO GATHER...");
+//              PxSystem.gatherOFT(dst);
 
-		} else {									// run sequential
-			upo.init(s1, false);
-			upo.doIt(dst.getData());
-		}
+            } catch (Exception e) {
+                System.err.println("Failed to perform operation!");
+                e.printStackTrace(System.err);
+            }
 
-		return dst;
-	}
+        } else {									// run sequential
+            upo.init(s1, false);
+            upo.doIt(dst.getData());
+        }
+
+        return dst;
+    }
 }

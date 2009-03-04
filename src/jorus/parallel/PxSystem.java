@@ -31,379 +31,477 @@ import jorus.operations.CxRedOp;
 import jorus.operations.CxRedOpArray;
 
 public class PxSystem {
-	/** * Ibis Capabilities & PortTypes ******************************* */
+    /** * Ibis Capabilities & PortTypes ******************************* */
 
 
-	private static PortType portType = new PortType(
-			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
-			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_ONE);
+    private static PortType portType = new PortType(
+            PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
+            PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_ONE);
 
-	
-	// These are experimental to see which reduce to all implementation performs best -- J.
-/*	private static PortType portTypeOneToMany = new PortType(
+
+    // These are experimental to see which reduce to all implementation performs best -- J.
+    /*	private static PortType portTypeOneToMany = new PortType(
 			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
 			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_MANY);
-	
+
 	private static PortType portTypeManyToOne = new PortType(
 			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
 			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_MANY_TO_ONE);
-	
+
 	private static PortType portTypeManyToOneUpcalls = new PortType(
 			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_OBJECT_IBIS,
 			PortType.RECEIVE_AUTO_UPCALLS, PortType.CONNECTION_MANY_TO_ONE);
-	*/	
-	// End -- J
-	
+     */	
+    // End -- J
 
-	private static IbisCapabilities ibisCapabilities = new IbisCapabilities(
-			IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.CLOSED_WORLD);
-	
-	
-	/** * Send & ReceivePorts to/from all particpipants *************** */
 
-	private static int NR_PORTS = 0;
+    private static IbisCapabilities ibisCapabilities = new IbisCapabilities(
+            IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.CLOSED_WORLD);
 
-	private static SendPort[] sps = null;
 
-	private static ReceivePort[] rps = null;
+    /** * Send & ReceivePorts to/from all particpipants *************** */
 
-	private static ReceivePort rpReduce = null;
-	private static SendPort spReduce = null;
-	
-	private static final String COMM_ID = "px_comm";
+    private static int NR_PORTS = 0;
 
-	// Experimental -- J.
-	
-	private static ArrayList reduceToAllData = new ArrayList(); 
-	
-	private static class ReduceToAllUpcallHandler implements MessageUpcall {
-	
-		public void upcall(ReadMessage rm) throws IOException, ClassNotFoundException {
-			synchronized (reduceToAllData) {
-				reduceToAllData.add(rm.readObject());
-	
-				if (reduceToAllData.size() == 1) { 
-					// potential waiters
-					reduceToAllData.notifyAll();
-				}
-			}
-		} 
-	}
-	
-	// End -- J
-	
-	/** * GENERAL 'PARALLEL WORLD' INFORMATION ************************ */
+    private static SendPort[] sps = null;
+    private static ReceivePort[] rps = null;
 
-	private static Ibis ibis = null;
+//    private static ReceivePort rpReduce = null;
+//    private static SendPort spReduce = null;
 
-	private static IbisIdentifier[] world = null;
+    private static final String COMM_ID = "px_comm";
 
-	private static int nrCPUs = -1;
+    // Experimental -- J.
 
-	private static int logCPUs = -1;
+    private static ArrayList reduceToAllData = new ArrayList(); 
 
-	private static int maxCPUs = -1;
+    private static class ReduceToAllUpcallHandler implements MessageUpcall {
 
-	private static int myCPU = -1;
+        public void upcall(ReadMessage rm) throws IOException, ClassNotFoundException {
+            synchronized (reduceToAllData) {
+                reduceToAllData.add(rm.readObject());
 
-	private static boolean initialized = false;
+                if (reduceToAllData.size() == 1) { 
+                    // potential waiters
+                    reduceToAllData.notifyAll();
+                }
+            }
+        } 
+    }
 
-	
-	private static long timeBarrierSBT;
-	private static long countBarrierSBT;
-	
-	private static long timeReduceValueToRoot0FT;
-	private static long countReduceValueToRoot0FT;
+    // End -- J
 
-	private static long timeReduceArrayToRoot0FT;
-	private static long countReduceArrayToRoot0FT;
+    /** * GENERAL 'PARALLEL WORLD' INFORMATION ************************ */
 
-	private static long timeReduceArrayToAll0FT;
-	private static long countReduceArrayToAll0FT;
+    private static Ibis ibis = null;
 
-	private static long timeScatter0FT;
-	private static long countScatter0FT;
-	
-	private static long timeGather0FT;
-	private static long countGather0FT;
+    private static IbisIdentifier[] world = null;
 
-	private static long timeBroadcastSBT;
-	private static long countBroadcastSBT;
+    private static int nrCPUs = -1;
 
-	private static long timeBroadcastValue;
-	private static long countBroadcastValue;
+    private static int logCPUs = -1;
 
-	private static long timeBorderExchange;
-	private static long countBorderExchange;
+    private static int maxCPUs = -1;
 
-	/** * Public Methods ********************************************** */
+    private static int myCPU = -1;
 
-	public static void initParallelSystem(String name, String size)
-	throws Exception {
-		Properties props = new Properties();
-		props.setProperty("ibis.pool.name", name);
-		props.setProperty("ibis.pool.size", size);
+    private static boolean initialized = false;
 
-		// Create Ibis & obtain parallel environment parameters (local)
 
-		// ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
-		ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
-				portType); // portTypeOneToMany, portTypeManyToOne, portTypeManyToOneUpcalls);
-		nrCPUs = ibis.registry().getPoolSize();
-		myCPU = (int) ibis.registry().getSequenceNumber("counter");
-		logCPUs = (int) (Math.log((double) nrCPUs) / Math.log(2.0));
-		maxCPUs = (int) Math.pow(2, logCPUs);
-		
-		if (maxCPUs < nrCPUs) {
-			logCPUs++;
-			maxCPUs *= 2;
-		}
+    private static long timeBarrierSBT;
+    private static long countBarrierSBT;
 
-		// Let each node elect itself as the Ibis with 'myCPU' as rank.
-		// Then, obtain Ibis identifiers for all CPUs.
+    private static long timeReduceValueToRoot0FT;
+    private static long countReduceValueToRoot0FT;
 
-		IbisIdentifier me = ibis.registry().elect(Integer.toString(myCPU));
-		world = new IbisIdentifier[nrCPUs];
-		for (int i = 0; i < nrCPUs; i++) {
-			String rank = Long.toString(i);
-			world[i] = ibis.registry().getElectionResult(rank);
-		}
+    private static long timeReduceArrayToRoot0FT;
+    private static long countReduceArrayToRoot0FT;
+    private static long dataInReduceArrayToRoot0FT;
+    private static long dataOutReduceArrayToRoot0FT;
 
-		// Initialize Send/ReceivePorts to/from all participants
+    private static long timeReduceArrayToAll0FT;
+    private static long countReduceArrayToAll0FT;
+    private static long dataInReduceArrayToAll0FT;
+    private static long dataOutReduceArrayToAll0FT;
 
-		NR_PORTS = nrCPUs;
-		sps = new SendPort[NR_PORTS];
-		rps = new ReceivePort[NR_PORTS];
+    private static long timeScatter0FT;
+    private static long countScatter0FT;
+    private static long dataInScatter0FT;
+    private static long dataOutScatter0FT;
 
-		initialized = true;
-	}
+    private static long timeGather0FT;
+    private static long countGather0FT;
+    private static long dataInGather0FT;
+    private static long dataOutGather0FT;
 
-	public static void printStatistics() {
+    private static long timeBroadcastSBT;
+    private static long countBroadcastSBT;
+    private static long dataInBroadcastSBT;
+    private static long dataOutBroadcastSBT;
 
-		long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
-			+ timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
-			+ timeScatter0FT + timeGather0FT + timeBroadcastSBT
-			+ timeBroadcastValue + timeBorderExchange;
+    private static long timeBroadcastValue;
+    private static long countBroadcastValue;
 
-		long totalCount = countBarrierSBT + countReduceValueToRoot0FT
-			+ countReduceArrayToRoot0FT + countReduceArrayToAll0FT
-			+ countScatter0FT + countGather0FT + countBroadcastSBT
-			+ countBroadcastValue + countBorderExchange;
-		
-		System.out.printf("Total communication time %.2f usec, count %d\n", (totalTime / 1000.0), totalCount);
-		System.out.printf("            barrier time %.2f usec, count %d\n", (timeBarrierSBT / 1000.0), countBarrierSBT);
-		System.out.printf("          reduceV2R time %.2f usec, count %d\n", (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
-		System.out.printf("          reduceA2R time %.2f usec, count %d\n", (timeReduceArrayToRoot0FT / 1000.0), countReduceArrayToRoot0FT);
-		System.out.printf("          reduceA2A time %.2f usec, count %d\n", (timeReduceArrayToAll0FT / 1000.0), countReduceArrayToAll0FT);
-		System.out.printf("            scatter time %.2f usec, count %d\n", (timeScatter0FT / 1000.0), countScatter0FT);
-		System.out.printf("             gather time %.2f usec, count %d\n", (timeGather0FT / 1000.0), countGather0FT);
-		System.out.printf("       broadcastSBT time %.2f usec, count %d\n", (timeBroadcastSBT / 1000.0), countBroadcastSBT);
-		System.out.printf("     broadcastValue time %.2f usec, count %d\n", (timeBroadcastValue / 1000.0), countBroadcastValue);
-		System.out.printf("     borderExchange time %.2f usec, count %d\n", (timeBorderExchange / 1000.0), countBorderExchange);
+    private static long timeBorderExchange;
+    private static long countBorderExchange;
+    private static long dataInBorderExchange;
+    private static long dataOutBorderExchange;
 
-		timeBarrierSBT = 0;
-		timeReduceValueToRoot0FT = 0;
-		timeReduceArrayToRoot0FT = 0;
-		timeReduceArrayToAll0FT = 0;
-		timeScatter0FT = 0;
-		timeGather0FT = 0;
-		timeBroadcastSBT = 0;
-		timeBroadcastValue = 0;
-		timeBorderExchange = 0;
+    /** * Public Methods ********************************************** */
 
-		countBarrierSBT = 0;
-		countReduceValueToRoot0FT = 0;
-		countReduceArrayToRoot0FT = 0;
-		countReduceArrayToAll0FT = 0;
-		countScatter0FT = 0;
-		countGather0FT = 0;
-		countBroadcastSBT = 0;
-		countBroadcastValue = 0;
-		countBorderExchange = 0;
-	}
+    public static void initParallelSystem(String name, String size)
+    throws Exception {
+        Properties props = new Properties();
+        props.setProperty("ibis.pool.name", name);
+        props.setProperty("ibis.pool.size", size);
 
-	public static void exitParallelSystem() throws Exception {
-		for (int i = 0; i < NR_PORTS; i++) {
-			if (sps[i] != null)
-				sps[i].close();
-			if (rps[i] != null)
-				rps[i].close();
-		}
-		ibis.end();
-		initialized = false;
-	}
+        // Create Ibis & obtain parallel environment parameters (local)
 
-	public static boolean initialized() {
-		return initialized;
-	}
+        // ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
+        ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
+                portType); // portTypeOneToMany, portTypeManyToOne, portTypeManyToOneUpcalls);
+        nrCPUs = ibis.registry().getPoolSize();
+        myCPU = (int) ibis.registry().getSequenceNumber("counter");
+        logCPUs = (int) (Math.log((double) nrCPUs) / Math.log(2.0));
+        maxCPUs = (int) Math.pow(2, logCPUs);
 
-	public static int myCPU() {
-		return myCPU;
-	}
+        if (maxCPUs < nrCPUs) {
+            logCPUs++;
+            maxCPUs *= 2;
+        }
 
-	public static int nrCPUs() {
-		return nrCPUs;
-	}
+        // Let each node elect itself as the Ibis with 'myCPU' as rank.
+        // Then, obtain Ibis identifiers for all CPUs.
 
-	public static void barrierSBT() throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+        IbisIdentifier me = ibis.registry().elect(Integer.toString(myCPU));
+        world = new IbisIdentifier[nrCPUs];
+       
+        for (int i = 0; i < nrCPUs; i++) {
+            String rank = Long.toString(i);
+            world[i] = ibis.registry().getElectionResult(rank);
+        }
 
-		int mask = 1;
-		for (int i = 0; i < logCPUs; i++) {
-			int partner = myCPU ^ mask;
-			if ((myCPU % mask == 0) && (partner < nrCPUs)) {
-				if (myCPU > partner) {
-					if (sps[partner] == null) {
-						sps[partner] = ibis.createSendPort(portType);
-						sps[partner].connect(world[partner], COMM_ID + myCPU);
-					}
-					WriteMessage w = sps[partner].newMessage();
-					w.finish();
-				} else {
-					if (rps[partner] == null) {
-						rps[partner] = ibis.createReceivePort(portType, COMM_ID
-								+ partner);
-						rps[partner].enableConnections();
-					}
-					ReadMessage r = rps[partner].receive();
-					r.finish();
-				}
-			}
-			mask <<= 1;
-		}
-		mask = 1 << (logCPUs - 1);
-		for (int i = 0; i < logCPUs; i++) {
-			int partner = myCPU ^ mask;
-			if ((myCPU % mask == 0) && (partner < nrCPUs)) {
-				if (myCPU < partner) {
-					if (sps[partner] == null) {
-						sps[partner] = ibis.createSendPort(portType);
-						sps[partner].connect(world[partner], COMM_ID + myCPU);
-					}
-					WriteMessage w = sps[partner].newMessage();
-					w.finish();
-				} else {
-					if (rps[partner] == null) {
-						rps[partner] = ibis.createReceivePort(portType, COMM_ID
-								+ partner);
-						rps[partner].enableConnections();
-					}
-					ReadMessage r = rps[partner].receive();
-					r.finish();
-				}
-			}
-			mask >>= 1;
-		}
+        // Initialize Send/ReceivePorts to/from all participants
+        NR_PORTS = nrCPUs;
+        sps = new SendPort[NR_PORTS];
+        rps = new ReceivePort[NR_PORTS];
 
-		// Added -- J
-		timeBarrierSBT += System.nanoTime() - start;
-		countBarrierSBT++;
-	}
+        // Added -- J.
+        //
+        // Init all send and receive ports here. This will give 
+        // us an all-to-all setup which is more than we need and 
+        // doesn't scale. However, since the application does not 
+        // seem to scale anyway we don't really care about this. 
+        
+        for (int i=0;i<nrCPUs;i++) { 
+            if (i != myCPU) { 
+                rps[i] = ibis.createReceivePort(portType, COMM_ID + i);
+                rps[i].enableConnections();
+            }
+        }
+        
+        for (int i=0;i<nrCPUs;i++) { 
+            if (i != myCPU) { 
+                sps[i] = ibis.createSendPort(portType);
+                sps[i].connect(world[i], COMM_ID + myCPU);
+            }
+        }
+        
+        initialized = true;
+    }
 
-	public static double reduceValueToRootOFT(double val, CxRedOp op)
-	throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+    private static double getThroughput(long data, long nanos) { 
+        
+        double Mbits = (data * 8.0) / 1000000.0;
+        double sec = nanos / (1000.0 * 1000.0 * 1000.0);
+        
+        return (Mbits / sec);
+    }
+    
+    public static void printStatistics() {
 
-		double result = val;
+        long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
+        + timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
+        + timeScatter0FT + timeGather0FT + timeBroadcastSBT
+        + timeBroadcastValue + timeBorderExchange;
 
-		if (myCPU == 0) {
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				if (rps[partner] == null) {
-					rps[partner] = ibis.createReceivePort(portType, COMM_ID
-							+ partner);
-					rps[partner].enableConnections();
-				}
-				ReadMessage r = rps[partner].receive();
-				double recvVal = r.readDouble();
-				r.finish();
-				result = (Double) op.doIt(result, recvVal);
-			}
-		} else {
-			if (sps[0] == null) {
-				sps[0] = ibis.createSendPort(portType);
-				sps[0].connect(world[0], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[0].newMessage();
-			w.writeDouble(val);
-			w.finish();
-		}
+        long totalCount = countBarrierSBT + countReduceValueToRoot0FT
+        + countReduceArrayToRoot0FT + countReduceArrayToAll0FT
+        + countScatter0FT + countGather0FT + countBroadcastSBT
+        + countBroadcastValue + countBorderExchange;
 
-		// Added -- J
-		timeReduceValueToRoot0FT += System.nanoTime() - start;
-		countReduceValueToRoot0FT++;
-		
-		return result;
-	}
+        System.out.printf("Total communication time %.2f usec, count %d\n", (totalTime / 1000.0), totalCount);
+        System.out.printf("            barrier time %.2f usec, count %d\n", (timeBarrierSBT / 1000.0), countBarrierSBT);
+        System.out.printf("     broadcastValue time %.2f usec, count %d\n", (timeBroadcastValue / 1000.0), countBroadcastValue);
+        System.out.printf("          reduceV2R time %.2f usec, count %d\n", (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
+        System.out.printf("          reduceA2R time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                  (timeReduceArrayToRoot0FT / 1000.0), 
+                  countReduceArrayToRoot0FT, 
+                  dataInReduceArrayToRoot0FT, 
+                  dataOutReduceArrayToRoot0FT, 
+                  getThroughput(dataInReduceArrayToRoot0FT + dataOutReduceArrayToRoot0FT, timeReduceArrayToRoot0FT));
+    
+        System.out.printf("          reduceA2A time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                (timeReduceArrayToAll0FT / 1000.0), 
+                countReduceArrayToAll0FT, 
+                dataInReduceArrayToAll0FT, 
+                dataOutReduceArrayToAll0FT, 
+                getThroughput(dataInReduceArrayToAll0FT + dataOutReduceArrayToAll0FT, timeReduceArrayToAll0FT));
+                
+        System.out.printf("            scatter time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                (timeScatter0FT / 1000.0), 
+                countScatter0FT, 
+                dataInScatter0FT, 
+                dataOutScatter0FT, 
+                getThroughput(dataInScatter0FT + dataOutScatter0FT, timeScatter0FT));
+                
+        System.out.printf("             gather time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                (timeGather0FT / 1000.0), 
+                countGather0FT, 
+                dataInGather0FT,
+                dataOutGather0FT, 
+                getThroughput(dataInGather0FT + dataOutGather0FT, timeGather0FT));
+                
+        System.out.printf("       broadcastSBT time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                (timeBroadcastSBT / 1000.0), 
+                countBroadcastSBT, 
+                dataInBroadcastSBT, 
+                dataOutBroadcastSBT, 
+                getThroughput(dataInBroadcastSBT + dataOutBroadcastSBT, timeBroadcastSBT));
+         
+        System.out.printf("     borderExchange time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
+                (timeBorderExchange / 1000.0), 
+                countBorderExchange, 
+                dataInBorderExchange, 
+                dataOutBorderExchange,
+                getThroughput(dataInBorderExchange + dataOutBorderExchange, timeBorderExchange));
+                
+        timeBarrierSBT = 0;
+        timeReduceValueToRoot0FT = 0;
+        timeReduceArrayToRoot0FT = 0;
+        timeReduceArrayToAll0FT = 0;
+        timeScatter0FT = 0;
+        timeGather0FT = 0;
+        timeBroadcastSBT = 0;
+        timeBroadcastValue = 0;
+        timeBorderExchange = 0;
 
-	public static double[] reduceArrayToRootOFT(double[] a, CxRedOpArray op)
-	throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+        countBarrierSBT = 0;
+        countReduceValueToRoot0FT = 0;
+        countReduceArrayToRoot0FT = 0;
+        countReduceArrayToAll0FT = 0;
+        countScatter0FT = 0;
+        countGather0FT = 0;
+        countBroadcastSBT = 0;
+        countBroadcastValue = 0;
+        countBorderExchange = 0;
 
-		if (myCPU == 0) {
-			double[] recvArray = new double[a.length];
+        dataInReduceArrayToRoot0FT = 0;
+        dataOutReduceArrayToRoot0FT = 0;
 
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				if (rps[partner] == null) {
-					rps[partner] = ibis.createReceivePort(portType, COMM_ID
-							+ partner);
-					rps[partner].enableConnections();
-				}
-				ReadMessage r = rps[partner].receive();
-				r.readArray(recvArray);
-				r.finish();
-				op.doIt(a, recvArray);
-			}
-		} else {
-			if (sps[0] == null) {
-				sps[0] = ibis.createSendPort(portType);
-				sps[0].connect(world[0], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[0].newMessage();
-			w.writeArray(a);
-			w.finish();
-		}
+        dataInReduceArrayToAll0FT = 0;
+        dataOutReduceArrayToAll0FT = 0;
 
-		// Added -- J
-		timeReduceArrayToRoot0FT += System.nanoTime() - start;
-		countReduceArrayToRoot0FT++;
-		
-		return a;
-	}
-/*
+        dataInScatter0FT = 0;
+        dataOutScatter0FT = 0;
+
+        dataInGather0FT = 0;
+        dataOutGather0FT = 0;
+
+        dataInBroadcastSBT = 0;
+        dataOutBroadcastSBT = 0;
+
+        dataInBorderExchange = 0;
+        dataOutBorderExchange = 0;
+
+    }
+
+    public static void exitParallelSystem() throws Exception {
+        for (int i = 0; i < NR_PORTS; i++) {
+            if (sps[i] != null)
+                sps[i].close();
+            if (rps[i] != null)
+                rps[i].close();
+        }
+        ibis.end();
+        initialized = false;
+    }
+
+    public static boolean initialized() {
+        return initialized;
+    }
+
+    public static int myCPU() {
+        return myCPU;
+    }
+
+    public static int nrCPUs() {
+        return nrCPUs;
+    }
+
+    public static void barrierSBT() throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        int mask = 1;
+        for (int i = 0; i < logCPUs; i++) {
+            int partner = myCPU ^ mask;
+            if ((myCPU % mask == 0) && (partner < nrCPUs)) {
+                if (myCPU > partner) {
+//                    if (sps[partner] == null) {
+//                        sps[partner] = ibis.createSendPort(portType);
+//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                    }
+                    WriteMessage w = sps[partner].newMessage();
+                    w.finish();
+                } else {
+//                    if (rps[partner] == null) {
+//                       rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                                + partner);
+//                        rps[partner].enableConnections();
+//                    }
+                    ReadMessage r = rps[partner].receive();
+                    r.finish();
+                }
+            }
+            mask <<= 1;
+        }
+        mask = 1 << (logCPUs - 1);
+        for (int i = 0; i < logCPUs; i++) {
+            int partner = myCPU ^ mask;
+            if ((myCPU % mask == 0) && (partner < nrCPUs)) {
+                if (myCPU < partner) {
+//                    if (sps[partner] == null) {
+//                        sps[partner] = ibis.createSendPort(portType);
+//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                    }
+                    WriteMessage w = sps[partner].newMessage();
+                    w.finish();
+                } else {
+//                    if (rps[partner] == null) {
+//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                               + partner);
+//                        rps[partner].enableConnections();
+//                    }
+                    ReadMessage r = rps[partner].receive();
+                    r.finish();
+                }
+            }
+            mask >>= 1;
+        }
+
+        // Added -- J
+        timeBarrierSBT += System.nanoTime() - start;
+        countBarrierSBT++;
+    }
+
+    public static double reduceValueToRootOFT(double val, CxRedOp op)
+    throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        double result = val;
+
+        if (myCPU == 0) {
+            for (int partner = 1; partner < nrCPUs; partner++) {
+//                if (rps[partner] == null) {
+//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                            + partner);
+//                    rps[partner].enableConnections();
+//                }
+                ReadMessage r = rps[partner].receive();
+                double recvVal = r.readDouble();
+                r.finish();
+                result = (Double) op.doIt(result, recvVal);
+            }
+        } else {
+//            if (sps[0] == null) {
+//                sps[0] = ibis.createSendPort(portType);
+//                sps[0].connect(world[0], COMM_ID + myCPU);
+//            }
+            WriteMessage w = sps[0].newMessage();
+            w.writeDouble(val);
+            w.finish();
+        }
+
+        // Added -- J
+        timeReduceValueToRoot0FT += System.nanoTime() - start;
+        countReduceValueToRoot0FT++;
+
+        return result;
+    }
+
+    public static double[] reduceArrayToRootOFT(double[] a, CxRedOpArray op)
+    throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        if (myCPU == 0) {
+            double[] recvArray = new double[a.length];
+
+            for (int partner = 1; partner < nrCPUs; partner++) {
+ //               if (rps[partner] == null) {
+ //                   rps[partner] = ibis.createReceivePort(portType, COMM_ID
+ //                           + partner);
+ //                   rps[partner].enableConnections();
+ //               }
+                ReadMessage r = rps[partner].receive();
+                r.readArray(recvArray);
+                r.finish();
+                op.doIt(a, recvArray);
+
+                dataInReduceArrayToRoot0FT += a.length * 8; 
+            }
+        } else {
+ //           if (sps[0] == null) {
+  //              sps[0] = ibis.createSendPort(portType);
+  //              sps[0].connect(world[0], COMM_ID + myCPU);
+  //          }
+            WriteMessage w = sps[0].newMessage();
+            w.writeArray(a);
+            w.finish();
+
+            dataOutReduceArrayToRoot0FT += a.length * 8; 
+        }
+
+        // Added -- J
+        timeReduceArrayToRoot0FT += System.nanoTime() - start;
+        countReduceArrayToRoot0FT++;
+
+        return a;
+    }
+    /*
 	public static double[] reduceArrayToAllOFT_Flat_ReceiveAny(double [] a, CxRedOpArray op) throws Exception {
 		// Added -- J
 		long start = System.nanoTime();
 
 		if (myCPU == 0) {
 			double[] recvArray = new double[a.length];
-			
+
 			if (rpReduce == null) {
 				rpReduce = ibis.createReceivePort(portTypeManyToOne, "REDUCE");
 				rpReduce.enableConnections();
 			}
-		
+
 			for (int partner = 1; partner < nrCPUs; partner++) {
 				ReadMessage r = rpReduce.receive();
 				r.readArray(recvArray);
 				r.finish();
 				op.doIt(a, recvArray);
 			}
-		
+
 			if (spReduce == null) {
 				spReduce = ibis.createSendPort(portTypeOneToMany);
-		
+
 				for (int partner = 1; partner < nrCPUs; partner++) {
 					spReduce.connect(world[partner], "REDUCE");
 				}
 			}
-		
+
 			WriteMessage w = spReduce.newMessage();
 			w.writeArray(a);
 			w.finish();
-			
+
 		} else {
 
 			if (rpReduce == null) {
@@ -428,7 +526,7 @@ public class PxSystem {
 		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
 		countReduceArrayToAll0FT++;
-		
+
 		return a;
 	}
 
@@ -437,7 +535,7 @@ public class PxSystem {
 		long start = System.nanoTime();
 
 		if (myCPU == 0) {
-			
+
 			if (rpReduce == null) {
 				rpReduce = ibis.createReceivePort(portTypeManyToOneUpcalls, "REDUCE", new ReduceToAllUpcallHandler());
 				rpReduce.enableConnections();
@@ -445,11 +543,11 @@ public class PxSystem {
 			}
 
 			for (int partner = 1; partner < nrCPUs; partner++) {
-			
+
 				double [] tmp;
-				
+
 				synchronized (reduceToAllData) {
-					
+
 					while (reduceToAllData.size() == 0) { 
 						try { 
 							reduceToAllData.wait();
@@ -457,25 +555,25 @@ public class PxSystem {
 							// ignored
 						}
 					}
-					
+
 					tmp = (double[]) reduceToAllData.remove(reduceToAllData.size()-1);
 				}
-				
+
 				op.doIt(a, tmp);
 			}
-		
+
 			if (spReduce == null) {
 				spReduce = ibis.createSendPort(portTypeOneToMany);
-		
+
 				for (int partner = 1; partner < nrCPUs; partner++) {
 					spReduce.connect(world[partner], "REDUCE");
 				}
 			}
-		
+
 			WriteMessage w = spReduce.newMessage();
 			w.writeArray(a);
 			w.finish();
-			
+
 		} else {
 
 			if (rpReduce == null) {
@@ -500,614 +598,694 @@ public class PxSystem {
 		// Added -- J
 		timeReduceArrayToAll0FT += System.nanoTime() - start;
 		countReduceArrayToAll0FT++;
-		
+
 		return a;
 	}
-*/
-	public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
-		// Added -- J
+     */
+    public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
+        // Added -- J
 
-		if (nrCPUs == 1) { 
-			return a;
-		}
-		
-		long start = System.nanoTime();
-		
-		// Start by dividing the array into 'nrCPUs' partitions. This is a bit tricky, since the array 
-		// size my not be dividable by nrCPUs. We ensure here that the difference in size is at most 1.
-		// We also remeber the start indexes of each partition.
-		final int [] sizes = new int[nrCPUs];
-		final int [] index = new int[nrCPUs];
-		
-		final int size = a.length / nrCPUs; 
-		final int left = a.length % nrCPUs; 
-		
-	//	System.out.println("Data size: " + a.length + " div: " + size + " mod: " + left);
-		
-		for (int i=0;i<nrCPUs;i++) { 
-			
-			if (left > 0) {
-				if (i < left) { 
-					sizes[i] = size + 1;
-					index[i] = size * i + i;
-				} else { 
-					sizes[i] = size;
-					index[i] = size * i + left;
-				}
-			} else { 
-				sizes[i] = size;
-				index[i] = size * i;
-			}
-			
-	//		System.out.println(i + " index: " + index[i] + " size: " + sizes[i]);
-		}
-		
-		// Create a temporary array for recieving data
-		final double [] tmp = new double[sizes[0]];  
-		
-		final int sendPartner = (myCPU + 1) % nrCPUs;
-		final int receivePartner = (myCPU + nrCPUs - 1) % nrCPUs;
+        if (nrCPUs == 1) { 
+            return a;
+        }
 
-	//	System.out.println("Send partner: " + sendPartner);
-	//	System.out.println("Receive partner: " + receivePartner);
-		
-		if (rps[receivePartner] == null) {
-			rps[receivePartner] = ibis.createReceivePort(portType, COMM_ID
-					+ receivePartner);
-			rps[receivePartner].enableConnections();
-		}
+        long start = System.nanoTime();
 
-		final ReceivePort rp = rps[receivePartner];
-		
-		if (sps[sendPartner] == null) {
-			sps[sendPartner] = ibis.createSendPort(portType);
-			sps[sendPartner].connect(world[sendPartner], COMM_ID + myCPU);
-		}
-	
-		final SendPort sp = sps[sendPartner];
-		
-		SendPortIdentifier [] s = rp.connectedTo();
-		
-		while (s.length == 0) { 
-			//System.out.println("EEP: no connections to RP yet!");
-			
-			try { 
-				Thread.sleep(10);
-			} catch (Exception e) {
-				// ignore
-			}
-			
-			s = rp.connectedTo();			
-		}
-		
-		// Determine the starting partition for this node.
-		int sendPartition = myCPU;
-		int receivePartition = (myCPU + nrCPUs - 1) % nrCPUs;
+        // Start by dividing the array into 'nrCPUs' partitions. This is a bit tricky, since the array 
+        // size my not be dividable by nrCPUs. We ensure here that the difference in size is at most 1.
+        // We also remeber the start indexes of each partition.
+        final int [] sizes = new int[nrCPUs];
+        final int [] index = new int[nrCPUs];
 
-		//System.out.println("Send partition: " + sendPartition);
-		//System.out.println("Receive partition: " + receivePartition);
-		
-		// Perform nrCPUs-1 rounds of the algorithm
-		for (int i=0;i<nrCPUs-1;i++) { 
+        final int size = a.length / nrCPUs; 
+        final int left = a.length % nrCPUs; 
 
-	//		System.out.println("Iteration: " + i);
-			
-			if ((myCPU & 1) == 0) { 
-				
-				WriteMessage wm = sp.newMessage();
-				wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
-				wm.finish();
-				
-				ReadMessage rm = rp.receive();
-				rm.readArray(tmp, 0, sizes[receivePartition]);
-				rm.finish();
-					
-			} else { 
-				
-				ReadMessage rm = rp.receive();
-				rm.readArray(tmp, 0, sizes[receivePartition]);
-				rm.finish();
-				
-				WriteMessage wm = sp.newMessage();
-				wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
-				wm.finish();
-				
-			}
-		
-			op.doItRange(a, tmp, index[receivePartition], sizes[receivePartition]);	
-		
-			// Shift the active partition by one.
-			sendPartition = receivePartition;
-			receivePartition = (receivePartition + nrCPUs - 1) % nrCPUs;
+        //	System.out.println("Data size: " + a.length + " div: " + size + " mod: " + left);
 
-		//	System.out.println("Send partition: " + sendPartition);
-		//	System.out.println("Receive partition: " + receivePartition);
+        for (int i=0;i<nrCPUs;i++) { 
 
-		}
-		
-		// The 'sendpartition' part of the data now contains the final result. We should now continue for
-		// another nrCPUs-1 steps to 'allgather' the result to all machines.
-		for (int i=0;i<nrCPUs-1;i++) { 
-		
-			if ((myCPU & 1) == 0) { 
-				
-				WriteMessage wm = sp.newMessage();
-				wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
-				wm.finish();
-				
-				ReadMessage rm = rp.receive();
-				rm.readArray(a, index[receivePartition], sizes[receivePartition]);
-				rm.finish();
-					
-			} else { 
-				
-				ReadMessage rm = rp.receive();
-				rm.readArray(a, index[receivePartition], sizes[receivePartition]);
-				rm.finish();
-				
-				WriteMessage wm = sp.newMessage();
-				wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
-				wm.finish();
-			}
-		
-			// Shift the active partition by one.
-			sendPartition = receivePartition;
-			receivePartition = (receivePartition + nrCPUs - 1) % nrCPUs;
-		}
+            if (left > 0) {
+                if (i < left) { 
+                    sizes[i] = size + 1;
+                    index[i] = size * i + i;
+                } else { 
+                    sizes[i] = size;
+                    index[i] = size * i + left;
+                }
+            } else { 
+                sizes[i] = size;
+                index[i] = size * i;
+            }
 
-		// Added -- J
-		timeReduceArrayToAll0FT += System.nanoTime() - start;
-		countReduceArrayToAll0FT++;
-		
-		return a;
-	}
+            //		System.out.println(i + " index: " + index[i] + " size: " + sizes[i]);
+        }
 
-	
-	
-	public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
-	throws Exception {
-//		Added -- J
-		long start = System.nanoTime();
+        // Create a temporary array for recieving data
+        final double [] tmp = new double[sizes[0]];  
 
-		if (myCPU == 0) {
-			double[] recvArray = new double[a.length];
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				if (rps[partner] == null) {
-					rps[partner] = ibis.createReceivePort(portType, COMM_ID
-							+ partner);
-					rps[partner].enableConnections();
-				}
-				ReadMessage r = rps[partner].receive();
-				r.readArray(recvArray);
-				r.finish();
-				op.doIt(a, recvArray);
-			}
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				if (sps[partner] == null) {
-					sps[partner] = ibis.createSendPort(portType);
-					sps[partner].connect(world[partner], COMM_ID + 0);
-				}
-				WriteMessage w = sps[partner].newMessage();
-				w.writeArray(a);
-				w.finish();
-			}
-		} else {
-			if (sps[0] == null) {
-				sps[0] = ibis.createSendPort(portType);
-				sps[0].connect(world[0], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[0].newMessage();
-			w.writeArray(a);
-			w.finish();
+        final int sendPartner = (myCPU + 1) % nrCPUs;
+        final int receivePartner = (myCPU + nrCPUs - 1) % nrCPUs;
 
-			if (rps[0] == null) {
-				rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
-				rps[0].enableConnections();
-			}
-			ReadMessage r = rps[0].receive();
-			r.readArray(a);
-			r.finish();
-		}
+        //	System.out.println("Send partner: " + sendPartner);
+        //	System.out.println("Receive partner: " + receivePartner);
 
-		// Added -- J
-		timeReduceArrayToAll0FT += System.nanoTime() - start;
-		countReduceArrayToAll0FT++;
-		
-		return a;
-	}
+//        if (rps[receivePartner] == null) {
+//            rps[receivePartner] = ibis.createReceivePort(portType, COMM_ID
+//                    + receivePartner);
+//            rps[receivePartner].enableConnections();
+//        }
 
-	public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
-		throws Exception {
-		return reduceArrayToAllOFT_Ring(a, op);
-		//return reduceArrayToAllOFT_Flat_Orig(a, op);
-	}	
+        final ReceivePort rp = rps[receivePartner];
 
-	public static void scatterOFT(CxArray2d a) throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+//        if (sps[sendPartner] == null) {
+//            sps[sendPartner] = ibis.createSendPort(portType);
+//            sps[sendPartner].connect(world[sendPartner], COMM_ID + myCPU);
+//        }
 
-		if (a instanceof CxArray2dDoubles) {
-			doScatterOFT((CxArray2dDoubles) a);
-		} else {
-			System.out.println("ERROR: SCATTER OFT NOT IMPLEMENTED YET!!!");
-		}
-		a.setLocalState(CxArray2d.VALID);
-		a.setDistType(CxArray2d.PARTIAL);
+        final SendPort sp = sps[sendPartner];
 
-		// Added -- J
-		timeScatter0FT += System.nanoTime() - start;
-		countScatter0FT++;
-	}
+        SendPortIdentifier [] s = rp.connectedTo();
 
-	public static void gatherOFT(CxArray2d a) throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+        while (s.length == 0) { 
+            //System.out.println("EEP: no connections to RP yet!");
 
-		if (a instanceof CxArray2dDoubles) {
-			doGatherOFT((CxArray2dDoubles) a);
-		} else {
-			System.out.println("ERROR: GATHER OFT NOT IMPLEMENTED YET!!!");
-		}
-		a.setGlobalState(CxArray2d.VALID);
+            try { 
+                Thread.sleep(10);
+            } catch (Exception e) {
+                // ignore
+            }
 
-		// Added -- J
-		timeGather0FT += System.nanoTime() - start;
-		countGather0FT++;
-	}
+            s = rp.connectedTo();			
+        }
 
-	public static void broadcastSBT(CxArray2d a) throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+        // Determine the starting partition for this node.
+        int sendPartition = myCPU;
+        int receivePartition = (myCPU + nrCPUs - 1) % nrCPUs;
 
-		if (a instanceof CxArray2dDoubles) {
-			doBroadcastSBT((CxArray2dDoubles) a);
-		} else {
-			System.out.println("ERROR: BROADCAST SBT NOT IMPLEMENTED YET!!!");
-		}
-		a.setLocalState(CxArray2d.VALID);
-		a.setDistType(CxArray2d.FULL);
+        //System.out.println("Send partition: " + sendPartition);
+        //System.out.println("Receive partition: " + receivePartition);
 
-		// Added -- J
-		timeBroadcastSBT += System.nanoTime() - start;
-		countBroadcastSBT++;
-	}
+        // Perform nrCPUs-1 rounds of the algorithm
+        for (int i=0;i<nrCPUs-1;i++) { 
 
-	public static void borderExchange(double[] a, int width, int height,
-			int off, int stride, int ySize) throws Exception {	
-		borderExchange_Orig(a, width, height, off, stride, ySize);		
-	}
-	
-	public static void borderExchange_Jason(double[] a, int width, int height,
-			int off, int stride, int ySize) throws Exception {
+            //		System.out.println("Iteration: " + i);
 
-		// Added -- J
-		long start = System.nanoTime();
+            if ((myCPU & 1) == 0) { 
 
-		// Border exchange in vertical direction (top <---> bottom)
-		int part1 = myCPU - 1;
-		int part2 = myCPU + 1;
-		int xSize = width + stride;
+                WriteMessage wm = sp.newMessage();
+                wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
+                wm.finish();
 
-		// Do some necessary initialisations. Note that these are only performed
-		// the first time the operation is used. 		
-		if (rps[part1] == null) {
-			rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
-			rps[part1].enableConnections();
-		}
+                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
-		if (rps[part2] == null) {
-			rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
-			rps[part2].enableConnections();
-		}
+                ReadMessage rm = rp.receive();
+                rm.readArray(tmp, 0, sizes[receivePartition]);
+                rm.finish();
 
-		if (sps[part1] == null) {
-			sps[part1] = ibis.createSendPort(portType);
-			sps[part1].connect(world[part1], COMM_ID + myCPU);
-		}
+                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
-		if (sps[part2] == null) {
-			sps[part2] = ibis.createSendPort(portType);
-			sps[part2].connect(world[part2], COMM_ID + myCPU);
-		}
-		
-		if ((myCPU & 1) == 0) { 
+            } else { 
 
-			if (part1 >= 0) {
-				
-				WriteMessage w = sps[part1].newMessage();
-				w.writeArray(a, off - stride / 2, xSize * ySize);
-				w.finish();
-			
-				ReadMessage r = rps[part1].receive();
-				r.readArray(a, 0, xSize * ySize);
-				r.finish();				
-			}
-			
-			if (part2 < PxSystem.nrCPUs()) {
-				
-				ReadMessage r = rps[part2].receive();
-				r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
-				r.finish();
+                ReadMessage rm = rp.receive();
+                rm.readArray(tmp, 0, sizes[receivePartition]);
+                rm.finish();
 
-				WriteMessage w = sps[part2].newMessage();
-				w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
-				w.finish();
-			}
-			
-		} else { 
+                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
-			if (part2 < PxSystem.nrCPUs()) {
-				
-				ReadMessage r = rps[part2].receive();
-				r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
-				r.finish();
+                WriteMessage wm = sp.newMessage();
+                wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
+                wm.finish();
 
-				WriteMessage w = sps[part2].newMessage();
-				w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
-				w.finish();
-			}
-			
-			if (part1 >= 0) {
-			
-				WriteMessage w = sps[part1].newMessage();
-				w.writeArray(a, off - stride / 2, xSize * ySize);
-				w.finish();			
-			
-				ReadMessage r = rps[part1].receive();
-				r.readArray(a, 0, xSize * ySize);
-				r.finish();
-			}
+                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
+            }
 
-		}
-		
-		// Added -- J
-		timeBorderExchange += System.nanoTime() - start;
-	}
+            op.doItRange(a, tmp, index[receivePartition], sizes[receivePartition]);	
 
-	
-	
-	public static void borderExchange_Orig(double[] a, int width, int height,
-			int off, int stride, int ySize) throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+            // Shift the active partition by one.
+            sendPartition = receivePartition;
+            receivePartition = (receivePartition + nrCPUs - 1) % nrCPUs;
 
-		// Border exchange in vertical direction (top <---> bottom)
-		int part1 = myCPU - 1;
-		int part2 = myCPU + 1;
-		int xSize = width + stride;
+            //	System.out.println("Send partition: " + sendPartition);
+            //	System.out.println("Receive partition: " + receivePartition);
 
-		// Send to first partner and receive from second partner
+        }
 
-		if (part1 >= 0) {
-			if (sps[part1] == null) {
-				sps[part1] = ibis.createSendPort(portType);
-				sps[part1].connect(world[part1], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[part1].newMessage();
-			w.writeArray(a, off - stride / 2, xSize * ySize);
-			w.finish();
-		}
-		
-		if (part2 < PxSystem.nrCPUs()) {
-			if (rps[part2] == null) {
-				rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
-				rps[part2].enableConnections();
-			}
-			ReadMessage r = rps[part2].receive();
-			r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
-			r.finish();
+        // The 'sendpartition' part of the data now contains the final result. We should now continue for
+        // another nrCPUs-1 steps to 'allgather' the result to all machines.
+        for (int i=0;i<nrCPUs-1;i++) { 
 
-			// Send to second partner and receive from first partner
+            if ((myCPU & 1) == 0) { 
 
-			if (sps[part2] == null) {
-				sps[part2] = ibis.createSendPort(portType);
-				sps[part2].connect(world[part2], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[part2].newMessage();
-			w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize
-					* ySize);
-			w.finish();
-		}
-		if (part1 >= 0) {
-			if (rps[part1] == null) {
-				rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
-				rps[part1].enableConnections();
-			}
-			ReadMessage r = rps[part1].receive();
-			r.readArray(a, 0, xSize * ySize);
-			r.finish();
-		}
+                WriteMessage wm = sp.newMessage();
+                wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
+                wm.finish();
 
-		// Added -- J
-		timeBorderExchange += System.nanoTime() - start;
-		countBorderExchange++;
-	}
+                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
-	private static int getPartHeight(int height, int CPUnr) {
-		int minLocalH = height / nrCPUs;
-		int overflowH = height % nrCPUs;
+                ReadMessage rm = rp.receive();
+                rm.readArray(a, index[receivePartition], sizes[receivePartition]);
+                rm.finish();
 
-		if (CPUnr < overflowH) {
-			minLocalH++;
-		}
-		return minLocalH;
-	}
+                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
-	public static int getLclStartY(int height, int CPUnr) {
-		int minLocalH = height / nrCPUs;
-		int overflowH = height % nrCPUs;
+            } else { 
 
-		if (CPUnr < overflowH) {
-			return (CPUnr * (minLocalH + 1));
-		} else {
-			return (CPUnr * minLocalH + overflowH);
-		}
-	}
+                ReadMessage rm = rp.receive();
+                rm.readArray(a, index[receivePartition], sizes[receivePartition]);
+                rm.finish();
 
-	private static void doScatterOFT(CxArray2dDoubles a) throws Exception {
-		// Here we assume CPU 0 (root) to have a full & valid structure
-		// which is scattered to the partial structs of all nodes. East
-		// and west borders are also communicated (not north and south).
+                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
-		int globH = a.getHeight();
-		int extent = a.getExtent();
-		int pWidth = a.getWidth();
-		int pHeight = getPartHeight(globH, myCPU);
-		int bWidth = a.getBorderWidth();
-		int bHeight = a.getBorderHeight();
-		double[] pData = new double[(pWidth + bWidth * 2)
-		                            * (pHeight + bHeight * 2) * extent];
-		a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
+                WriteMessage wm = sp.newMessage();
+                wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
+                wm.finish();
 
-		int xSize = (pWidth + bWidth * 2) * extent;
-		if (myCPU == 0) {
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				int ySize = getPartHeight(globH, partner);
-				int offset = xSize * (getLclStartY(globH, partner) + bHeight);
-				if (sps[partner] == null) {
-					sps[partner] = ibis.createSendPort(portType);
-					sps[partner].connect(world[partner], COMM_ID + 0);
-				}
-				WriteMessage w = sps[partner].newMessage();
-				w.writeArray(a.getData(), offset, xSize * ySize);
-				w.finish();
-			}
-			int start = xSize * bHeight;
-			System.arraycopy(a.getData(), start, pData, start, pData.length - 2
-					* start);
+                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
-		} else {
-			int ySize = getPartHeight(globH, myCPU);
-			int offset = xSize * bHeight;
-			if (rps[0] == null) {
-				rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
-				rps[0].enableConnections();
-			}
-			ReadMessage r = rps[0].receive();
-			r.readArray(a.getPartialData(), offset, xSize * ySize);
-			r.finish();
-		}
-	}
+            }
 
-	private static void doGatherOFT(CxArray2dDoubles a) throws Exception {
-		// Here we assume all nodes to have a full yet invalid global
-		// structure and a valid partial structure, which is gathered
-		// to the global structure of CPU 0; east and west borders are
-		// also communicated (not north and south).
+            // Shift the active partition by one.
+            sendPartition = receivePartition;
+            receivePartition = (receivePartition + nrCPUs - 1) % nrCPUs;
+        }
 
-		int globH = a.getHeight();
-		int extent = a.getExtent();
-		int pWidth = a.getWidth();
-		int bWidth = a.getBorderWidth();
-		int bHeight = a.getBorderHeight();
+        // Added -- J
+        timeReduceArrayToAll0FT += System.nanoTime() - start;
+        countReduceArrayToAll0FT++;
 
-		int xSize = (pWidth + bWidth * 2) * extent;
-		if (myCPU == 0) {
-			for (int partner = 1; partner < nrCPUs; partner++) {
-				int ySize = getPartHeight(globH, partner);
-				int offset = xSize * (getLclStartY(globH, partner) + bHeight);
-				if (rps[partner] == null) {
-					rps[partner] = ibis.createReceivePort(portType, COMM_ID
-							+ partner);
-					rps[partner].enableConnections();
-				}
-				ReadMessage r = rps[partner].receive();
-				r.readArray(a.getData(), offset, xSize * ySize);
-				r.finish();
-			}
-			int start = xSize * bHeight;
-			System.arraycopy(a.getPartialData(), start, a.getData(), start, a
-					.getPartialData().length
-					- 2 * start);
+        return a;
+    }
 
-		} else {
-			int ySize = getPartHeight(globH, myCPU);
-			int offset = xSize * bHeight;
-			if (sps[0] == null) {
-				sps[0] = ibis.createSendPort(portType);
-				sps[0].connect(world[0], COMM_ID + myCPU);
-			}
-			WriteMessage w = sps[0].newMessage();
-			w.writeArray(a.getPartialData(), offset, xSize * ySize);
-			w.finish();
-		}
-	}
 
-	private static void doBroadcastSBT(CxArray2dDoubles a) throws Exception {
-		// Here we assume CPU 0 (root) to have a full & valid structure
-		// which is broadcast to the partial structs of all nodes; east
-		// and west borders are also communicated (not north and south).
 
-		int globW = a.getWidth();
-		int globH = a.getHeight();
+    public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
+    throws Exception {
+//      Added -- J
+        long start = System.nanoTime();
 
-		double[] pData = a.getData().clone();
-		a.setPartialData(globW, globH, pData, CxArray2d.NONE, CxArray2d.NONE);
+        if (myCPU == 0) {
+            double[] recvArray = new double[a.length];
+            for (int partner = 1; partner < nrCPUs; partner++) {
+//                if (rps[partner] == null) {
+//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                            + partner);
+ //                   rps[partner].enableConnections();
+  //              }
+                ReadMessage r = rps[partner].receive();
+                r.readArray(recvArray);
+                r.finish();
 
-		int xSize = (globW + a.getBorderWidth() * 2) * a.getExtent();
-		int length = xSize * globH;
-		int offset = xSize * a.getBorderHeight();
+                dataInReduceArrayToAll0FT += a.length * 8;
 
-		int mask = 1 << (logCPUs - 1);
-		for (int i = 0; i < logCPUs; i++) {
-			int partner = myCPU ^ mask;
-			if ((myCPU % mask == 0) && (partner < nrCPUs)) {
-				if (myCPU < partner) {
-					if (sps[partner] == null) {
-						sps[partner] = ibis.createSendPort(portType);
-						sps[partner].connect(world[partner], COMM_ID + myCPU);
-					}
-					WriteMessage w = sps[partner].newMessage();
-					w.writeArray(a.getPartialData(), offset, length);
-					w.finish();
-				} else {
-					if (rps[partner] == null) {
-						rps[partner] = ibis.createReceivePort(portType, COMM_ID
-								+ partner);
-						rps[partner].enableConnections();
-					}
-					ReadMessage r = rps[partner].receive();
-					r.readArray(a.getPartialData(), offset, length);
-					r.finish();
-				}
-			}
-			mask >>= 1;
-		}
-	}
+                op.doIt(a, recvArray);
+            }
+            for (int partner = 1; partner < nrCPUs; partner++) {
+//                if (sps[partner] == null) {
+//                    sps[partner] = ibis.createSendPort(portType);
+//                    sps[partner].connect(world[partner], COMM_ID + 0);
+ //               }
+                WriteMessage w = sps[partner].newMessage();
+                w.writeArray(a);
+                w.finish();
 
-	public static int broadcastValue(int value) throws Exception {
-		// Added -- J
-		long start = System.nanoTime();
+                dataOutReduceArrayToAll0FT += a.length * 8;
+            }
+        } else {
+//            if (sps[0] == null) {
+//                sps[0] = ibis.createSendPort(portType);
+//                sps[0].connect(world[0], COMM_ID + myCPU);
+//            }
+            WriteMessage w = sps[0].newMessage();
+            w.writeArray(a);
+            w.finish();
 
-		int mask = 1 << (logCPUs - 1);
-		for (int i = 0; i < logCPUs; i++) {
-			int partner = myCPU ^ mask;
-			if ((myCPU % mask == 0) && (partner < nrCPUs)) {
-				if (myCPU < partner) {
-					if (sps[partner] == null) {
-						sps[partner] = ibis.createSendPort(portType);
-						sps[partner].connect(world[partner], COMM_ID + myCPU);
-					}
-					WriteMessage w = sps[partner].newMessage();
-					w.writeInt(value);
-					w.finish();
-				} else {
-					if (rps[partner] == null) {
-						rps[partner] = ibis.createReceivePort(portType, COMM_ID
-								+ partner);
-						rps[partner].enableConnections();
-					}
-					ReadMessage r = rps[partner].receive();
-					value = r.readInt();
-					r.finish();
-				}
-			}
-			mask >>= 1;
-		}
+            dataOutReduceArrayToAll0FT += a.length * 8;
+//
+//            if (rps[0] == null) {
+//                rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
+//                rps[0].enableConnections();
+//            }
+            ReadMessage r = rps[0].receive();
+            r.readArray(a);
+            r.finish();
 
-		// Added -- J
-		timeBroadcastValue += System.nanoTime() - start;
+            dataInReduceArrayToAll0FT += a.length * 8;
 
-		return value;
-	}
+        }
+
+        // Added -- J
+        timeReduceArrayToAll0FT += System.nanoTime() - start;
+        countReduceArrayToAll0FT++;
+
+        return a;
+    }
+
+    public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
+    throws Exception {
+        return reduceArrayToAllOFT_Ring(a, op);
+        //return reduceArrayToAllOFT_Flat_Orig(a, op);
+    }	
+
+    public static void scatterOFT(CxArray2d a) throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        if (a instanceof CxArray2dDoubles) {
+            doScatterOFT((CxArray2dDoubles) a);
+        } else {
+            System.out.println("ERROR: SCATTER OFT NOT IMPLEMENTED YET!!!");
+        }
+        a.setLocalState(CxArray2d.VALID);
+        a.setDistType(CxArray2d.PARTIAL);
+
+        // Added -- J
+        timeScatter0FT += System.nanoTime() - start;
+        countScatter0FT++;
+    }
+
+    public static void gatherOFT(CxArray2d a) throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        if (a instanceof CxArray2dDoubles) {
+            doGatherOFT((CxArray2dDoubles) a);
+        } else {
+            System.out.println("ERROR: GATHER OFT NOT IMPLEMENTED YET!!!");
+        }
+        a.setGlobalState(CxArray2d.VALID);
+
+        // Added -- J
+        timeGather0FT += System.nanoTime() - start;
+        countGather0FT++;
+    }
+
+    public static void broadcastSBT(CxArray2d a) throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        if (a instanceof CxArray2dDoubles) {
+            doBroadcastSBT((CxArray2dDoubles) a);
+        } else {
+            System.out.println("ERROR: BROADCAST SBT NOT IMPLEMENTED YET!!!");
+        }
+        a.setLocalState(CxArray2d.VALID);
+        a.setDistType(CxArray2d.FULL);
+
+        // Added -- J
+        timeBroadcastSBT += System.nanoTime() - start;
+        countBroadcastSBT++;
+    }
+
+    public static void borderExchange(double[] a, int width, int height,
+            int off, int stride, int ySize) throws Exception {	
+        borderExchange_Jason(a, width, height, off, stride, ySize);		
+    }
+
+    public static void borderExchange_Jason(double[] a, int width, int height,
+            int off, int stride, int ySize) throws Exception {
+
+        // Added -- J
+        long start = System.nanoTime();
+
+        // Border exchange in vertical direction (top <---> bottom)
+        int prevCPU = myCPU - 1;
+        int nextCPU = myCPU + 1;
+
+        int xSize = width + stride;
+
+        // Do some necessary initialisations. Note that these are only performed
+        // the first time the operation is used. 
+        /*
+        if (prevCPU >= 0 && rps[prevCPU] == null) {
+            rps[prevCPU] = ibis.createReceivePort(portType, COMM_ID + prevCPU);
+            rps[prevCPU].enableConnections();
+        }
+
+        if (nextCPU < PxSystem.nrCPUs() && rps[nextCPU] == null) {
+            rps[nextCPU] = ibis.createReceivePort(portType, COMM_ID + nextCPU);
+            rps[nextCPU].enableConnections();
+        }
+
+        if (prevCPU >= 0 && sps[prevCPU] == null) {
+            sps[prevCPU] = ibis.createSendPort(portType);
+            sps[prevCPU].connect(world[prevCPU], COMM_ID + myCPU);
+        }
+
+        if (nextCPU < PxSystem.nrCPUs() && sps[nextCPU] == null) {
+            sps[nextCPU] = ibis.createSendPort(portType);
+            sps[nextCPU].connect(world[nextCPU], COMM_ID + myCPU);
+        }*/
+
+//        System.out.println("Border exchange: " + xSize + "x" + ySize + " (" + (xSize*ySize) + ")");
+
+        if ((myCPU & 1) == 0) { 
+
+            if (prevCPU >= 0) {
+                WriteMessage w = sps[prevCPU].newMessage();
+                w.writeArray(a, off - stride / 2, xSize * ySize);
+                w.finish();
+
+                dataOutBorderExchange += xSize * ySize * 8;
+            }
+
+            if (nextCPU < PxSystem.nrCPUs()) {
+                WriteMessage w = sps[nextCPU].newMessage();
+                w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
+                w.finish();
+
+                dataOutBorderExchange += xSize * ySize * 8;             
+            }
+
+            if (prevCPU >= 0) {
+                ReadMessage r = rps[prevCPU].receive();
+                r.readArray(a, 0, xSize * ySize);
+                r.finish();				
+
+                dataInBorderExchange += xSize * ySize * 8;
+            }
+
+            if (nextCPU < PxSystem.nrCPUs()) {
+                ReadMessage r = rps[nextCPU].receive();
+                r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
+                r.finish();
+
+                dataInBorderExchange += xSize * ySize * 8;        
+            }
+            
+        } else { 
+
+            if (nextCPU < PxSystem.nrCPUs()) {
+                ReadMessage r = rps[nextCPU].receive();
+                r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
+                r.finish();
+
+                dataInBorderExchange += xSize * ySize * 8;
+            }
+
+            if (prevCPU >= 0) {
+                ReadMessage r = rps[prevCPU].receive();
+                r.readArray(a, 0, xSize * ySize);
+                r.finish();
+
+                dataInBorderExchange += xSize * ySize * 8;
+            }
+
+            if (nextCPU < PxSystem.nrCPUs()) {
+                WriteMessage w = sps[nextCPU].newMessage();
+                w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
+                w.finish();
+
+                dataOutBorderExchange += xSize * ySize * 8;
+            }
+
+            if (prevCPU >= 0) {
+                WriteMessage w = sps[prevCPU].newMessage();
+                w.writeArray(a, off - stride / 2, xSize * ySize);
+                w.finish();                     
+
+                dataOutBorderExchange += xSize * ySize * 8;
+            }
+        }
+
+        // Added -- J
+        timeBorderExchange += System.nanoTime() - start;
+        countBorderExchange++;
+    }
+
+    public static void borderExchange_Orig(double[] a, int width, int height,
+            int off, int stride, int ySize) throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        // Border exchange in vertical direction (top <---> bottom)
+        int part1 = myCPU - 1;
+        int part2 = myCPU + 1;
+        int xSize = width + stride;
+
+        // Send to first partner and receive from second partner
+
+        if (part1 >= 0) {
+            //if (sps[part1] == null) {
+            //    sps[part1] = ibis.createSendPort(portType);
+            //    sps[part1].connect(world[part1], COMM_ID + myCPU);
+           // }
+            WriteMessage w = sps[part1].newMessage();
+            w.writeArray(a, off - stride / 2, xSize * ySize);
+            w.finish();
+
+            dataOutBorderExchange += xSize * ySize * 8;
+        }
+
+        if (part2 < PxSystem.nrCPUs()) {
+            //if (rps[part2] == null) {
+             //   rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
+            //    rps[part2].enableConnections();
+           // }
+            ReadMessage r = rps[part2].receive();
+            r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
+            r.finish();
+
+            dataInBorderExchange += xSize * ySize * 8;
+
+            // Send to second partner and receive from first partner
+
+//            if (sps[part2] == null) {
+ //               sps[part2] = ibis.createSendPort(portType);
+  //              sps[part2].connect(world[part2], COMM_ID + myCPU);
+   //         }
+            WriteMessage w = sps[part2].newMessage();
+            w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize
+                    * ySize);
+            w.finish();
+
+            dataOutBorderExchange += xSize * ySize * 8;
+
+        }
+        if (part1 >= 0) {
+//            if (rps[part1] == null) {
+//                rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
+ //               rps[part1].enableConnections();
+  //          }
+            ReadMessage r = rps[part1].receive();
+            r.readArray(a, 0, xSize * ySize);
+            r.finish();
+
+            dataInBorderExchange += xSize * ySize * 8;
+        }
+
+        // Added -- J
+        timeBorderExchange += System.nanoTime() - start;
+        countBorderExchange++;
+    }
+
+    public static int getPartHeight(int height, int CPUnr) {
+        int minLocalH = height / nrCPUs;
+        int overflowH = height % nrCPUs;
+
+        if (CPUnr < overflowH) {
+            minLocalH++;
+        }
+        return minLocalH;
+    }
+
+    public static int getLclStartY(int height, int CPUnr) {
+        int minLocalH = height / nrCPUs;
+        int overflowH = height % nrCPUs;
+
+        if (CPUnr < overflowH) {
+            return (CPUnr * (minLocalH + 1));
+        } else {
+            return (CPUnr * minLocalH + overflowH);
+        }
+    }
+
+    private static void doScatterOFT(CxArray2dDoubles a) throws Exception {
+        // Here we assume CPU 0 (root) to have a full & valid structure
+        // which is scattered to the partial structs of all nodes. East
+        // and west borders are also communicated (not north and south).
+
+        int globH = a.getHeight();
+        int extent = a.getExtent();
+        int pWidth = a.getWidth();
+        int pHeight = getPartHeight(globH, myCPU);
+        int bWidth = a.getBorderWidth();
+        int bHeight = a.getBorderHeight();
+        
+        double[] pData = new double[(pWidth + bWidth * 2)
+                                    * (pHeight + bHeight * 2) * extent];
+        
+        a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
+
+        int xSize = (pWidth + bWidth * 2) * extent;
+
+        if (myCPU == 0) {
+            for (int partner = 1; partner < nrCPUs; partner++) {
+                int ySize = getPartHeight(globH, partner);
+                int offset = xSize * (getLclStartY(globH, partner) + bHeight);
+    //            if (sps[partner] == null) {
+    //                sps[partner] = ibis.createSendPort(portType);
+    //                sps[partner].connect(world[partner], COMM_ID + 0);
+    //            }
+                WriteMessage w = sps[partner].newMessage();
+                w.writeArray(a.getData(), offset, xSize * ySize);
+                w.finish();
+
+                // Added-- J
+                dataOutScatter0FT += 8 * xSize * ySize;               
+            }
+        
+            int start = xSize * bHeight;
+            
+            System.arraycopy(a.getData(), start, pData, start, pData.length - 2
+                    * start);
+        } else {
+            int ySize = getPartHeight(globH, myCPU);
+            int offset = xSize * bHeight;
+      //      if (rps[0] == null) {
+       //         rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
+       //         rps[0].enableConnections();
+       //     }
+            ReadMessage r = rps[0].receive();
+            r.readArray(a.getPartialData(), offset, xSize * ySize);
+            r.finish();
+
+            // Added-- J
+            dataInScatter0FT += 8 * xSize * ySize;               
+        }
+    }
+
+    private static void doGatherOFT(CxArray2dDoubles a) throws Exception {
+        // Here we assume all nodes to have a full yet invalid global
+        // structure and a valid partial structure, which is gathered
+        // to the global structure of CPU 0; east and west borders are
+        // also communicated (not north and south).
+
+        int globH = a.getHeight();
+        int extent = a.getExtent();
+        int pWidth = a.getWidth();
+        int bWidth = a.getBorderWidth();
+        int bHeight = a.getBorderHeight();
+
+        int xSize = (pWidth + bWidth * 2) * extent;
+        
+        if (myCPU == 0) {
+            for (int partner = 1; partner < nrCPUs; partner++) {
+                int ySize = getPartHeight(globH, partner);
+                int offset = xSize * (getLclStartY(globH, partner) + bHeight);
+//                if (rps[partner] == null) {
+//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                            + partner);
+//                    rps[partner].enableConnections();
+//                }
+                ReadMessage r = rps[partner].receive();
+                r.readArray(a.getData(), offset, xSize * ySize);
+                r.finish();
+
+                // Added -- J.
+                dataInGather0FT += 8 * xSize * ySize;
+            }
+            int start = xSize * bHeight;
+            System.arraycopy(a.getPartialData(), start, a.getData(), start, a
+                    .getPartialData().length
+                    - 2 * start);
+
+        } else {
+            int ySize = getPartHeight(globH, myCPU);
+            int offset = xSize * bHeight;
+//            if (sps[0] == null) {
+//                sps[0] = ibis.createSendPort(portType);
+//                sps[0].connect(world[0], COMM_ID + myCPU);
+//            }
+            WriteMessage w = sps[0].newMessage();
+            w.writeArray(a.getPartialData(), offset, xSize * ySize);
+            w.finish();
+
+            // Added -- J.
+            dataOutGather0FT += 8 * xSize * ySize;
+        }
+    }
+
+    private static void doBroadcastSBT(CxArray2dDoubles a) throws Exception {
+        // Here we assume CPU 0 (root) to have a full & valid structure
+        // which is broadcast to the partial structs of all nodes; east
+        // and west borders are also communicated (not north and south).
+
+        int globW = a.getWidth();
+        int globH = a.getHeight();
+
+        double[] pData = a.getData().clone();
+
+        a.setPartialData(globW, globH, pData, CxArray2d.NONE, CxArray2d.NONE);
+
+        int xSize = (globW + a.getBorderWidth() * 2) * a.getExtent();
+        int length = xSize * globH;
+        int offset = xSize * a.getBorderHeight();
+
+        int mask = 1 << (logCPUs - 1);
+        for (int i = 0; i < logCPUs; i++) {
+            int partner = myCPU ^ mask;
+            if ((myCPU % mask == 0) && (partner < nrCPUs)) {
+                if (myCPU < partner) {
+//                    if (sps[partner] == null) {
+//                        sps[partner] = ibis.createSendPort(portType);
+//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                    }
+                    WriteMessage w = sps[partner].newMessage();
+                    w.writeArray(a.getPartialData(), offset, length);
+                    w.finish();
+
+                    dataOutBroadcastSBT += length * 8;
+                } else {
+//                    if (rps[partner] == null) {
+//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                                + partner);
+//                        rps[partner].enableConnections();
+//                    }
+                    ReadMessage r = rps[partner].receive();
+                    r.readArray(a.getPartialData(), offset, length);
+                    r.finish();
+
+                    dataInBroadcastSBT += length * 8; 
+                }
+            }
+            mask >>= 1;
+        }
+    }
+
+    public static int broadcastValue(int value) throws Exception {
+        // Added -- J
+        long start = System.nanoTime();
+
+        int mask = 1 << (logCPUs - 1);
+        for (int i = 0; i < logCPUs; i++) {
+            int partner = myCPU ^ mask;
+            if ((myCPU % mask == 0) && (partner < nrCPUs)) {
+                if (myCPU < partner) {
+//                    if (sps[partner] == null) {
+//                        sps[partner] = ibis.createSendPort(portType);
+//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                    }
+                    WriteMessage w = sps[partner].newMessage();
+                    w.writeInt(value);
+                    w.finish();
+                } else {
+//                    if (rps[partner] == null) {
+//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                                + partner);
+//                        rps[partner].enableConnections();
+//                    }
+                    ReadMessage r = rps[partner].receive();
+                    value = r.readInt();
+                    r.finish();
+                }
+            }
+            mask >>= 1;
+        }
+
+        // Added -- J
+        timeBroadcastValue += System.nanoTime() - start;
+        countBroadcastValue++;
+
+        return value;
+    }
 }

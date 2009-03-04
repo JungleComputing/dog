@@ -216,6 +216,7 @@ public class Server implements Upcall {
                 PxSystem.broadcastValue(operation);
             } catch (Exception e) {
                 // TODO: REACT TO FAILURE PROPERLY
+                e.printStackTrace(System.err);
             }
 
         } else {
@@ -227,6 +228,7 @@ public class Server implements Upcall {
                 img = new RGB24Image(width, height);
             } catch (Exception e) {
                 // TODO: REACT TO FAILURE PROPERLY
+                e.printStackTrace(System.err);
             }
         }
 

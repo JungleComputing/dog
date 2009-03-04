@@ -18,15 +18,15 @@ import jorus.parallel.PxSystem;
 
 public class CxPatSetBorder
 {
-	public static void dispatch(CxArray2d s1,
-								int numX, int numY, CxSetBorder sbo)
-	{
-		if (PxSystem.initialized()) {				// run parallel
-			sbo.init(s1, true);
-			sbo.doIt(s1.getPartialData(), numX, numY);
-		} else {									// run sequential
-			sbo.init(s1, false);
-			sbo.doIt(s1.getData(), numX, numY);
-		}
-	}
+    public static void dispatch(CxArray2d s1,
+            int numX, int numY, CxSetBorder sbo)
+    {
+        if (PxSystem.initialized()) {				// run parallel
+            sbo.init(s1, true);
+            sbo.doIt(s1.getPartialData(), numX, numY);
+        } else {									// run sequential
+            sbo.init(s1, false);
+            sbo.doIt(s1.getData(), numX, numY);
+        }
+    }
 }

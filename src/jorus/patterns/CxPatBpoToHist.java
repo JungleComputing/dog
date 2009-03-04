@@ -19,45 +19,45 @@ import jorus.parallel.PxSystem;
 
 public class CxPatBpoToHist
 {
-	public static double[] dispatch(CxArray2d s1, CxArray2d s2,
-									int nBins, double minVal,
-									double maxVal, CxBpoToHist bpo)
-	{
-		double [] dst = new double[nBins];
-		
-		if (PxSystem.initialized()) {				// run parallel
-			try {
+    public static double[] dispatch(CxArray2d s1, CxArray2d s2,
+            int nBins, double minVal,
+            double maxVal, CxBpoToHist bpo)
+    {
+        double [] dst = new double[nBins];
 
-				if (s1.getLocalState() != CxArray2d.VALID ||
-							s1.getDistType() != CxArray2d.PARTIAL) {
-if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 1...");
-					PxSystem.scatterOFT(s1);
-				}
-				if (s2.getLocalState() != CxArray2d.VALID ||
-							s2.getDistType() != CxArray2d.PARTIAL) {
-if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 2...");
-					PxSystem.scatterOFT(s2);
-				}
+        if (PxSystem.initialized()) {				// run parallel
+            try {
 
-				bpo.init(s1, s2, true);
-				
-				bpo.doIt(dst, s1.getPartialData(),
-						 s2.getPartialData(), nBins, minVal, maxVal);
+                if (s1.getLocalState() != CxArray2d.VALID ||
+                        s1.getDistType() != CxArray2d.PARTIAL) {
+                    if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 1...");
+                    PxSystem.scatterOFT(s1);
+                }
+                if (s2.getLocalState() != CxArray2d.VALID ||
+                        s2.getDistType() != CxArray2d.PARTIAL) {
+                    if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 2...");
+                    PxSystem.scatterOFT(s2);
+                }
 
-//if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST ALLREDUCE..");
-				PxSystem.reduceArrayToAllOFT(dst,
-										new CxRedOpAddDoubleArray());
+                bpo.init(s1, s2, true);
 
-			} catch (Exception e) {
-				System.err.println("Failed to perform operation!");
-				e.printStackTrace(System.err);
-			}
+                bpo.doIt(dst, s1.getPartialData(),
+                        s2.getPartialData(), nBins, minVal, maxVal);
 
-		} else {									// run sequential
-			bpo.init(s1, s2, false);
-			bpo.doIt(dst, s1.getData(),
-					 s2.getData(), nBins, minVal, maxVal);
-		}
-		return dst;
-	}
+//              if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST ALLREDUCE..");
+                PxSystem.reduceArrayToAllOFT(dst,
+                        new CxRedOpAddDoubleArray());
+
+            } catch (Exception e) {
+                System.err.println("Failed to perform operation!");
+                e.printStackTrace(System.err);
+            }
+
+        } else {									// run sequential
+            bpo.init(s1, s2, false);
+            bpo.doIt(dst, s1.getData(),
+                    s2.getData(), nBins, minVal, maxVal);
+        }
+        return dst;
+    }
 }

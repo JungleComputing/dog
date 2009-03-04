@@ -18,40 +18,41 @@ import jorus.operations.CxRedOpAddDoubleArray;
 
 public class CxPatTask
 {
-	// This must be generalized to allow any type of task to be executed
+    // This must be generalized to allow any type of task to be executed
 
 
-	public static void dispatch(CxWeibullFit task, int iMax, int jMax)
-	{
-		if (PxSystem.initialized()) {				// run parallel
-			try {
-				int taskNr = 0;
-				for (int j=0; j<jMax; j++) {
-					for (int i=0; i<iMax; i++) {
-						if (taskNr %
-								PxSystem.nrCPUs() == PxSystem.myCPU()) {
-							task.doIt(i, j);
-						}
-						
-						// Added -- Jason
-						taskNr++;						
-					}
-				}
-				for (int j=0; j<jMax; j++) {
-					PxSystem.reduceArrayToRootOFT(task.getBetas(j),
-			                        	new CxRedOpAddDoubleArray());
-					PxSystem.reduceArrayToRootOFT(task.getGammas(j),
-				                        new CxRedOpAddDoubleArray());
-				}
-			} catch (Exception e) {
-				//
-			}
-		} else {									// run sequential
-			for (int j=0; j<jMax; j++) {
-				for (int i=0; i<iMax; i++) {
-					task.doIt(i, j);
-				}
-			}
-		}
-	}
+    public static void dispatch(CxWeibullFit task, int iMax, int jMax)
+    {
+        if (PxSystem.initialized()) {				// run parallel
+            try {
+                int taskNr = 0;
+                for (int j=0; j<jMax; j++) {
+                    for (int i=0; i<iMax; i++) {
+                        if (taskNr %
+                                PxSystem.nrCPUs() == PxSystem.myCPU()) {
+                            task.doIt(i, j);
+                        }
+
+                        // Added -- Jason
+                        taskNr++;						
+                    }
+                }
+                for (int j=0; j<jMax; j++) {
+                    PxSystem.reduceArrayToRootOFT(task.getBetas(j),
+                            new CxRedOpAddDoubleArray());
+                    PxSystem.reduceArrayToRootOFT(task.getGammas(j),
+                            new CxRedOpAddDoubleArray());
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to perform operation!");
+                e.printStackTrace(System.err);
+            }
+        } else {									// run sequential
+            for (int j=0; j<jMax; j++) {
+                for (int i=0; i<iMax; i++) {
+                    task.doIt(i, j);
+                }
+            }
+        }
+    }
 }

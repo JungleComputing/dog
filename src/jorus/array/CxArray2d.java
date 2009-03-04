@@ -58,7 +58,7 @@ public abstract class CxArray2d<T>
 		data = array;
 		if (data != null) {
 			type = data.getClass().getComponentType();
-gstate = VALID;
+			gstate = VALID;
 		}
 	}
 

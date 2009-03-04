@@ -7,167 +7,152 @@
  *
  */
 
-
 package jorus.array;
-
 
 import jorus.operations.*;
 import jorus.patterns.*;
 import jorus.pixel.*;
 
+public class CxArray2dScalarDouble extends CxArray2dDoubles {
+    /** * Public Methods ********************************************** */
 
-public class CxArray2dScalarDouble extends CxArray2dDoubles
-{
-	/*** Public Methods ***********************************************/
+    public CxArray2dScalarDouble(int w, int h) {
+        this(w, h, 0, 0, null);
+    }
 
-	public CxArray2dScalarDouble(int w, int h)
-	{
-		this(w, h, 0, 0, null);
-	}
+    public CxArray2dScalarDouble(int w, int h, double[] array) {
+        this(w, h, 0, 0, array);
+    }
 
+    public CxArray2dScalarDouble(int w, int h, int bw, int bh, double[] array) {
+        super(w, h, bw, bh, 1, array);
+    }
 
-	public CxArray2dScalarDouble(int w, int h, double[] array)
-	{
-		this(w, h, 0, 0, array);
-	}
+    public CxArray2dScalarDouble(CxArray2dScalarDouble old, int newBW, int newBH) { 
+        super(old, newBW, newBH);
+    }
+    
+    /** * Clone ******************************************************* */
 
+    public CxArray2dScalarDouble clone() {
+        
+        CxArray2dScalarDouble c = new CxArray2dScalarDouble(width + 2 * bwidth,
+                height + 2 * bheight, data); 
+        
+        // data.clone());
+        // No need to clone here, since the constructor immediately copies 
+        // the data! -- J
+        
+        c.setDimensions(width, height, bwidth, bheight, extent);
+        c.setGlobalState(gstate);
+        
+        if (pdata != null) {
+            c.setPartialData(pwidth, pheight, pdata.clone(), pstate, ptype);
+        }
+        
+        return c;
+    }
 
-	public CxArray2dScalarDouble(int w, int h,
-										int bw, int bh, double[] array)
-	{
-		super(w, h, bw, bh, 1, array);
-	}
+    public CxArray2dScalarDouble clone(int newBW, int newBH) {
+        return new CxArray2dScalarDouble(this, newBW, newBH);
+        
+        /* Replaced by call to copy constructor. Leave this code until 
+           we are sure the results are the same -- J.
+        
+        double[] newdata = new double[width * height * extent];
 
+        int off = ((width + 2 * bwidth) * bheight + bwidth) * extent;
+        int stride = bwidth * extent * 2;
+        int srcPtr = 0;
+        int dstPtr = 0;
 
-	/*** Clone ********************************************************/
+        for (int j = 0; j < height; j++) {
+            srcPtr = off + j * (width * extent + stride);
+            dstPtr = j * (width * extent);
+            for (int i = 0; i < width * extent; i++) {
+                newdata[dstPtr + i] = data[srcPtr + i];
+            }
+        }
+        CxArray2dScalarDouble c = new CxArray2dScalarDouble(width, height,
+                newBW, newBH, newdata);
+        
+        c.setGlobalState(gstate);
+        
+        if (pdata != null) {
+            double[] newpdata = new double[(pwidth + 2 * newBW)
+                    * (pheight + 2 * newBH) * extent];
 
-	public CxArray2dScalarDouble clone()
-	{
-		CxArray2dScalarDouble c =
-					new CxArray2dScalarDouble(width+2*bwidth,
-										height+2*bheight, data.clone());
-		c.setDimensions(width, height, bwidth, bheight, extent);
-		c.setGlobalState(gstate);
-		if (pdata != null) {
-			c.setPartialData(pwidth, pheight,
-							 pdata.clone(), pstate, ptype);
-		}
-		return c;
-	}
+            int srcOff = ((pwidth + 2 * bwidth) * bheight + bwidth) * extent;
+            int dstOff = ((pwidth + 2 * newBW) * newBH + newBW) * extent;
 
+            for (int j = 0; j < pheight; j++) {
+                srcPtr = srcOff + j * (pwidth + 2 * bwidth) * extent;
+                dstPtr = dstOff + j * (pwidth + 2 * newBW) * extent;
+                for (int i = 0; i < pwidth * extent; i++) {
+                    newpdata[dstPtr + i] = pdata[srcPtr + i];
+                }
+            }
+            c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
+        }
+        return c;
+        */
+    }
 
-	public CxArray2dScalarDouble clone(int newBW, int newBH)
-	{
-		double[] newdata = new double[width*height*extent];
+    /** * Separated Gaussian Filter Operations ************************ */
 
-		int off    = ((width+2*bwidth) * bheight + bwidth) * extent;
-		int stride = bwidth * extent * 2;
-		int srcPtr = 0;
-		int dstPtr = 0;
+    public CxArray2dScalarDouble gaussDerivative(double sigma, int orderX,
+            int orderY, double truncation) {
+        return gaussDerivative(sigma, sigma, orderX, orderY, truncation);
+    }
 
-		for (int j=0; j<height; j++) {
-			srcPtr = off + j*(width*extent+stride);
-			dstPtr = j*(width*extent);
-			for (int i=0; i<width*extent; i++) {
-				newdata[dstPtr + i] = data[srcPtr + i];
-			}
-		}
-		CxArray2dScalarDouble c = new CxArray2dScalarDouble(width,
-										height, newBW, newBH, newdata);
-		c.setGlobalState(gstate);
-		if (pdata != null) {
-			double[] newpdata = new
-					double[(pwidth+2*newBW)*(pheight+2*newBH)*extent];
+    public CxArray2dScalarDouble gaussDerivative(double sx, double sy,
+            int orderX, int orderY, double truncation) {
+        CxArray2dScalarDouble gx = CxGaussian1d.create(sx, orderX,
+                3 * sx * 2 + 1, width, 0);
+        CxArray2dScalarDouble gy = CxGaussian1d.create(sy, orderY,
+                3 * sy * 2 + 1, height, 0);
+        return (CxArray2dScalarDouble) CxPatGenConv2dSep.dispatch(this, gx, gy,
+                new CxGenConv2dSepGauss(), new CxSetBorderMirrorDouble());
+    }
 
-			int srcOff = ((pwidth+2*bwidth)*bheight+bwidth)*extent;
-			int dstOff = ((pwidth+2*newBW)*newBH+newBW)*extent;
+    /** * Histogram Operations **************************************** */
 
-			for (int j=0; j<pheight; j++) {
-				srcPtr = srcOff + j*(pwidth+2*bwidth)*extent;
-				dstPtr = dstOff + j*(pwidth+2*newBW)*extent;
-				for (int i=0; i<pwidth*extent; i++) {
-					newpdata[dstPtr + i] = pdata[srcPtr + i];
-				}
-			}
-			c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
-		}
-		return c;
-	}
+    public double[] impreciseHistogram(CxArray2dScalarDouble a, int nBins,
+            double minVal, double maxVal) {
+        if (!equalSignature(a))
+            return null;
+        return CxPatBpoToHist.dispatch(this, a, nBins, minVal, maxVal,
+                new CxBpoToHistDouble());
+    }
 
+    public double[][] impreciseHistograms(CxArray2dScalarDouble[] a, int nBins,
+            double minVal, double maxVal) {
+        
+        if (a == null || a.length == 0 || !equalSignature(a[0])) {
+            return null;
+        }
+        
+        return CxPatBpoArrayToHistArray.dispatch(this, a, nBins, minVal,
+                maxVal, new CxBpoToHistDouble());
+    }
 
-    /*** Separated Gaussian Filter Operations *************************/
+    /** * Pixel Manipulation (NOT PARALLEL) *************************** */
 
-	public CxArray2dScalarDouble gaussDerivative(double sigma,
-							int orderX, int orderY, double truncation)
-	{
-		return gaussDerivative(sigma, sigma,
-							   orderX, orderY, truncation);
-	}
+    public CxPixelScalarDouble getPixel(int xidx, int yidx) {
+        return new CxPixelScalarDouble(xidx, yidx, width, height, bwidth,
+                bheight, data);
+    }
 
+    public void setPixel(CxPixel p, int xidx, int yidx) {
+        double[] values = ((CxPixelScalarDouble) p).getValue();
 
-	public CxArray2dScalarDouble gaussDerivative(double sx, double sy,
-							int orderX, int orderY, double truncation)
-	{
-		CxArray2dScalarDouble gx =
-					CxGaussian1d.create(sx, orderX, 3*sx*2+1, width, 0);
-		CxArray2dScalarDouble gy =
-					CxGaussian1d.create(sy, orderY, 3*sy*2+1, height,0);
-		return (CxArray2dScalarDouble) CxPatGenConv2dSep.dispatch(this,
-								gx, gy, new CxGenConv2dSepGauss(),
-								new CxSetBorderMirrorDouble());
-	}
+        int off = ((width + 2 * bwidth) * bheight + bwidth) * extent;
+        int stride = bwidth * extent * 2;
+        int pos = off + yidx * (width * extent + stride) + xidx * extent;
 
-
-    /*** Histogram Operations *****************************************/
-
-	public double[] impreciseHistogram(CxArray2dScalarDouble a,
-								int nBins, double minVal, double maxVal)
-	{
-		if (!equalSignature(a)) return null;
-		return CxPatBpoToHist.dispatch(this, a, nBins, minVal, maxVal,
-									   new CxBpoToHistDouble());
-	}
-
-	public double[][] impreciseHistograms(CxArray2dScalarDouble [] a,
-			int nBins, double minVal, double maxVal)
-	{
-		if (!equalSignature(a[0])) return null;
-	
-		/* FIXME: This is still slow -- J!
-		double [][] result = new double[a.length][];
-		
-		for (int i=0;i<a.length;i++) { 
-			result[i] = CxPatBpoToHist.dispatch(this, a[i], nBins, minVal, maxVal,
-								new CxBpoToHistDouble());
-		}
-		
-		return result;
-		*/
-		
-		return CxPatBpoArrayToHistArray.dispatch(this, a, nBins, minVal, maxVal, new CxBpoToHistDouble());
-	}
-	
-
-	/*** Pixel Manipulation (NOT PARALLEL) ****************************/
-
-	public CxPixelScalarDouble getPixel(int xidx, int yidx)
-	{
-		return new CxPixelScalarDouble(xidx, yidx, width, height,
-												bwidth, bheight, data);
-	}
-
-
-	public void setPixel(CxPixel p, int xidx, int yidx)
-	{
-		double[] values = ((CxPixelScalarDouble)p).getValue();
-
-		int off = ((width + 2*bwidth) * bheight + bwidth) * extent;
-		int stride = bwidth * extent * 2;
-		int pos = off + yidx*(width*extent+stride) + xidx*extent;
-		
-		for (int i=0; i<extent; i++) {
-			data[pos+i] = values[i];
-		}
-		return;
-	}
+        for (int i = 0; i < extent; i++) {
+            data[pos + i] = values[i];
+        }
+        return;
+    }
 }
