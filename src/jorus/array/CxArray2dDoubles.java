@@ -49,27 +49,47 @@ public abstract class CxArray2dDoubles extends CxArray2d<double[]>
         gstate = VALID;
     }
 */
-    
-    public CxArray2dDoubles(int w, int h, int bw, int bh, int e, 
-            double[] array) {
-       
-        // Initialize
-        super(w, h, bw, bh, e, null);
+  
+	public CxArray2dDoubles(int w, int h, int bw, int bh, int e, 
+	            boolean create) {
+		
+		super(w, h, bw, bh, e, null);
 
-        // Create new array and copy values, ignoring border values
+		// Create new array and copy values, ignoring border values
         final int fullw = w + 2*bw;
         final int fullh = h + 2*bh;
         final int start = (fullw*bh+bw)*e;
 
-        final double [] newarray = new double[fullw*fullh*e];
+        data = new double[fullw*fullh*e];
+       
+        type = data.getClass().getComponentType();
+        gstate = VALID;
+	}
+	  
+    public CxArray2dDoubles(int w, int h, int bw, int bh, int e, 
+            double[] array, boolean copy) {
+       
+        // Initialize
+        super(w, h, bw, bh, e, null);
 
-        if (array != null) {
-            for (int j=0; j<h; j++) {
-                System.arraycopy(array, j*w*e, newarray, start+j*fullw*e, w*e);
-            }
+        if (copy) { 
+
+        	// Create new array and copy values, ignoring border values
+        	final int fullw = w + 2*bw;
+        	final int fullh = h + 2*bh;
+        	final int start = (fullw*bh+bw)*e;
+
+        	data = new double[fullw*fullh*e];
+
+        	if (array != null) {
+        		for (int j=0; j<h; j++) {
+        			System.arraycopy(array, j*w*e, data, start+j*fullw*e, w*e);
+        		}
+        	}
+        } else { 
+        	data = array;
         }
         
-        data = newarray;
         type = data.getClass().getComponentType();
         gstate = VALID;
     }

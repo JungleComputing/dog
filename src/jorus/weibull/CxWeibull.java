@@ -101,7 +101,7 @@ public class CxWeibull
         int		centery = inImH/2;
 
         CxArray2dScalarDouble pntIm =
-            new CxArray2dScalarDouble(inImW, inImH);
+            new CxArray2dScalarDouble(inImW, inImH, true);
         CxPixelScalarDouble zero =
             new CxPixelScalarDouble(new double[]{0.});
         CxPixelScalarDouble one =
@@ -260,8 +260,7 @@ public class CxWeibull
         // Create CxArray2d from file image data
 
         CxArray2dVec3Double input = new CxArray2dVec3Double(width,
-                height, CxConvert.toDoubles(bArray));
-
+                height, CxConvert.toDoubles(bArray), false);
 
         long createInput = System.currentTimeMillis();
 

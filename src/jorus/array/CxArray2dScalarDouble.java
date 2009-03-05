@@ -16,16 +16,22 @@ import jorus.pixel.*;
 public class CxArray2dScalarDouble extends CxArray2dDoubles {
     /** * Public Methods ********************************************** */
 
-    public CxArray2dScalarDouble(int w, int h) {
-        this(w, h, 0, 0, null);
+    public CxArray2dScalarDouble(int w, int h, boolean create) {
+        super(w, h, 0, 0, 1, create);
     }
 
-    public CxArray2dScalarDouble(int w, int h, double[] array) {
-        this(w, h, 0, 0, array);
+    public CxArray2dScalarDouble(int w, int h, int bw, int bh, boolean create) {
+        super(w, h, bw, bh, 1, create);
+    }
+    
+    public CxArray2dScalarDouble(int w, int h, double[] array, boolean copy) {
+        this(w, h, 0, 0, array, copy);
     }
 
-    public CxArray2dScalarDouble(int w, int h, int bw, int bh, double[] array) {
-        super(w, h, bw, bh, 1, array);
+    public CxArray2dScalarDouble(int w, int h, int bw, int bh, double[] array, 
+    		boolean copy) {
+        
+    	super(w, h, bw, bh, 1, array, copy);
     }
 
     public CxArray2dScalarDouble(CxArray2dScalarDouble old, int newBW, int newBH) { 
@@ -36,7 +42,9 @@ public class CxArray2dScalarDouble extends CxArray2dDoubles {
 
     public CxArray2dScalarDouble clone() {
         
-        CxArray2dScalarDouble c = new CxArray2dScalarDouble(width + 2 * bwidth,
+    	/* Replaced by version below -- J
+    	
+    	CxArray2dScalarDouble c = new CxArray2dScalarDouble(width + 2 * bwidth,
                 height + 2 * bheight, data); 
         
         // data.clone());
@@ -44,7 +52,13 @@ public class CxArray2dScalarDouble extends CxArray2dDoubles {
         // the data! -- J
         
         c.setDimensions(width, height, bwidth, bheight, extent);
-        c.setGlobalState(gstate);
+        
+        */
+        
+    	CxArray2dScalarDouble c = new CxArray2dScalarDouble(width, height, 
+    			bwidth, bheight, data, true);
+    	
+    	c.setGlobalState(gstate);
         
         if (pdata != null) {
             c.setPartialData(pwidth, pheight, pdata.clone(), pstate, ptype);

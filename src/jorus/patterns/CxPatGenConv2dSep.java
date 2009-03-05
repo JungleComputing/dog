@@ -49,11 +49,15 @@ public class CxPatGenConv2dSep
                 CxPatSetBorder.dispatch(dst, numX, 0, sbo);
                 CxArray2d tmp = dst.clone();
                 gco.init(dst, ker1, ker2, true);
-                gco.doIt(tmp.getPartialData(), dst.getPartialData(),
+                gco.doIt(tmp.getPartialDataWriteOnly(), 
+                		dst.getPartialDataReadOnly(),
                         ker1.getDataReadOnly(), 0);
+                
                 CxPatSetBorder.dispatch(tmp, 0, numY, sbo);
-                gco.doIt(dst.getPartialData(), tmp.getPartialData(),
+                gco.doIt(dst.getPartialDataWriteOnly(), 
+                		tmp.getPartialDataReadOnly(),
                         ker2.getDataReadOnly(), 1);
+                
                 dst.setGlobalState(CxArray2d.INVALID);
 
 //              if (PxSystem.myCPU() == 0) System.out.println("GENCONV GATHER...");

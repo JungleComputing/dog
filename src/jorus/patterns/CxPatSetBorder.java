@@ -23,7 +23,7 @@ public class CxPatSetBorder
     {
         if (PxSystem.initialized()) {				// run parallel
             sbo.init(s1, true);
-            sbo.doIt(s1.getPartialData(), numX, numY);
+            sbo.doIt(s1.getPartialDataReadWrite(), numX, numY);
         } else {									// run sequential
             sbo.init(s1, false);
             sbo.doIt(s1.getDataReadWrite(), numX, numY);

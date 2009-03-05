@@ -64,7 +64,8 @@ public class CxPatBpo
                 }
                 
                 bpo.init(s1, s2, true);
-                bpo.doIt(dst.getPartialData(), s2.getPartialData());
+                bpo.doIt(dst.getPartialDataReadWrite(), 
+                		s2.getPartialDataReadOnly());
 
                 dst.setGlobalState(CxArray2d.INVALID);
                 

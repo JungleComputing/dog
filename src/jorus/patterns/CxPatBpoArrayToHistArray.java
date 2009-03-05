@@ -38,8 +38,8 @@ public class CxPatBpoArrayToHistArray {
 
                     bpo.init(s1, s2, true);
 
-                    bpo.doIt(dst, s1.getPartialData(),
-                            s2.getPartialData(), nBins, minVal, maxVal);
+                    bpo.doIt(dst, s1.getPartialDataReadOnly(),
+                            s2.getPartialDataReadOnly(), nBins, minVal, maxVal);
 
                     System.arraycopy(dst, 0, buffer, i*nBins, nBins);
                 }

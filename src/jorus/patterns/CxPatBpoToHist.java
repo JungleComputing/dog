@@ -41,8 +41,8 @@ public class CxPatBpoToHist
 
                 bpo.init(s1, s2, true);
 
-                bpo.doIt(dst, s1.getPartialData(),
-                        s2.getPartialData(), nBins, minVal, maxVal);
+                bpo.doIt(dst, s1.getPartialDataReadOnly(),
+                        s2.getPartialDataReadOnly(), nBins, minVal, maxVal);
 
 //              if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST ALLREDUCE..");
                 PxSystem.reduceArrayToAllOFT(dst,

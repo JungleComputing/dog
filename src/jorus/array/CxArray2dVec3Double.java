@@ -20,44 +20,62 @@ public class CxArray2dVec3Double extends CxArray2dDoubles
 {
     /*** Public Methods ***********************************************/
 
-    public CxArray2dVec3Double(int w, int h)
+    public CxArray2dVec3Double(int w, int h, boolean create)
     {
-        this(w, h, 0, 0, null);
+        super(w, h, 0, 0, 3, create);
     }
 
 
-    public CxArray2dVec3Double(int w, int h, double[] array)
+    public CxArray2dVec3Double(int w, int h, double[] array, boolean copy)
     {
-        this(w, h, 0, 0, array);
+        this(w, h, 0, 0, array, copy);
     }
 
 
     public CxArray2dVec3Double(int w, int h,
-            int bw, int bh, double[] array)
+            int bw, int bh, double[] array, boolean copy)
     {
-        super(w, h, bw, bh, 3, array);
+        super(w, h, bw, bh, 3, array, copy);
     }
 
-
+    public CxArray2dVec3Double(CxArray2dVec3Double old, int newBW, int newBH) { 
+        super(old, newBW, newBH);
+    }
+    
     /*** Clone ********************************************************/
 
     public CxArray2dVec3Double clone()
     {
+    	/* Replaced with version below -- J
         CxArray2dVec3Double c = new CxArray2dVec3Double(width+2*bwidth,
                 height+2*bheight, data.clone());
+     
         c.setDimensions(width, height, bwidth, bheight, extent);
+
+        */
+    
+    	CxArray2dVec3Double c = new CxArray2dVec3Double(width, height, bwidth, 
+    			bheight, data, true);
+    	
         c.setGlobalState(gstate);
+
         if (pdata != null) {
             c.setPartialData(pwidth, pheight,
                     pdata.clone(), pstate, ptype);
         }
+        
         return c;
     }
 
 
     public CxArray2dVec3Double clone(int newBW, int newBH)
     {
-        double[] newdata = new double[width*height*extent];
+        return new CxArray2dVec3Double(this, newBW, newBH);
+        
+
+    	/* Replace by copy constructor -- J
+    	
+    	double[] newdata = new double[width*height*extent];
 
         int off    = ((width+2*bwidth) * bheight + bwidth) * extent;
         int stride = bwidth * extent * 2;
@@ -90,7 +108,7 @@ public class CxArray2dVec3Double extends CxArray2dDoubles
             }
             c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
         }
-        return c;
+        return c;*/
     }
 
 
@@ -111,7 +129,7 @@ public class CxArray2dVec3Double extends CxArray2dDoubles
         // double[] a = new double[(width+2*bwidth)*(height+2*bheight)];
 
         CxArray2dScalarDouble dst = new CxArray2dScalarDouble(width, height,
-                    bwidth, bheight, null);
+                    bwidth, bheight, false);
 
         dst.setGlobalState(CxArray2d.NONE);
         

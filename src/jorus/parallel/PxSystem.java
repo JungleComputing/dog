@@ -1146,7 +1146,7 @@ public class PxSystem {
        //         rps[0].enableConnections();
        //     }
             ReadMessage r = rps[0].receive();
-            r.readArray(a.getPartialData(), offset, xSize * ySize);
+            r.readArray(a.getPartialDataWriteOnly(), offset, xSize * ySize);
             r.finish();
 
             // Added-- J
@@ -1185,9 +1185,11 @@ public class PxSystem {
                 dataInGather0FT += 8 * xSize * ySize;
             }
             int start = xSize * bHeight;
-            System.arraycopy(a.getPartialData(), start, a.getDataWriteOnly(), start, a
-                    .getPartialData().length
-                    - 2 * start);
+            
+            final double [] pdata = a.getPartialDataReadOnly();
+            
+            System.arraycopy(pdata, start, a.getDataWriteOnly(), 
+            		start, pdata.length - 2 * start);
 
         } else {
             int ySize = getPartHeight(globH, myCPU);
@@ -1197,7 +1199,7 @@ public class PxSystem {
 //                sps[0].connect(world[0], COMM_ID + myCPU);
 //            }
             WriteMessage w = sps[0].newMessage();
-            w.writeArray(a.getPartialData(), offset, xSize * ySize);
+            w.writeArray(a.getPartialDataReadOnly(), offset, xSize * ySize);
             w.finish();
 
             // Added -- J.
@@ -1231,7 +1233,7 @@ public class PxSystem {
 //                        sps[partner].connect(world[partner], COMM_ID + myCPU);
 //                    }
                     WriteMessage w = sps[partner].newMessage();
-                    w.writeArray(a.getPartialData(), offset, length);
+                    w.writeArray(a.getPartialDataReadOnly(), offset, length);
                     w.finish();
 
                     dataOutBroadcastSBT += length * 8;
@@ -1242,7 +1244,7 @@ public class PxSystem {
 //                        rps[partner].enableConnections();
 //                    }
                     ReadMessage r = rps[partner].receive();
-                    r.readArray(a.getPartialData(), offset, length);
+                    r.readArray(a.getPartialDataWriteOnly(), offset, length);
                     r.finish();
 
                     dataInBroadcastSBT += length * 8; 

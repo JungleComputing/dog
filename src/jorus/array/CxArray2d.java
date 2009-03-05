@@ -157,12 +157,46 @@ public abstract class CxArray2d<T>
     }
 
 
-    public T getPartialData()
+    public T getPartialDataReadOnly()
     {
-        return pdata;
+    	if (pdata == null) { 
+            throw new RuntimeException("Cannot read partial data: " +
+            		"no data available");
+        }
+
+        if (pstate != VALID) { 
+            throw new RuntimeException("Cannot read partial data: " +
+            		"state != VALID (" + pstate + ")");
+        }
+    	
+    	return pdata;
     }
 
+    public T getPartialDataWriteOnly()
+    {
+    	if (pdata == null) { 
+            throw new RuntimeException("Cannot write partial data: " +
+            		"no data available");
+        }
+    	
+    	return pdata;
+    }
 
+    public T getPartialDataReadWrite()
+    {
+    	if (pdata == null) { 
+            throw new RuntimeException("Cannot read/write partial data: " +
+            		"no data available");
+        }
+
+        if (pstate != VALID) { 
+            throw new RuntimeException("Cannot read/write partial data: " +
+            		"pstate != VALID (" + pstate + ")");
+        }
+
+        return pdata;
+    }
+    
     public void setPartialData(int width, int height,
             T data, int state, int type)
     {

@@ -41,9 +41,11 @@ public class CxPatSvo
                 svo.init(s1, true);
                 int start = PxSystem.getLclStartY(s1.getHeight(),
                         PxSystem.myCPU());
+                
                 if ((y >= start) && (y < start+s1.getPartialHeight())) {
-                    svo.doIt(dst.getPartialData(), x, y - start);
+                    svo.doIt(dst.getPartialDataWriteOnly(), x, y - start);
                 }
+                
                 dst.setGlobalState(CxArray2d.INVALID);
 
 //              if (PxSystem.myCPU() == 0) System.out.println("SVO GATHER...");

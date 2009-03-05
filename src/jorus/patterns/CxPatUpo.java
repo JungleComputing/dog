@@ -41,7 +41,7 @@ public class CxPatUpo
                 }
 
                 upo.init(s1, true);
-                upo.doIt(dst.getPartialData());
+                upo.doIt(dst.getPartialDataReadWrite());
                 dst.setGlobalState(CxArray2d.INVALID);
 
 //              if (PxSystem.myCPU() == 0) System.out.println("UPO GATHER...");
