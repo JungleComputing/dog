@@ -19,96 +19,22 @@ import jorus.pixel.*;
 public class CxArray2dVec3Double extends CxArray2dDoubles
 {
     /*** Public Methods ***********************************************/
-
-    public CxArray2dVec3Double(int w, int h, boolean create)
-    {
-        super(w, h, 0, 0, 3, create);
+    
+    public CxArray2dVec3Double(CxArray2dVec3Double orig, int newBW, int newBH) {
+        super(orig, newBW, newBH);
     }
 
-
-    public CxArray2dVec3Double(int w, int h, double[] array, boolean copy)
-    {
-        this(w, h, 0, 0, array, copy);
+    public CxArray2dVec3Double(CxArray2dVec3Double orig) {
+        super(orig);
     }
 
+    public CxArray2dVec3Double(int w, int h, int bw, int bh, boolean create) {
+        super(w, h, bw, bh, 3, create);
+    }
 
-    public CxArray2dVec3Double(int w, int h,
-            int bw, int bh, double[] array, boolean copy)
-    {
+    public CxArray2dVec3Double(int w, int h, int bw, int bh, double[] array, 
+            boolean copy) {
         super(w, h, bw, bh, 3, array, copy);
-    }
-
-    public CxArray2dVec3Double(CxArray2dVec3Double old, int newBW, int newBH) { 
-        super(old, newBW, newBH);
-    }
-    
-    /*** Clone ********************************************************/
-
-    public CxArray2dVec3Double clone()
-    {
-    	/* Replaced with version below -- J
-        CxArray2dVec3Double c = new CxArray2dVec3Double(width+2*bwidth,
-                height+2*bheight, data.clone());
-     
-        c.setDimensions(width, height, bwidth, bheight, extent);
-
-        */
-    
-    	CxArray2dVec3Double c = new CxArray2dVec3Double(width, height, bwidth, 
-    			bheight, data, true);
-    	
-        c.setGlobalState(gstate);
-
-        if (pdata != null) {
-            c.setPartialData(pwidth, pheight,
-                    pdata.clone(), pstate, ptype);
-        }
-        
-        return c;
-    }
-
-
-    public CxArray2dVec3Double clone(int newBW, int newBH)
-    {
-        return new CxArray2dVec3Double(this, newBW, newBH);
-        
-
-    	/* Replace by copy constructor -- J
-    	
-    	double[] newdata = new double[width*height*extent];
-
-        int off    = ((width+2*bwidth) * bheight + bwidth) * extent;
-        int stride = bwidth * extent * 2;
-        int srcPtr = 0;
-        int dstPtr = 0;
-
-        for (int j=0; j<height; j++) {
-            srcPtr = off + j*(width*extent+stride);
-            dstPtr = j*(width*extent);
-            for (int i=0; i<width*extent; i++) {
-                newdata[dstPtr + i] = data[srcPtr + i];
-            }
-        }
-        CxArray2dVec3Double c = new CxArray2dVec3Double(width,
-                height, newBW, newBH, newdata);
-        c.setGlobalState(gstate);
-        if (pdata != null) {
-            double[] newpdata = new
-            double[(pwidth+2*newBW)*(pheight+2*newBH)*extent];
-
-            int srcOff = ((pwidth+2*bwidth)*bheight+bwidth)*extent;
-            int dstOff = ((pwidth+2*newBW)*newBH+newBW)*extent;
-
-            for (int j=0; j<pheight; j++) {
-                srcPtr = srcOff + j*(pwidth+2*bwidth)*extent;
-                dstPtr = dstOff + j*(pwidth+2*newBW)*extent;
-                for (int i=0; i<pwidth*extent; i++) {
-                    newpdata[dstPtr + i] = pdata[srcPtr + i];
-                }
-            }
-            c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
-        }
-        return c;*/
     }
 
 
@@ -159,5 +85,15 @@ public class CxArray2dVec3Double extends CxArray2dDoubles
             data[pos+i] = values[i];
         }
         return;
+    }
+    
+    @Override
+    public CxArray2d clone() {
+        return new CxArray2dVec3Double(this);
+    }
+
+    @Override
+    public CxArray2d clone(int newBorderWidth, int newBorderHeight) {
+        return new CxArray2dVec3Double(this, newBorderWidth, newBorderHeight);
     }
 }

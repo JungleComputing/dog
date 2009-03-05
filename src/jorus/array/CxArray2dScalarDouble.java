@@ -16,102 +16,24 @@ import jorus.pixel.*;
 public class CxArray2dScalarDouble extends CxArray2dDoubles {
     /** * Public Methods ********************************************** */
 
-    public CxArray2dScalarDouble(int w, int h, boolean create) {
-        super(w, h, 0, 0, 1, create);
+       
+    public CxArray2dScalarDouble(CxArray2dScalarDouble orig, int newBW, int newBH) {
+        super(orig, newBW, newBH);
+    }
+
+    public CxArray2dScalarDouble(CxArray2dScalarDouble orig) {
+        super(orig);
     }
 
     public CxArray2dScalarDouble(int w, int h, int bw, int bh, boolean create) {
         super(w, h, bw, bh, 1, create);
     }
-    
-    public CxArray2dScalarDouble(int w, int h, double[] array, boolean copy) {
-        this(w, h, 0, 0, array, copy);
-    }
 
     public CxArray2dScalarDouble(int w, int h, int bw, int bh, double[] array, 
-    		boolean copy) {
-        
-    	super(w, h, bw, bh, 1, array, copy);
-    }
-
-    public CxArray2dScalarDouble(CxArray2dScalarDouble old, int newBW, int newBH) { 
-        super(old, newBW, newBH);
+            boolean copy) {
+        super(w, h, bw, bh, 1, array, copy);
     }
     
-    /** * Clone ******************************************************* */
-
-    public CxArray2dScalarDouble clone() {
-        
-    	/* Replaced by version below -- J
-    	
-    	CxArray2dScalarDouble c = new CxArray2dScalarDouble(width + 2 * bwidth,
-                height + 2 * bheight, data); 
-        
-        // data.clone());
-        // No need to clone here, since the constructor immediately copies 
-        // the data! -- J
-        
-        c.setDimensions(width, height, bwidth, bheight, extent);
-        
-        */
-        
-    	CxArray2dScalarDouble c = new CxArray2dScalarDouble(width, height, 
-    			bwidth, bheight, data, true);
-    	
-    	c.setGlobalState(gstate);
-        
-        if (pdata != null) {
-            c.setPartialData(pwidth, pheight, pdata.clone(), pstate, ptype);
-        }
-        
-        return c;
-    }
-
-    public CxArray2dScalarDouble clone(int newBW, int newBH) {
-        return new CxArray2dScalarDouble(this, newBW, newBH);
-        
-        /* Replaced by call to copy constructor. Leave this code until 
-           we are sure the results are the same -- J.
-        
-        double[] newdata = new double[width * height * extent];
-
-        int off = ((width + 2 * bwidth) * bheight + bwidth) * extent;
-        int stride = bwidth * extent * 2;
-        int srcPtr = 0;
-        int dstPtr = 0;
-
-        for (int j = 0; j < height; j++) {
-            srcPtr = off + j * (width * extent + stride);
-            dstPtr = j * (width * extent);
-            for (int i = 0; i < width * extent; i++) {
-                newdata[dstPtr + i] = data[srcPtr + i];
-            }
-        }
-        CxArray2dScalarDouble c = new CxArray2dScalarDouble(width, height,
-                newBW, newBH, newdata);
-        
-        c.setGlobalState(gstate);
-        
-        if (pdata != null) {
-            double[] newpdata = new double[(pwidth + 2 * newBW)
-                    * (pheight + 2 * newBH) * extent];
-
-            int srcOff = ((pwidth + 2 * bwidth) * bheight + bwidth) * extent;
-            int dstOff = ((pwidth + 2 * newBW) * newBH + newBW) * extent;
-
-            for (int j = 0; j < pheight; j++) {
-                srcPtr = srcOff + j * (pwidth + 2 * bwidth) * extent;
-                dstPtr = dstOff + j * (pwidth + 2 * newBW) * extent;
-                for (int i = 0; i < pwidth * extent; i++) {
-                    newpdata[dstPtr + i] = pdata[srcPtr + i];
-                }
-            }
-            c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
-        }
-        return c;
-        */
-    }
-
     /** * Separated Gaussian Filter Operations ************************ */
 
     public CxArray2dScalarDouble gaussDerivative(double sigma, int orderX,
@@ -121,10 +43,12 @@ public class CxArray2dScalarDouble extends CxArray2dDoubles {
 
     public CxArray2dScalarDouble gaussDerivative(double sx, double sy,
             int orderX, int orderY, double truncation) {
+        
         CxArray2dScalarDouble gx = CxGaussian1d.create(sx, orderX,
                 3 * sx * 2 + 1, width, 0);
         CxArray2dScalarDouble gy = CxGaussian1d.create(sy, orderY,
                 3 * sy * 2 + 1, height, 0);
+        
         return (CxArray2dScalarDouble) CxPatGenConv2dSep.dispatch(this, gx, gy,
                 new CxGenConv2dSepGauss(), new CxSetBorderMirrorDouble());
     }
@@ -168,5 +92,15 @@ public class CxArray2dScalarDouble extends CxArray2dDoubles {
             data[pos + i] = values[i];
         }
         return;
+    }
+    
+    @Override
+    public CxArray2d clone() {
+        return new CxArray2dScalarDouble(this);
+    }
+
+    @Override
+    public CxArray2d clone(int newBorderWidth, int newBorderHeight) {
+        return new CxArray2dScalarDouble(this, newBorderWidth, newBorderHeight);
     }
 }

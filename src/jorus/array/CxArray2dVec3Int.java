@@ -16,101 +16,54 @@ import jorus.pixel.*;
 
 public class CxArray2dVec3Int extends CxArray2dInts
 {
-	/*** Public Methods ***********************************************/
+    /*** Public Methods ***********************************************/
+    public CxArray2dVec3Int(CxArray2dVec3Int orig, int newBW, int newBH) {
+        super(orig, newBW, newBH);
+    }
 
-	public CxArray2dVec3Int(int w, int h)
-	{
-		this(w, h, 0, 0, null);
-	}
+    public CxArray2dVec3Int(CxArray2dVec3Int orig) {
+        super(orig);
+    }
 
+    public CxArray2dVec3Int(int w, int h, int bw, int bh, boolean create) {
+        super(w, h, bw, bh, 3, create);
+    }
 
-	public CxArray2dVec3Int(int w, int h, int[] array)
-	{
-		this(w, h, 0, 0, array);
-	}
+    public CxArray2dVec3Int(int w, int h, int bw, int bh, int[] array, boolean copy) {
+        super(w, h, bw, bh, 3, array, copy);
+    }
 
+    /*** Pixel Manipulation (NOT PARALLEL) ****************************/
 
-	public CxArray2dVec3Int(int w, int h, int bw, int bh, int[] array)
-	{
-		super(w, h, bw, bh, 3, array);
-	}
-
-
-	/*** Clone ********************************************************/
-
-	public CxArray2dVec3Int clone()
-	{
-		CxArray2dVec3Int c = new CxArray2dVec3Int(width+2*bwidth,
-										height+2*bheight, data.clone());
-		c.setDimensions(width, height, bwidth, bheight, extent);
-		c.setGlobalState(gstate);
-		if (pdata != null) {
-			c.setPartialData(pwidth, pheight,
-							 pdata.clone(), pstate, ptype);
-		}
-		return c;
-	}
-
-
-    public CxArray2dVec3Int clone(int newBW, int newBH)
+    public CxPixelVec3Int getPixel(int xidx, int yidx)
     {
-		int[] newdata = new int[width*height*extent];
-
-		int off    = ((width+2*bwidth) * bheight + bwidth) * extent;
-		int stride = bwidth * extent * 2;
-		int srcPtr = 0;
-		int dstPtr = 0;
-
-		for (int j=0; j<height; j++) {
-			srcPtr = off + j*(width*extent+stride);
-			dstPtr = j*(width*extent);
-			for (int i=0; i<width*extent; i++) {
-				newdata[dstPtr + i] = data[srcPtr + i];
-			}
-		}
-		CxArray2dVec3Int c = new CxArray2dVec3Int(width, height,
-												newBW, newBH, newdata);
-		c.setGlobalState(gstate);
-		if (pdata != null) {
-			int[] newpdata = new
-						int[(pwidth+2*newBW)*(pheight+2*newBH)*extent];
-
-			int srcOff = ((pwidth+2*bwidth)*bheight+bwidth)*extent;
-			int dstOff = ((pwidth+2*newBW)*newBH+newBW)*extent;
-
-			for (int j=0; j<pheight; j++) {
-				srcPtr = srcOff + j*(pwidth+2*bwidth)*extent;
-				dstPtr = dstOff + j*(pwidth+2*newBW)*extent;
-				for (int i=0; i<pwidth*extent; i++) {
-					newpdata[dstPtr + i] = pdata[srcPtr + i];
-				}
-			}
-			c.setPartialData(pwidth, pheight, newpdata, pstate, ptype);
-		}
-		return c;
+        return new CxPixelVec3Int(xidx, yidx, width, height,
+                bwidth, bheight, data);
     }
 
 
-	/*** Pixel Manipulation (NOT PARALLEL) ****************************/
+    public void setPixel(CxPixel p, int xidx, int yidx)
+    {
+        int[] values = ((CxPixelVec3Int)p).getValue();
 
-	public CxPixelVec3Int getPixel(int xidx, int yidx)
-	{
-		return new CxPixelVec3Int(xidx, yidx, width, height,
-												bwidth, bheight, data);
-	}
+        int off = ((width + 2*bwidth) * bheight + bwidth) * extent;
+        int stride = bwidth * extent * 2;
+        int pos = off + yidx*(width*extent+stride) + xidx*extent;
 
+        for (int i=0; i<extent; i++) {
+            data[pos+i] = values[i];
+        }
+        return;
+    }
+   
+    @Override
+    public CxArray2d clone() {
+        return new CxArray2dVec3Int(this);
+    }
 
-	public void setPixel(CxPixel p, int xidx, int yidx)
-	{
-		int[] values = ((CxPixelVec3Int)p).getValue();
-
-		int off = ((width + 2*bwidth) * bheight + bwidth) * extent;
-		int stride = bwidth * extent * 2;
-		int pos = off + yidx*(width*extent+stride) + xidx*extent;
-
-		for (int i=0; i<extent; i++) {
-			data[pos+i] = values[i];
-		}
-		return;
-	}
+    @Override
+    public CxArray2d clone(int newBorderWidth, int newBorderHeight) {
+        return new CxArray2dVec3Int(this, newBorderWidth, newBorderHeight);
+    }
+    
 }
