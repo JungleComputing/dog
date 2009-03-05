@@ -18,8 +18,6 @@ import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
-    
-    
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -40,7 +38,7 @@ public class Server implements Upcall {
         if (master = (PxSystem.myCPU() == 0)) {
 
             comm = new Communication("Server", this);
-            
+
             // Install a shutdown hook that terminates ibis.
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -52,7 +50,7 @@ public class Server implements Upcall {
                     .getLocation());
         }
     }
-    
+
     private void end() {
         System.out.println("Ending server");
         unregister();
@@ -191,25 +189,25 @@ public class Server implements Upcall {
         long endop;
         long commdone;
         long end;
-         
+
         if (master) {
 
             // The master should dequeue a request and broadcast
             // the details.
 
             r = getRequest(DEFAULT_TIMEOUT);
-        
+
             request = System.currentTimeMillis();
-            
+
             System.err.println(PxSystem.myCPU() + " Got request " + r);
             if (r == null) {
                 return;
             }
             operation = r.operation;
-            img = r.image.uncompress();
+            img = r.image.toRGB24();
 
             decompress = System.currentTimeMillis();
-            
+
             try {
                 PxSystem.broadcastValue(img.width);
                 PxSystem.broadcastValue(img.height);
@@ -233,16 +231,16 @@ public class Server implements Upcall {
         }
 
         commdone = System.currentTimeMillis();
-        
+
         switch (operation) {
-        case Request.OPERATION_RECOGNISE: {
+        case Request.OPERATION_LEARN:
+        case Request.OPERATION_RECOGNIZE: {
 
             FeatureVector v = new FeatureVector(CxWeibull.getNrInvars(),
                     CxWeibull.getNrRfields());
             CxWeibull.doRecognize(img.width, img.height, img.pixels, v.vector);
             reply = v;
-            
-            
+
             break;
         }
             // case Request.OPERATION_LABELING: {
@@ -262,30 +260,30 @@ public class Server implements Upcall {
         }
 
         endop = System.currentTimeMillis();
-        
+
         if (master) {
             System.err.println("Sending reply....");
             try {
                 comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
-                    new Reply(me, r.sequenceNumber, r.operation, reply));
+                        new Reply(me, r.sequenceNumber, r.operation, reply));
             } catch (Exception e) {
                 System.err.println("Failed to return reply to "
                         + r.replyAddress);
             }
             System.err.println("Reply send....");
         }
-        
+
         end = System.currentTimeMillis();
-        
-        System.out.println("Total time   " + (end-start) + " ms.");
-        System.out.println("  request    " + (request-start) + " ms.");
-        System.out.println("  decompress " + (decompress-request) + " ms.");
-        System.out.println("  bcast      " + (commdone-decompress) + " ms.");
-        System.out.println("  op         " + (endop-commdone) + " ms.");
-        System.out.println("  reply      " + (end-endop) + " ms.");
-        
+
+        System.out.println("Total time   " + (end - start) + " ms.");
+        System.out.println("  request    " + (request - start) + " ms.");
+        System.out.println("  decompress " + (decompress - request) + " ms.");
+        System.out.println("  bcast      " + (commdone - decompress) + " ms.");
+        System.out.println("  op         " + (endop - commdone) + " ms.");
+        System.out.println("  reply      " + (end - endop) + " ms.");
+
         PxSystem.printStatistics();
-        
+
     }
 
     private void run() {

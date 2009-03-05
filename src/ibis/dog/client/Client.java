@@ -34,7 +34,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     private MachineDescription me;
 
     // Current operation
-    private byte operation = Request.OPERATION_RECOGNISE;
+    private byte operation = Request.OPERATION_RECOGNIZE;
 
     // Current server set.
     private Servers servers;
@@ -165,15 +165,15 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private synchronized void setFeatureVector(FeatureVector vector) {
         this.vector = vector;
-        
+
         long now = System.currentTimeMillis();
 
         if (vectorCount == 0) {
             start = System.currentTimeMillis();
         } else if (now >= start + 2500) {
             if (framerateConsumer != null) {
-                framerateConsumer
-                        .setProcessedFramerate(vectorCount * 1000.0 / (now - start));
+                framerateConsumer.setProcessedFramerate(vectorCount * 1000.0
+                        / (now - start));
             }
             start = now;
             vectorCount = 0;
@@ -238,7 +238,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
             return;
         } else {
             data.hasFrame(false);
-            if (r.operation == Request.OPERATION_RECOGNISE) {
+            if (r.operation == Request.OPERATION_RECOGNIZE) {
                 // feature vector received from server, set "last known vector"
                 // and send a database lookup request to the broker.
 
@@ -258,9 +258,10 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                     comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm
                             .getMachineDescription(), vector, 3, serverName);
                 } catch (Exception e) {
-                    logger.error(
-                        "Could not send recognize request to database@broker",
-                        e);
+                    logger
+                            .error(
+                                    "Could not send recognize request to database@broker",
+                                    e);
                 }
 
             } else if (r.operation == Request.OPERATION_DUMMY) {
@@ -332,8 +333,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         if (target != null) {
             logger.debug("Sending frame to " + target.getName());
 
-            target.send(new Request(getCurrentOperation(), 0L,
-                    new CompressedImage(image), me));
+            target.send(new Request(getCurrentOperation(), 0L, image, me));
         } else {
             // System.out.println("Dropping frame");
         }

@@ -33,7 +33,7 @@ public class Client extends Thread implements Upcall {
     private final ObjectRecognition recognition;
 
     // Current operation
-    private byte operation = Request.OPERATION_RECOGNISE;
+    private byte operation = Request.OPERATION_RECOGNIZE;
 
     // Current server set.
     private Servers servers;
@@ -46,17 +46,17 @@ public class Client extends Thread implements Upcall {
     // Link to the GUI.
     private ClientListener listener;
 
-    private final int count;    
-    
+    private final int count;
+
     private int replies;
+
     private int sends;
-    
-    
+
     public Client(RGB32Image image, int count) {
         super("CLIENT");
         this.image = image;
         this.count = count;
-        recognition = new ObjectRecognition();    
+        recognition = new ObjectRecognition();
     }
 
     private void init() throws Exception {
@@ -67,14 +67,13 @@ public class Client extends Thread implements Upcall {
         logger.debug("$$$$$$$$$$$$ comm");
 
         comm = new Communication("Client", this);
-        
-        // Install a shutdown hook that terminates ibis. 
+
+        // Install a shutdown hook that terminates ibis.
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 comm.end();
             }
         });
-
 
         logger.debug("$$$$$$$$$$$$ me");
 
@@ -87,7 +86,6 @@ public class Client extends Thread implements Upcall {
         logger.debug("$$$$$$$$$$$$ init");
 
     }
-
 
     public boolean learn(String name) {
 
@@ -113,7 +111,6 @@ public class Client extends Thread implements Upcall {
     public synchronized void registerListener(ClientListener l) {
         this.listener = l;
     }
-    
 
     private synchronized void forwardServersToListnener() {
         if (listener != null) {
@@ -127,7 +124,7 @@ public class Client extends Thread implements Upcall {
 
     private synchronized FeatureVector getFeatureVector() {
         FeatureVector v = vector;
-        //vector = null;
+        // vector = null;
         return v;
     }
 
@@ -139,14 +136,14 @@ public class Client extends Thread implements Upcall {
         this.operation = operation;
     }
 
-//    public synchronized void done() {
- //       System.out.println("Client done!");
-  //      done = true;
-   //     notifyAll();
-    //}
+    // public synchronized void done() {
+    // System.out.println("Client done!");
+    // done = true;
+    // notifyAll();
+    // }
 
     private RGB32Image getFrame() {
-    	return image;
+        return image;
     }
 
     private void processReply(Reply r) {
@@ -158,7 +155,7 @@ public class Client extends Thread implements Upcall {
             return;
         } else {
             data.hasFrame(false);
-            if (r.operation == Request.OPERATION_RECOGNISE) {
+            if (r.operation == Request.OPERATION_RECOGNIZE) {
                 setFeatureVector((FeatureVector) r.result);
                 String server = r.server.getName();
                 String result = recognition.recognize((FeatureVector) r.result);
@@ -172,10 +169,10 @@ public class Client extends Thread implements Upcall {
                 // } else if (r.operation == Request.OPERATION_LABELING) {
                 // RGB24Image image = (RGB24Image) r.result;
                 // forwardFrameToListnener(image, 1);
-                
+
                 synchronized (this) {
-                	replies++;
-                	notifyAll();
+                    replies++;
+                    notifyAll();
                 }
             } else if (r.operation == Request.OPERATION_DUMMY) {
                 System.out
@@ -188,16 +185,16 @@ public class Client extends Thread implements Upcall {
     }
 
     private synchronized void waitForReplies() {
-    	
-    	while (replies < count) { 
-    		try { 
-    			wait();
-    		} catch (Exception e) {
-				// ignored
-			}
-    	}    	
-	}
-    
+
+        while (replies < count) {
+            try {
+                wait();
+            } catch (Exception e) {
+                // ignored
+            }
+        }
+    }
+
     public void upcall(byte opcode, Object... objects) throws Exception {
         try {
             switch (opcode) {
@@ -219,7 +216,7 @@ public class Client extends Thread implements Upcall {
                 forwardServersToListnener();
                 break;
             }
-            
+
             case Communication.CLIENT_REPLY_REQUEST: {
                 // It is a reply to a server request.
                 processReply((Reply) objects[0]);
@@ -242,16 +239,15 @@ public class Client extends Thread implements Upcall {
         if (target != null) {
             logger.debug("Sending frame to " + target.getName());
 
-            target.send(new Request(getCurrentOperation(), 0L,
-                    new CompressedImage(image), me));
-            
-            sends++;            
+            target.send(new Request(getCurrentOperation(), 0L, image, me));
+
+            sends++;
         } else {
-        	try { 
-        		Thread.sleep(5);
-        	} catch (Exception e) {
-        		// ignored
-        	}
+            try {
+                Thread.sleep(5);
+            } catch (Exception e) {
+                // ignored
+            }
             // System.out.println("Dropping frame");
         }
     }
@@ -274,15 +270,15 @@ public class Client extends Thread implements Upcall {
         }
 
         waitForReplies();
-        
+
         // We are done, so kill the servers polling, deployment and
         // communication.
         servers.done();
         comm.exit();
     }
-    
+
     private synchronized void log(String text) {
-    	System.out.println(text);
+        System.out.println(text);
     }
 
 }
