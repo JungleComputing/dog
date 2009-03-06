@@ -1,6 +1,8 @@
 package ibis.dog.shared;
 
-public interface BaseImage {
+import java.io.Serializable;
+
+public interface BaseImage extends Serializable {
     
     public RGB24Image toRGB24();
 

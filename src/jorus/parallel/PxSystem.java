@@ -66,8 +66,8 @@ public class PxSystem {
     private static SendPort[] sps = null;
     private static ReceivePort[] rps = null;
 
-//    private static ReceivePort rpReduce = null;
-//    private static SendPort spReduce = null;
+//  private static ReceivePort rpReduce = null;
+//  private static SendPort spReduce = null;
 
     private static final String COMM_ID = "px_comm";
 
@@ -175,7 +175,7 @@ public class PxSystem {
 
         IbisIdentifier me = ibis.registry().elect(Integer.toString(myCPU));
         world = new IbisIdentifier[nrCPUs];
-       
+
         for (int i = 0; i < nrCPUs; i++) {
             String rank = Long.toString(i);
             world[i] = ibis.registry().getElectionResult(rank);
@@ -192,32 +192,32 @@ public class PxSystem {
         // us an all-to-all setup which is more than we need and 
         // doesn't scale. However, since the application does not 
         // seem to scale anyway we don't really care about this. 
-        
+
         for (int i=0;i<nrCPUs;i++) { 
             if (i != myCPU) { 
                 rps[i] = ibis.createReceivePort(portType, COMM_ID + i);
                 rps[i].enableConnections();
             }
         }
-        
+
         for (int i=0;i<nrCPUs;i++) { 
             if (i != myCPU) { 
                 sps[i] = ibis.createSendPort(portType);
                 sps[i].connect(world[i], COMM_ID + myCPU);
             }
         }
-        
+
         initialized = true;
     }
 
     private static double getThroughput(long data, long nanos) { 
-        
+
         double Mbits = (data * 8.0) / 1000000.0;
         double sec = nanos / (1000.0 * 1000.0 * 1000.0);
-        
+
         return (Mbits / sec);
     }
-    
+
     public static void printStatistics() {
 
         long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
@@ -235,47 +235,47 @@ public class PxSystem {
         System.out.printf("     broadcastValue time %.2f usec, count %d\n", (timeBroadcastValue / 1000.0), countBroadcastValue);
         System.out.printf("          reduceV2R time %.2f usec, count %d\n", (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
         System.out.printf("          reduceA2R time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                  (timeReduceArrayToRoot0FT / 1000.0), 
-                  countReduceArrayToRoot0FT, 
-                  dataInReduceArrayToRoot0FT, 
-                  dataOutReduceArrayToRoot0FT, 
-                  getThroughput(dataInReduceArrayToRoot0FT + dataOutReduceArrayToRoot0FT, timeReduceArrayToRoot0FT));
-    
+                (timeReduceArrayToRoot0FT / 1000.0), 
+                countReduceArrayToRoot0FT, 
+                dataInReduceArrayToRoot0FT, 
+                dataOutReduceArrayToRoot0FT, 
+                getThroughput(dataInReduceArrayToRoot0FT + dataOutReduceArrayToRoot0FT, timeReduceArrayToRoot0FT));
+
         System.out.printf("          reduceA2A time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeReduceArrayToAll0FT / 1000.0), 
                 countReduceArrayToAll0FT, 
                 dataInReduceArrayToAll0FT, 
                 dataOutReduceArrayToAll0FT, 
                 getThroughput(dataInReduceArrayToAll0FT + dataOutReduceArrayToAll0FT, timeReduceArrayToAll0FT));
-                
+
         System.out.printf("            scatter time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeScatter0FT / 1000.0), 
                 countScatter0FT, 
                 dataInScatter0FT, 
                 dataOutScatter0FT, 
                 getThroughput(dataInScatter0FT + dataOutScatter0FT, timeScatter0FT));
-                
+
         System.out.printf("             gather time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeGather0FT / 1000.0), 
                 countGather0FT, 
                 dataInGather0FT,
                 dataOutGather0FT, 
                 getThroughput(dataInGather0FT + dataOutGather0FT, timeGather0FT));
-                
+
         System.out.printf("       broadcastSBT time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeBroadcastSBT / 1000.0), 
                 countBroadcastSBT, 
                 dataInBroadcastSBT, 
                 dataOutBroadcastSBT, 
                 getThroughput(dataInBroadcastSBT + dataOutBroadcastSBT, timeBroadcastSBT));
-         
+
         System.out.printf("     borderExchange time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeBorderExchange / 1000.0), 
                 countBorderExchange, 
                 dataInBorderExchange, 
                 dataOutBorderExchange,
                 getThroughput(dataInBorderExchange + dataOutBorderExchange, timeBorderExchange));
-                
+
         timeBarrierSBT = 0;
         timeReduceValueToRoot0FT = 0;
         timeReduceArrayToRoot0FT = 0;
@@ -348,18 +348,18 @@ public class PxSystem {
             int partner = myCPU ^ mask;
             if ((myCPU % mask == 0) && (partner < nrCPUs)) {
                 if (myCPU > partner) {
-//                    if (sps[partner] == null) {
-//                        sps[partner] = ibis.createSendPort(portType);
-//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
-//                    }
+//                  if (sps[partner] == null) {
+//                  sps[partner] = ibis.createSendPort(portType);
+//                  sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                  }
                     WriteMessage w = sps[partner].newMessage();
                     w.finish();
                 } else {
-//                    if (rps[partner] == null) {
-//                       rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                                + partner);
-//                        rps[partner].enableConnections();
-//                    }
+//                  if (rps[partner] == null) {
+//                  rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                  + partner);
+//                  rps[partner].enableConnections();
+//                  }
                     ReadMessage r = rps[partner].receive();
                     r.finish();
                 }
@@ -371,18 +371,18 @@ public class PxSystem {
             int partner = myCPU ^ mask;
             if ((myCPU % mask == 0) && (partner < nrCPUs)) {
                 if (myCPU < partner) {
-//                    if (sps[partner] == null) {
-//                        sps[partner] = ibis.createSendPort(portType);
-//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
-//                    }
+//                  if (sps[partner] == null) {
+//                  sps[partner] = ibis.createSendPort(portType);
+//                  sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                  }
                     WriteMessage w = sps[partner].newMessage();
                     w.finish();
                 } else {
-//                    if (rps[partner] == null) {
-//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                               + partner);
-//                        rps[partner].enableConnections();
-//                    }
+//                  if (rps[partner] == null) {
+//                  rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                  + partner);
+//                  rps[partner].enableConnections();
+//                  }
                     ReadMessage r = rps[partner].receive();
                     r.finish();
                 }
@@ -404,21 +404,21 @@ public class PxSystem {
 
         if (myCPU == 0) {
             for (int partner = 1; partner < nrCPUs; partner++) {
-//                if (rps[partner] == null) {
-//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                            + partner);
-//                    rps[partner].enableConnections();
-//                }
+//              if (rps[partner] == null) {
+//              rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//              + partner);
+//              rps[partner].enableConnections();
+//              }
                 ReadMessage r = rps[partner].receive();
                 double recvVal = r.readDouble();
                 r.finish();
                 result = (Double) op.doIt(result, recvVal);
             }
         } else {
-//            if (sps[0] == null) {
-//                sps[0] = ibis.createSendPort(portType);
-//                sps[0].connect(world[0], COMM_ID + myCPU);
-//            }
+//          if (sps[0] == null) {
+//          sps[0] = ibis.createSendPort(portType);
+//          sps[0].connect(world[0], COMM_ID + myCPU);
+//          }
             WriteMessage w = sps[0].newMessage();
             w.writeDouble(val);
             w.finish();
@@ -440,11 +440,11 @@ public class PxSystem {
             double[] recvArray = new double[a.length];
 
             for (int partner = 1; partner < nrCPUs; partner++) {
- //               if (rps[partner] == null) {
- //                   rps[partner] = ibis.createReceivePort(portType, COMM_ID
- //                           + partner);
- //                   rps[partner].enableConnections();
- //               }
+                //               if (rps[partner] == null) {
+                //                   rps[partner] = ibis.createReceivePort(portType, COMM_ID
+                //                           + partner);
+                //                   rps[partner].enableConnections();
+                //               }
                 ReadMessage r = rps[partner].receive();
                 r.readArray(recvArray);
                 r.finish();
@@ -453,10 +453,10 @@ public class PxSystem {
                 dataInReduceArrayToRoot0FT += a.length * 8; 
             }
         } else {
- //           if (sps[0] == null) {
-  //              sps[0] = ibis.createSendPort(portType);
-  //              sps[0].connect(world[0], COMM_ID + myCPU);
-  //          }
+            //           if (sps[0] == null) {
+            //              sps[0] = ibis.createSendPort(portType);
+            //              sps[0].connect(world[0], COMM_ID + myCPU);
+            //          }
             WriteMessage w = sps[0].newMessage();
             w.writeArray(a);
             w.finish();
@@ -649,18 +649,18 @@ public class PxSystem {
         //	System.out.println("Send partner: " + sendPartner);
         //	System.out.println("Receive partner: " + receivePartner);
 
-//        if (rps[receivePartner] == null) {
-//            rps[receivePartner] = ibis.createReceivePort(portType, COMM_ID
-//                    + receivePartner);
-//            rps[receivePartner].enableConnections();
-//        }
+//      if (rps[receivePartner] == null) {
+//      rps[receivePartner] = ibis.createReceivePort(portType, COMM_ID
+//      + receivePartner);
+//      rps[receivePartner].enableConnections();
+//      }
 
         final ReceivePort rp = rps[receivePartner];
 
-//        if (sps[sendPartner] == null) {
-//            sps[sendPartner] = ibis.createSendPort(portType);
-//            sps[sendPartner].connect(world[sendPartner], COMM_ID + myCPU);
-//        }
+//      if (sps[sendPartner] == null) {
+//      sps[sendPartner] = ibis.createSendPort(portType);
+//      sps[sendPartner].connect(world[sendPartner], COMM_ID + myCPU);
+//      }
 
         final SendPort sp = sps[sendPartner];
 
@@ -776,7 +776,54 @@ public class PxSystem {
         return a;
     }
 
+    public static double[] reduceArrayToAllOFT_Binomial(double[] a, CxRedOpArray op)
+        throws Exception {
 
+        // Added -- J
+        long start = System.nanoTime();
+
+        final double [] tmp = new double[a.length];
+        
+        int mask = 1;
+
+        for (int i=0; i<logCPUs; i++) {
+
+            final int partner = myCPU ^ mask;
+
+            if (myCPU > partner) {
+                WriteMessage w = sps[partner].newMessage();
+                w.writeArray(a);
+                w.finish();
+            
+                ReadMessage r = rps[partner].receive();
+                r.readArray(a);
+                r.finish();
+                
+                
+            } else {
+                ReadMessage r = rps[partner].receive();
+                r.readArray(a);
+                r.finish();
+            
+                WriteMessage w = sps[partner].newMessage();
+                w.writeArray(a);
+                w.finish();
+            }
+            
+            op.doIt(a, tmp);
+            
+            mask <<= 1;
+        }
+
+        // Added -- J
+     
+        timeReduceArrayToAll0FT += System.nanoTime() - start;
+        dataInReduceArrayToAll0FT += a.length * 8 * logCPUs;
+        dataOutReduceArrayToAll0FT += a.length * 8 * logCPUs;
+        countReduceArrayToAll0FT++;
+     
+        return a;
+    }
 
     public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
     throws Exception {
@@ -786,11 +833,11 @@ public class PxSystem {
         if (myCPU == 0) {
             double[] recvArray = new double[a.length];
             for (int partner = 1; partner < nrCPUs; partner++) {
-//                if (rps[partner] == null) {
-//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                            + partner);
- //                   rps[partner].enableConnections();
-  //              }
+//              if (rps[partner] == null) {
+//              rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//              + partner);
+                //                   rps[partner].enableConnections();
+                //              }
                 ReadMessage r = rps[partner].receive();
                 r.readArray(recvArray);
                 r.finish();
@@ -800,10 +847,10 @@ public class PxSystem {
                 op.doIt(a, recvArray);
             }
             for (int partner = 1; partner < nrCPUs; partner++) {
-//                if (sps[partner] == null) {
-//                    sps[partner] = ibis.createSendPort(portType);
-//                    sps[partner].connect(world[partner], COMM_ID + 0);
- //               }
+//              if (sps[partner] == null) {
+//              sps[partner] = ibis.createSendPort(portType);
+//              sps[partner].connect(world[partner], COMM_ID + 0);
+                //               }
                 WriteMessage w = sps[partner].newMessage();
                 w.writeArray(a);
                 w.finish();
@@ -811,20 +858,20 @@ public class PxSystem {
                 dataOutReduceArrayToAll0FT += a.length * 8;
             }
         } else {
-//            if (sps[0] == null) {
-//                sps[0] = ibis.createSendPort(portType);
-//                sps[0].connect(world[0], COMM_ID + myCPU);
-//            }
+//          if (sps[0] == null) {
+//          sps[0] = ibis.createSendPort(portType);
+//          sps[0].connect(world[0], COMM_ID + myCPU);
+//          }
             WriteMessage w = sps[0].newMessage();
             w.writeArray(a);
             w.finish();
 
             dataOutReduceArrayToAll0FT += a.length * 8;
-//
-//            if (rps[0] == null) {
-//                rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
-//                rps[0].enableConnections();
-//            }
+
+//          if (rps[0] == null) {
+//          rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
+//          rps[0].enableConnections();
+//          }
             ReadMessage r = rps[0].receive();
             r.readArray(a);
             r.finish();
@@ -841,8 +888,9 @@ public class PxSystem {
     }
 
     public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
-    throws Exception {
-        return reduceArrayToAllOFT_Ring(a, op);
+        throws Exception {
+        
+        return reduceArrayToAllOFT_Binomial(a, op);
         //return reduceArrayToAllOFT_Flat_Orig(a, op);
     }	
 
@@ -936,7 +984,7 @@ public class PxSystem {
             sps[nextCPU].connect(world[nextCPU], COMM_ID + myCPU);
         }*/
 
-//        System.out.println("Border exchange: " + xSize + "x" + ySize + " (" + (xSize*ySize) + ")");
+//      System.out.println("Border exchange: " + xSize + "x" + ySize + " (" + (xSize*ySize) + ")");
 
         if ((myCPU & 1) == 0) { 
 
@@ -971,7 +1019,7 @@ public class PxSystem {
 
                 dataInBorderExchange += xSize * ySize * 8;        
             }
-            
+
         } else { 
 
             if (nextCPU < PxSystem.nrCPUs()) {
@@ -1028,7 +1076,7 @@ public class PxSystem {
             //if (sps[part1] == null) {
             //    sps[part1] = ibis.createSendPort(portType);
             //    sps[part1].connect(world[part1], COMM_ID + myCPU);
-           // }
+            // }
             WriteMessage w = sps[part1].newMessage();
             w.writeArray(a, off - stride / 2, xSize * ySize);
             w.finish();
@@ -1038,9 +1086,9 @@ public class PxSystem {
 
         if (part2 < PxSystem.nrCPUs()) {
             //if (rps[part2] == null) {
-             //   rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
+            //   rps[part2] = ibis.createReceivePort(portType, COMM_ID + part2);
             //    rps[part2].enableConnections();
-           // }
+            // }
             ReadMessage r = rps[part2].receive();
             r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
             r.finish();
@@ -1049,10 +1097,10 @@ public class PxSystem {
 
             // Send to second partner and receive from first partner
 
-//            if (sps[part2] == null) {
- //               sps[part2] = ibis.createSendPort(portType);
-  //              sps[part2].connect(world[part2], COMM_ID + myCPU);
-   //         }
+//          if (sps[part2] == null) {
+            //               sps[part2] = ibis.createSendPort(portType);
+            //              sps[part2].connect(world[part2], COMM_ID + myCPU);
+            //         }
             WriteMessage w = sps[part2].newMessage();
             w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize
                     * ySize);
@@ -1062,10 +1110,10 @@ public class PxSystem {
 
         }
         if (part1 >= 0) {
-//            if (rps[part1] == null) {
-//                rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
- //               rps[part1].enableConnections();
-  //          }
+//          if (rps[part1] == null) {
+//          rps[part1] = ibis.createReceivePort(portType, COMM_ID + part1);
+            //               rps[part1].enableConnections();
+            //          }
             ReadMessage r = rps[part1].receive();
             r.readArray(a, 0, xSize * ySize);
             r.finish();
@@ -1110,10 +1158,10 @@ public class PxSystem {
         int pHeight = getPartHeight(globH, myCPU);
         int bWidth = a.getBorderWidth();
         int bHeight = a.getBorderHeight();
-        
+
         double[] pData = new double[(pWidth + bWidth * 2)
                                     * (pHeight + bHeight * 2) * extent];
-        
+
         a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
 
         int xSize = (pWidth + bWidth * 2) * extent;
@@ -1122,10 +1170,10 @@ public class PxSystem {
             for (int partner = 1; partner < nrCPUs; partner++) {
                 int ySize = getPartHeight(globH, partner);
                 int offset = xSize * (getLclStartY(globH, partner) + bHeight);
-    //            if (sps[partner] == null) {
-    //                sps[partner] = ibis.createSendPort(portType);
-    //                sps[partner].connect(world[partner], COMM_ID + 0);
-    //            }
+                //            if (sps[partner] == null) {
+                //                sps[partner] = ibis.createSendPort(portType);
+                //                sps[partner].connect(world[partner], COMM_ID + 0);
+                //            }
                 WriteMessage w = sps[partner].newMessage();
                 w.writeArray(a.getDataReadOnly(), offset, xSize * ySize);
                 w.finish();
@@ -1133,18 +1181,18 @@ public class PxSystem {
                 // Added-- J
                 dataOutScatter0FT += 8 * xSize * ySize;               
             }
-        
+
             int start = xSize * bHeight;
-            
+
             System.arraycopy(a.getDataReadOnly(), start, pData, start, pData.length - 2
                     * start);
         } else {
             int ySize = getPartHeight(globH, myCPU);
             int offset = xSize * bHeight;
-      //      if (rps[0] == null) {
-       //         rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
-       //         rps[0].enableConnections();
-       //     }
+            //      if (rps[0] == null) {
+            //         rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
+            //         rps[0].enableConnections();
+            //     }
             ReadMessage r = rps[0].receive();
             r.readArray(a.getPartialDataWriteOnly(), offset, xSize * ySize);
             r.finish();
@@ -1167,16 +1215,16 @@ public class PxSystem {
         int bHeight = a.getBorderHeight();
 
         int xSize = (pWidth + bWidth * 2) * extent;
-        
+
         if (myCPU == 0) {
             for (int partner = 1; partner < nrCPUs; partner++) {
                 int ySize = getPartHeight(globH, partner);
                 int offset = xSize * (getLclStartY(globH, partner) + bHeight);
-//                if (rps[partner] == null) {
-//                    rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                            + partner);
-//                    rps[partner].enableConnections();
-//                }
+//              if (rps[partner] == null) {
+//              rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//              + partner);
+//              rps[partner].enableConnections();
+//              }
                 ReadMessage r = rps[partner].receive();
                 r.readArray(a.getDataWriteOnly(), offset, xSize * ySize);
                 r.finish();
@@ -1185,19 +1233,19 @@ public class PxSystem {
                 dataInGather0FT += 8 * xSize * ySize;
             }
             int start = xSize * bHeight;
-            
+
             final double [] pdata = a.getPartialDataReadOnly();
-            
+
             System.arraycopy(pdata, start, a.getDataWriteOnly(), 
-            		start, pdata.length - 2 * start);
+                    start, pdata.length - 2 * start);
 
         } else {
             int ySize = getPartHeight(globH, myCPU);
             int offset = xSize * bHeight;
-//            if (sps[0] == null) {
-//                sps[0] = ibis.createSendPort(portType);
-//                sps[0].connect(world[0], COMM_ID + myCPU);
-//            }
+//          if (sps[0] == null) {
+//          sps[0] = ibis.createSendPort(portType);
+//          sps[0].connect(world[0], COMM_ID + myCPU);
+//          }
             WriteMessage w = sps[0].newMessage();
             w.writeArray(a.getPartialDataReadOnly(), offset, xSize * ySize);
             w.finish();
@@ -1228,21 +1276,21 @@ public class PxSystem {
             int partner = myCPU ^ mask;
             if ((myCPU % mask == 0) && (partner < nrCPUs)) {
                 if (myCPU < partner) {
-//                    if (sps[partner] == null) {
-//                        sps[partner] = ibis.createSendPort(portType);
-//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
-//                    }
+//                  if (sps[partner] == null) {
+//                  sps[partner] = ibis.createSendPort(portType);
+//                  sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                  }
                     WriteMessage w = sps[partner].newMessage();
                     w.writeArray(a.getPartialDataReadOnly(), offset, length);
                     w.finish();
 
                     dataOutBroadcastSBT += length * 8;
                 } else {
-//                    if (rps[partner] == null) {
-//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                                + partner);
-//                        rps[partner].enableConnections();
-//                    }
+//                  if (rps[partner] == null) {
+//                  rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                  + partner);
+//                  rps[partner].enableConnections();
+//                  }
                     ReadMessage r = rps[partner].receive();
                     r.readArray(a.getPartialDataWriteOnly(), offset, length);
                     r.finish();
@@ -1263,19 +1311,19 @@ public class PxSystem {
             int partner = myCPU ^ mask;
             if ((myCPU % mask == 0) && (partner < nrCPUs)) {
                 if (myCPU < partner) {
-//                    if (sps[partner] == null) {
-//                        sps[partner] = ibis.createSendPort(portType);
-//                        sps[partner].connect(world[partner], COMM_ID + myCPU);
-//                    }
+//                  if (sps[partner] == null) {
+//                  sps[partner] = ibis.createSendPort(portType);
+//                  sps[partner].connect(world[partner], COMM_ID + myCPU);
+//                  }
                     WriteMessage w = sps[partner].newMessage();
                     w.writeInt(value);
                     w.finish();
                 } else {
-//                    if (rps[partner] == null) {
-//                        rps[partner] = ibis.createReceivePort(portType, COMM_ID
-//                                + partner);
-//                        rps[partner].enableConnections();
-//                    }
+//                  if (rps[partner] == null) {
+//                  rps[partner] = ibis.createReceivePort(portType, COMM_ID
+//                  + partner);
+//                  rps[partner].enableConnections();
+//                  }
                     ReadMessage r = rps[partner].receive();
                     value = r.readInt();
                     r.finish();

@@ -13,7 +13,7 @@ package jorus.operations;
 
 public abstract class CxRedOpArray<T>
 {
-	public abstract void doIt(T val1, T val2);
-	public abstract void doItRange(T val1, T val2, int startIndex, int length);
+	public abstract void doIt(T target, T src);
+	public abstract void doItRange(T target, T src, int startIndex, int length);
 
 }

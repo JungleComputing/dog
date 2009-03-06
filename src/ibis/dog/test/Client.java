@@ -1,10 +1,9 @@
 package ibis.dog.test;
 
 import ibis.dog.shared.Communication;
-import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.MachineDescription;
-import ibis.dog.shared.RGB32Image;
+import ibis.dog.shared.RGB24Image;
 import ibis.dog.shared.Reply;
 import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
@@ -39,7 +38,7 @@ public class Client extends Thread implements Upcall {
     private Servers servers;
 
     // Current input media, pixels size, and input frame.
-    private final RGB32Image image;
+    private final RGB24Image image;
 
     private FeatureVector vector;
 
@@ -52,7 +51,7 @@ public class Client extends Thread implements Upcall {
 
     private int sends;
 
-    public Client(RGB32Image image, int count) {
+    public Client(RGB24Image image, int count) {
         super("CLIENT");
         this.image = image;
         this.count = count;
@@ -142,7 +141,7 @@ public class Client extends Thread implements Upcall {
     // notifyAll();
     // }
 
-    private RGB32Image getFrame() {
+    private RGB24Image getFrame() {
         return image;
     }
 
@@ -233,7 +232,7 @@ public class Client extends Thread implements Upcall {
         }
     }
 
-    private void sendFrameToServer(RGB32Image image) {
+    private void sendFrameToServer(RGB24Image image) {
         ServerData target = servers.findIdleServer();
 
         if (target != null) {
@@ -262,7 +261,7 @@ public class Client extends Thread implements Upcall {
             return;
         }
 
-        RGB32Image image = getFrame();
+        RGB24Image image = getFrame();
 
         while (sends < count && image != null) {
             sendFrameToServer(image);

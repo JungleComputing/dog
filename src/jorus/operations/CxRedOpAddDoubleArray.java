@@ -13,17 +13,17 @@ package jorus.operations;
 
 public class CxRedOpAddDoubleArray extends CxRedOpArray<double[]>
 {
-	public void doIt(double[] src1, double[] src2)
+	public void doIt(double[] target, double[] src)
 	{
-		for (int i=0; i<src1.length; i++) {
-			src1[i] += src2[i];
+		for (int i=0; i<target.length; i++) {
+			target[i] += src[i];
 		}
 	}
 	
 	@Override
-	public void doItRange(double[] src1, double[] src2, int startIndex,int length) {
+	public void doItRange(double[] target, double[] src, int startIndex,int length) {
 		for (int i=0; i<length; i++) {
-			src1[startIndex+i] += src2[i];
+			target[startIndex+i] += src[i];
 		}
 	}
 
