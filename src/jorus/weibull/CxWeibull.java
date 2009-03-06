@@ -444,6 +444,8 @@ public class CxWeibull
         //    invalids[i] = false;
         //}
         
+        int countIvalids = 0;
+        
         Arrays.fill(invalids, false);
         
         for (int j=0; j<NR_INVARS; j++) {
@@ -454,6 +456,11 @@ public class CxWeibull
                         Double.isNaN(resgammas[j][i]) ||
                         Double.isInfinite(resgammas[j][i]) ||
                         resgammas[j][i] > 100.);
+                
+                if (invalids[i]) { 
+                    countIvalids++;
+                }
+                
             }
         }
 
@@ -484,6 +491,8 @@ public class CxWeibull
         System.out.println("            inithistos " + (initHistos-buildInvar));
         System.out.println("            histos     " + (createHistos-initHistos));
         System.out.println("            weibul     " + (doWeibuls-createHistos));
+        System.out.println("              invalids " + countIvalids);
+        
     }
 
 

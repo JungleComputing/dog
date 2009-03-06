@@ -151,11 +151,12 @@ public class PxSystem {
 
     public static void initParallelSystem(String name, String size)
     throws Exception {
+        
         Properties props = new Properties();
         props.setProperty("ibis.pool.name", name);
         props.setProperty("ibis.pool.size", size);
-
-        // Create Ibis & obtain parallel environment parameters (local)
+        
+            // Create Ibis & obtain parallel environment parameters (local)
 
         // ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
         ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
@@ -207,7 +208,9 @@ public class PxSystem {
             }
         }
 
-        initialized = true;
+        if (nrCPUs > 1) { 
+            initialized = true;
+        }
     }
 
     private static double getThroughput(long data, long nanos) { 
@@ -796,13 +799,13 @@ public class PxSystem {
                 w.finish();
             
                 ReadMessage r = rps[partner].receive();
-                r.readArray(a);
+                r.readArray(tmp);
                 r.finish();
                 
                 
             } else {
                 ReadMessage r = rps[partner].receive();
-                r.readArray(a);
+                r.readArray(tmp);
                 r.finish();
             
                 WriteMessage w = sps[partner].newMessage();
@@ -890,6 +893,7 @@ public class PxSystem {
     public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
         throws Exception {
         
+        //return reduceArrayToAllOFT_Ring(a, op);
         return reduceArrayToAllOFT_Binomial(a, op);
         //return reduceArrayToAllOFT_Flat_Orig(a, op);
     }	
