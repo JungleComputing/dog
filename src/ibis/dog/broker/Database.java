@@ -140,9 +140,9 @@ public class Database {
         }
     }
 
-    public synchronized Item[] recognize(FeatureVector vector, int nrOfResults) {
+    public synchronized TreeMap<Double, Item> recognize(FeatureVector vector, int nrOfResults) {
         if (nrOfResults == 0) {
-            return new Item[0];
+            return new TreeMap<Double, Item>();
         }
 
         TreeMap<Double, Item> results = new TreeMap<Double, Item>();
@@ -166,7 +166,7 @@ public class Database {
         }
 
         // return best results.
-        return results.values().toArray(new Item[0]);
+        return results;
     }
 
     public synchronized boolean learn(Item item) {

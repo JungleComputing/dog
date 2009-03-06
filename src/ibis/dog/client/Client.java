@@ -1,13 +1,9 @@
 package ibis.dog.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ibis.dog.broker.Item;
 import ibis.dog.gui.application.FramerateConsumer;
 import ibis.dog.gui.application.OutputPanel;
 import ibis.dog.shared.Communication;
-import ibis.dog.shared.CompressedImage;
 import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.MachineDescription;
 import ibis.dog.shared.RGB32Image;
@@ -16,6 +12,11 @@ import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 import ibis.video4j.VideoConsumer;
+
+import java.util.SortedMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Client extends Thread implements Upcall, VideoConsumer {
 
@@ -274,16 +275,17 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         }
     }
 
-    private synchronized void processDatabaseLookup(Item[] items,
-            String serverName) {
-        this.currentResults = items;
+    private synchronized void processDatabaseLookup(
+            SortedMap<Double, Item> results, String serverName) {
+        this.currentResults = results.values().toArray(new Item[0]);
 
-        if (items == null || items.length == 0) {
+        if (currentResults == null || currentResults.length == 0) {
             logger.info(serverName + " doesn't recognize this object");
             log(serverName + " doesn't recognize this object");
         } else {
-            logger.info(serverName + " says this is a " + items[0].getName());
-            log(serverName + " says this is a " + items[0].getName());
+            logger.info(serverName + " says this is a "
+                    + currentResults[0].getName());
+            log(serverName + " says this is a " + currentResults[0].getName());
         }
 
     }
@@ -315,7 +317,8 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                 processServerReply((Reply) objects[0]);
                 break;
             case Communication.CLIENT_REPLY_RECOGNIZE:
-                processDatabaseLookup((Item[]) objects[0], (String) objects[1]);
+                processDatabaseLookup((SortedMap<Double, Item>) objects[0],
+                        (String) objects[1]);
                 break;
             default:
                 System.err.println("Received unknown opcode: " + opcode);

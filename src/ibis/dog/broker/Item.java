@@ -1,9 +1,9 @@
 package ibis.dog.broker;
 
-import java.io.Serializable;
-
 import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.RGB24Image;
+import ibis.dog.shared.RGB32Image;
+
+import java.io.Serializable;
 
 /**
  * An item in the database of objects.
@@ -20,10 +20,10 @@ public class Item implements Serializable {
 
     private final String author;
 
-    private final RGB24Image thumbnail;
+    private final RGB32Image thumbnail;
 
     public Item(FeatureVector vector, String name, String author,
-            RGB24Image thumbnail) {
+            RGB32Image thumbnail) {
         this.vector = vector;
         this.name = name;
         this.author = author;
@@ -54,9 +54,12 @@ public class Item implements Serializable {
     /**
      * @return the thumbnail
      */
-    public RGB24Image getThumbnail() {
+    public RGB32Image getThumbnail() {
         return thumbnail;
     }
 
+    public String toString() {
+        return name + ", " + author + ", " + vector + ", " + thumbnail;
+    }
 
 }

@@ -9,6 +9,7 @@ import ibis.ipl.IbisCreationFailedException;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.SortedMap;
 
 public class Broker implements Upcall {
 
@@ -77,12 +78,12 @@ public class Broker implements Upcall {
     }
 
     public void upcall(byte opcode, Object... objects) throws IOException {
-
         switch (opcode) {
         case Communication.BROKER_REQ_GET_SERVERS:
             // It a lookup request from a client.
             communication.send((MachineDescription) objects[0],
-                Communication.CLIENT_REPLY_GETSERVERS, (Object[]) getServers());
+                    Communication.CLIENT_REPLY_GETSERVERS,
+                    (Object[]) getServers());
             break;
         case Communication.BROKER_REQ_REGISTER:
             // It is a registration request from a server.
@@ -103,21 +104,22 @@ public class Broker implements Upcall {
         case Communication.BROKER_REQ_LEARN:
             // Request to add something to database
             Item item = (Item) objects[0];
-            
             database.learn(item);
+            break;
         case Communication.BROKER_REQ_RECOGNIZE:
             // Request to add something to database
-            
             MachineDescription machineDescription = (MachineDescription) objects[0];
             FeatureVector vector = (FeatureVector) objects[1];
             Integer nrOfResults = (Integer) objects[2];
-            //random object useful for clients
+            // random object useful for clients
             Object tag = objects[3];
-            
-            Item[] results = database.recognize(vector, nrOfResults);
-            
+
+            SortedMap<Double, Item> results = database.recognize(vector,
+                    nrOfResults);
+
             communication.send(machineDescription,
-                Communication.CLIENT_REPLY_RECOGNIZE, results, tag);
+                    Communication.CLIENT_REPLY_RECOGNIZE, results, tag);
+            break;
         default:
             System.err.println("Received unknown opcode: " + opcode);
         }
