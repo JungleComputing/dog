@@ -91,7 +91,7 @@ public class CxWeibull
         // Create central Gaussian at high resolution
 
         MemoryUsage mu = mbean.getHeapMemoryUsage();
-        
+
         System.out.println("Memory used: " + mu.getUsed());
 
         long start = System.currentTimeMillis();
@@ -100,40 +100,55 @@ public class CxWeibull
         int		centerx = inImW/2;
         int		centery = inImH/2;
 
+        // NOTE: we now create an empty distibuted structure here! -- J
         CxArray2dScalarDouble pntIm =
+//            new CxArray2dScalarDouble(inImW, inImH, 0, 0, false);
             new CxArray2dScalarDouble(inImW, inImH, 0, 0, true);
+
         CxPixelScalarDouble zero =
             new CxPixelScalarDouble(new double[]{0.});
+
         CxPixelScalarDouble one =
             new CxPixelScalarDouble(new double[]{1.});
+
+        // We now fill the distibuted structure with zeros -- J
         pntIm.setVal(zero, true);
+
+        // .. and put a 1 in the middle -- J
         pntIm.setSingleValue(one, centerx, centery, true);
+
+        // Calculate the blur (in a new distributed structure). -- J
         rfIm[0] = pntIm.gaussDerivative(sigma, 0, 0, 5.);
+
+        // Reset the original data structure -- J
         pntIm.setSingleValue(zero, centerx, centery, true);
 
         mu = mbean.getHeapMemoryUsage();
         System.out.println("Memory used: " + mu.getUsed());
 
-
         long init = System.currentTimeMillis();
 
         // Create remaining Gaussians in circular fashion around center
 
-        int		idx = 1;
-        int		order = 3;							// nr. of circles
-        int		dens = 1;							// density
-        int		radialdens = 6;						// radial density
-        double	r = dens*sigma;
+        int idx = 1;
+        final int order = 3;		// nr. of circles
+        final int dens = 1;		// density
+        final int radialdens = 6;	// radial density
+        double r = dens*sigma;
 
         for (int n=1; n<=order; n++) {
             r += dens*sigma;
             for (int phi=0; phi<n*radialdens; phi++) {
-                double xp = r*Math.cos(2*Math.PI*phi/(n*radialdens));
-                double yp = -r*Math.sin(2*Math.PI*phi/(n*radialdens));
-                int x = (int)(centerx + xp);
-                int y = (int)(centery + yp);
+                
+                final double xp = r*Math.cos(2*Math.PI*phi/(n*radialdens));
+                final double yp = -r*Math.sin(2*Math.PI*phi/(n*radialdens));
+                
+                final int x = (int)(centerx + xp);
+                final int y = (int)(centery + yp);
+                
                 if (x >= sigma && y >= sigma &&
                         (x < inImW - sigma) && (y < inImH - sigma)) {
+                    
                     pntIm.setSingleValue(one, x, y, true);
                     rfIm[idx] = pntIm.gaussDerivative(sigma, 0, 0, 5.);
                     pntIm.setSingleValue(zero, x, y, true);
@@ -173,24 +188,24 @@ public class CxWeibull
         // Note: this operation will also scatter the input image to all 
         // participating machines -- J.
         input.convertRGB2OOO(true);
-        
+
         input.mulVal(new
                 CxPixelVec3Double(new double[]{255., 255., 255.}), true);
 
         CxArray2dScalarDouble plane = input.getPlane(0);
-        
+
         CxArray2dScalarDouble E  = plane.gaussDerivative(s, 0, 0, 3.);
         CxArray2dScalarDouble Ex = plane.gaussDerivative(s, 1, 0, 3.);
         CxArray2dScalarDouble Ey = plane.gaussDerivative(s, 0, 1, 3.);
 
         plane = input.getPlane(1);
-        
+
         CxArray2dScalarDouble El  = plane.gaussDerivative(s, 0, 0, 3.);
         CxArray2dScalarDouble Elx = plane.gaussDerivative(s, 1, 0, 3.);
         CxArray2dScalarDouble Ely = plane.gaussDerivative(s, 0, 1, 3.);
 
         plane = input.getPlane(2);
-        
+
         CxArray2dScalarDouble Ell  = plane.gaussDerivative(s, 0, 0, 3.);
         CxArray2dScalarDouble Ellx = plane.gaussDerivative(s, 1, 0, 3.);
         CxArray2dScalarDouble Elly = plane.gaussDerivative(s, 0, 1, 3.);
@@ -416,7 +431,7 @@ public class CxWeibull
                     angleg = 0.5*Math.atan2(2.0*xyg, xxg-yyg);
                 }
                  */
-                
+
                 double H  = 0.5*(xxb+yyb);
                 double D  = H*H-xxb*yyb+xyb*xyb;
                 double Ia = H+Math.sqrt(D);
@@ -437,17 +452,17 @@ public class CxWeibull
         // Make invalid all parameters that are not finite or too large
 
         boolean[] invalids = new boolean[NR_RFIELDS];
-     
+
         // Replaced by Arrays.fill - J.
         //
         //for (int i=0; i<NR_RFIELDS; i++) {
         //    invalids[i] = false;
         //}
-        
+
         int countIvalids = 0;
         
         Arrays.fill(invalids, false);
-        
+
         for (int j=0; j<NR_INVARS; j++) {
             for (int i=0; i<NR_RFIELDS; i++) {
                 invalids[i] = (Double.isNaN(resbetas[j][i]) ||

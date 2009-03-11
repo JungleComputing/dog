@@ -156,7 +156,16 @@ public class PxSystem {
         props.setProperty("ibis.pool.name", name);
         props.setProperty("ibis.pool.size", size);
         
-            // Create Ibis & obtain parallel environment parameters (local)
+        String internalImpl = System.getProperty("PxSystem.impl");
+        
+        if (internalImpl != null) { 
+            
+            System.out.println("PxSystem using implemementation: " + internalImpl);
+            
+            props.setProperty("ibis.implementation", internalImpl);
+        }
+        
+        // Create Ibis & obtain parallel environment parameters (local)
 
         // ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
         ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
@@ -202,15 +211,37 @@ public class PxSystem {
         }
 
         for (int i=0;i<nrCPUs;i++) { 
-            if (i != myCPU) { 
+            
+            if (i != myCPU) {
+            
+                System.out.println("Connecting to " + i);
+                
+                if (i > myCPU) {
+
+                    System.out.println("Need to wait");
+                    
+                    while (rps[i].connectedTo().length == 0) { 
+                        
+                        System.out.println("Waiting for connection from " + i);
+                        
+                        try { 
+                            Thread.sleep(500);
+                        } catch (Exception e) {
+                            // TODO: handle exception
+                        }
+                        
+                    }
+                }
+                
+                System.out.println("Really connecting to " + i);
+
+                
                 sps[i] = ibis.createSendPort(portType);
-                sps[i].connect(world[i], COMM_ID + myCPU);
+                sps[i].connect(world[i], COMM_ID + myCPU);                    
             }
         }
 
-        if (nrCPUs > 1) { 
-            initialized = true;
-        }
+        initialized = true;
     }
 
     private static double getThroughput(long data, long nanos) { 
