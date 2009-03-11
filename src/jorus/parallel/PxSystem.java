@@ -33,7 +33,11 @@ import jorus.operations.CxRedOpArray;
 public class PxSystem {
     /** * Ibis Capabilities & PortTypes ******************************* */
 
-
+    private static final int ALLREDUCE_FLAT = 0;
+    private static final int ALLREDUCE_RING = 1;
+    private static final int ALLREDUCE_TREE = 2;
+    private static final int ALLREDUCE_MAX = 2;
+       
     private static PortType portType = new PortType(
             PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
             PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_ONE);
@@ -105,8 +109,9 @@ public class PxSystem {
 
     private static int myCPU = -1;
 
+    private static int allreduce = ALLREDUCE_TREE;
+    
     private static boolean initialized = false;
-
 
     private static long timeBarrierSBT;
     private static long countBarrierSBT;
@@ -151,6 +156,16 @@ public class PxSystem {
 
     public static void initParallelSystem(String name, String size)
     throws Exception {
+        
+        String tmp = System.getProperty("pxsystem.allreduce");
+        
+        if (tmp != null && tmp.length() > 0) { 
+            allreduce = Integer.parseInt(tmp);
+        
+            if (allreduce < 0 && allreduce > ALLREDUCE_MAX) { 
+                throw new Exception("Illegal allreduce implementation selected");
+            }
+        }
         
         Properties props = new Properties();
         props.setProperty("ibis.pool.name", name);
@@ -242,6 +257,25 @@ public class PxSystem {
         }
 
         initialized = true;
+
+        if (myCPU == 0) { 
+
+            String version = "UNKNOWN";
+
+            switch (allreduce) {
+            case ALLREDUCE_FLAT:
+                version = "FLAT";
+                break;
+            case ALLREDUCE_RING:
+                version = "RING";
+                break;
+            case ALLREDUCE_TREE:
+                version = "TREE";
+                break;
+            }
+
+            System.out.println("Selected " + version + " allreduce");
+        }
     }
 
     private static double getThroughput(long data, long nanos) { 
@@ -933,6 +967,8 @@ public class PxSystem {
         // Added -- J
         long start = System.nanoTime();
 
+        
+        
         if (a instanceof CxArray2dDoubles) {
             doScatterOFT((CxArray2dDoubles) a);
         } else {
@@ -1187,6 +1223,14 @@ public class PxSystem {
         // which is scattered to the partial structs of all nodes. East
         // and west borders are also communicated (not north and south).
 
+        if (nrCPUs == 1) { 
+            // On 1 CPU we simply create an alias to the same data
+            a.setPartialData(a.getWidth(), a.getHeight(), a.getDataReadWrite(), 
+                    CxArray2d.NONE, CxArray2d.NONE);
+            return;
+        }
+        
+        
         int globH = a.getHeight();
         int extent = a.getExtent();
         int pWidth = a.getWidth();
@@ -1243,6 +1287,20 @@ public class PxSystem {
         // to the global structure of CPU 0; east and west borders are
         // also communicated (not north and south).
 
+        if (nrCPUs == 0) {
+            
+            double [] data = a.getDataReadWrite();
+            double [] pdata = a.getDataReadOnly();
+            
+            if (data == pdata) { 
+                // Data is an alias, so we don't do anything
+            } else { 
+                System.arraycopy(pdata, 0, data, 0, pdata.length);
+            }
+            
+            return;
+        }
+        
         int globH = a.getHeight();
         int extent = a.getExtent();
         int pWidth = a.getWidth();

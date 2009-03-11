@@ -97,8 +97,8 @@ public class CxWeibull
         long start = System.currentTimeMillis();
 
         double	sigma = 30.0 * (double)inImH / 576;
-        int		centerx = inImW/2;
-        int		centery = inImH/2;
+        int     centerx = inImW/2;
+        int     centery = inImH/2;
 
         // NOTE: we now create an empty distibuted structure here! -- J
         CxArray2dScalarDouble pntIm =
@@ -155,10 +155,14 @@ public class CxWeibull
                     idx++;
                 }
 
+                mbean.gc();
+                
                 mu = mbean.getHeapMemoryUsage();
                 System.out.println("Memory used after " + n + ", " + phi + ": " + mu.getUsed());
             }
 
+            mbean.gc();
+            
             mu = mbean.getHeapMemoryUsage();
             System.out.println("Memory used after " + n + ": " + mu.getUsed());
 
@@ -167,6 +171,8 @@ public class CxWeibull
 
         long end = System.currentTimeMillis();
 
+        mbean.gc();
+        
         mu = mbean.getHeapMemoryUsage();
         System.out.println("Memory used (END): " + mu.getUsed());
 
@@ -460,7 +466,7 @@ public class CxWeibull
         //}
 
         int countIvalids = 0;
-        
+
         Arrays.fill(invalids, false);
 
         for (int j=0; j<NR_INVARS; j++) {
@@ -471,11 +477,11 @@ public class CxWeibull
                         Double.isNaN(resgammas[j][i]) ||
                         Double.isInfinite(resgammas[j][i]) ||
                         resgammas[j][i] > 100.);
-                
+
                 if (invalids[i]) { 
                     countIvalids++;
                 }
-                
+
             }
         }
 
@@ -507,7 +513,7 @@ public class CxWeibull
         System.out.println("            histos     " + (createHistos-initHistos));
         System.out.println("            weibul     " + (doWeibuls-createHistos));
         System.out.println("              invalids " + countIvalids);
-        
+
     }
 
 

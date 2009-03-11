@@ -58,10 +58,6 @@ public abstract class CxArray2d<T>
         // Subclasses should make sure that this is indeed the case!!!!
         setDimensions(w, h, bw, bh, e);
         type = getDataType();
-        
-        
-        
-        
     }
 
     // Constructor which takes the desired dimensions of the Cx2dArray, and 
@@ -118,16 +114,22 @@ public abstract class CxArray2d<T>
         gstate = orig.gstate;        
         
         if (orig.pdata != null) { 
+            
             pwidth = orig.pwidth; 
             pheight = orig.pheight; 
             ptype = orig.ptype;
 
-            final int fullpw = pwidth + 2*bwidth;
-            final int fullph = pheight + 2*bheight;
+            // Special case: the 'pdata' may be an alias of 'data' when running on a single CPU.
+            if (orig.pdata == orig.data) {
+                pdata = data;
+            } else {  
+                final int fullpw = pwidth + 2*bwidth;
+                final int fullph = pheight + 2*bheight;
 
-            pdata = createDataArray(fullpw * fullph * extent);
+                pdata = createDataArray(fullpw * fullph * extent);
 
-            System.arraycopy(orig.pdata, 0, pdata, 0, fullpw * fullph * extent);
+                System.arraycopy(orig.pdata, 0, pdata, 0, fullpw * fullph * extent);
+            }
         }
         
         pstate = orig.pstate;
@@ -161,20 +163,26 @@ public abstract class CxArray2d<T>
         gstate = orig.gstate;
 
         if (orig.pdata != null) {
-            pdata = createDataArray((orig.pwidth + 2*newBW) * (orig.pheight + 2*newBH) * extent);
+          
+            // Special case: the 'pdata' may be an alias of 'data' when running on a single CPU.
+            if (orig.pdata == orig.data) {
+                pdata = data;
+            } else {  
+                pwidth = orig.pwidth; 
+                pheight = orig.pheight; 
+                ptype = orig.ptype;
 
-            pwidth = orig.pwidth; 
-            pheight = orig.pheight; 
-            ptype = orig.ptype;
+                pdata = createDataArray((orig.pwidth + 2*newBW) * (orig.pheight + 2*newBH) * extent);
 
-            final int srcOff = ((orig.pwidth + 2 * orig.bwidth) * orig.bheight + orig.bwidth) * extent;
-            final int dstOff = ((orig.pwidth + 2 * newBW) * newBH + newBW) * extent;
+                final int srcOff = ((orig.pwidth + 2 * orig.bwidth) * orig.bheight + orig.bwidth) * extent;
+                final int dstOff = ((orig.pwidth + 2 * newBW) * newBH + newBW) * extent;
 
-            for (int j = 0; j < orig.pheight; j++) {
-                final int srcPtr = srcOff + j * (orig.pwidth + 2 * orig.bwidth) * extent;
-                final int dstPtr = dstOff + j * (orig.pwidth + 2 * newBW) * extent;
+                for (int j = 0; j < orig.pheight; j++) {
+                    final int srcPtr = srcOff + j * (orig.pwidth + 2 * orig.bwidth) * extent;
+                    final int dstPtr = dstOff + j * (orig.pwidth + 2 * newBW) * extent;
 
-                System.arraycopy(orig.pdata, srcPtr, pdata, dstPtr, orig.pwidth * extent);
+                    System.arraycopy(orig.pdata, srcPtr, pdata, dstPtr, orig.pwidth * extent);
+                }
             }
         }
         
