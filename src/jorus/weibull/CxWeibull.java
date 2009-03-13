@@ -102,8 +102,8 @@ public class CxWeibull
 
         // NOTE: we now create an empty distibuted structure here! -- J
         CxArray2dScalarDouble pntIm =
-//            new CxArray2dScalarDouble(inImW, inImH, 0, 0, false);
-            new CxArray2dScalarDouble(inImW, inImH, 0, 0, true);
+            new CxArray2dScalarDouble(inImW, inImH, 0, 0, false);
+//            new CxArray2dScalarDouble(inImW, inImH, 0, 0, true);
 
         CxPixelScalarDouble zero =
             new CxPixelScalarDouble(new double[]{0.});
