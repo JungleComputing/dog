@@ -391,6 +391,7 @@ public abstract class CxArray2d<T>
     public abstract CxArray2d clone(); 
     public abstract CxArray2d clone(int newBorderWidth, int newBorderHeight);
     
+    
     /*** Array creation and type information ***************************/
     
     protected abstract T createDataArray(int size); 
@@ -444,4 +445,8 @@ public abstract class CxArray2d<T>
 
     public abstract CxPixel<T> getPixel(int xindex, int yindex);
     public abstract void setPixel(CxPixel p, int xindex, int yindex);
+
+    
+
+   
 }

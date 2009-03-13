@@ -1,6 +1,6 @@
 <project name="Dog Demo" default="all" basedir=".">
 
-	<property name="version" value="dog-0.7" />
+	<property name="version" value="dog-0.8" />
 	<property name="jar" value="${version}.jar" />
 
 	<property name="srcdir" value="./src" />

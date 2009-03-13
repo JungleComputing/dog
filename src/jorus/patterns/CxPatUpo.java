@@ -78,7 +78,7 @@ public class CxPatUpo
 
                     if (s1.getGlobalState() != CxArray2d.NONE) { 
 
-                        if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 1...");
+                   //     if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 1...");
                         PxSystem.scatterOFT(dst);
 
                     } else { 

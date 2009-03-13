@@ -23,7 +23,7 @@ public class CxPatBpo
     {
         CxArray2d dst = s1;
        
-        if (!inplace) dst = s1.clone();
+     
 
         if (PxSystem.initialized()) {				// run parallel
             try {
@@ -57,11 +57,7 @@ public class CxPatBpo
                     PxSystem.scatterOFT(s2);
                 }
                 
-                if (!inplace && (dst.getLocalState() != CxArray2d.VALID ||
-                        dst.getDistType() != CxArray2d.PARTIAL)) {
-                    if (PxSystem.myCPU() == 0) System.out.println("BPO SCATTER 3...");
-                    PxSystem.scatterOFT(dst);
-                }
+                if (!inplace) dst = s1.clone();
                 
                 bpo.init(s1, s2, true);
                 bpo.doIt(dst.getPartialDataReadWrite(), 
@@ -77,7 +73,10 @@ public class CxPatBpo
                 e.printStackTrace(System.err);
             }
 
-        } else {									// run sequential
+        } else {			
+            if (!inplace) dst = s1.clone();
+            
+            // run sequential
             bpo.init(s1, s2, false);
             bpo.doIt(dst.getDataReadWrite(), s2.getDataReadOnly());
         }

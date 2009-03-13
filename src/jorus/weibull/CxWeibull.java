@@ -86,13 +86,13 @@ public class CxWeibull
 
     private static void initialize(int inImW, int inImH)
     {
-        MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+  //      MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
 
         // Create central Gaussian at high resolution
 
-        MemoryUsage mu = mbean.getHeapMemoryUsage();
+     //   MemoryUsage mu = mbean.getHeapMemoryUsage();
 
-        System.out.println("Memory used: " + mu.getUsed());
+    //    System.out.println("Memory used: " + mu.getUsed());
 
         long start = System.currentTimeMillis();
 
@@ -123,10 +123,10 @@ public class CxWeibull
         // Reset the original data structure -- J
         pntIm.setSingleValue(zero, centerx, centery, true);
 
-        mu = mbean.getHeapMemoryUsage();
-        System.out.println("Memory used: " + mu.getUsed());
+    //    mu = mbean.getHeapMemoryUsage();
+   //     System.out.println("Memory used: " + mu.getUsed());
 
-        long init = System.currentTimeMillis();
+    //    long init = System.currentTimeMillis();
 
         // Create remaining Gaussians in circular fashion around center
 
@@ -155,31 +155,32 @@ public class CxWeibull
                     idx++;
                 }
 
-                mbean.gc();
+     //           mbean.gc();
                 
-                mu = mbean.getHeapMemoryUsage();
-                System.out.println("Memory used after " + n + ", " + phi + ": " + mu.getUsed());
+     //           mu = mbean.getHeapMemoryUsage();
+     //           System.out.println("Memory used after " + n + ", " + phi + ": " + mu.getUsed());
             }
 
-            mbean.gc();
+     //       mbean.gc();
             
-            mu = mbean.getHeapMemoryUsage();
-            System.out.println("Memory used after " + n + ": " + mu.getUsed());
+     //       mu = mbean.getHeapMemoryUsage();
+     //       System.out.println("Memory used after " + n + ": " + mu.getUsed());
 
             r += dens*sigma;
         }
 
-        long end = System.currentTimeMillis();
+    //    long end = System.currentTimeMillis();
 
-        mbean.gc();
+    //    mbean.gc();
         
-        mu = mbean.getHeapMemoryUsage();
+   /*     mu = mbean.getHeapMemoryUsage();
         System.out.println("Memory used (END): " + mu.getUsed());
 
         System.out.println("Initialization took " + (end-start));
         System.out.println("     hi-res         " + (init-start));
         System.out.println("     circles        " + (end-init));
-
+*/
+        
         initialized = true;
     }
 
@@ -268,7 +269,7 @@ public class CxWeibull
             byte[] bArray, double[] vector)
     {
 
-        long start = System.currentTimeMillis();
+  //      long start = System.currentTimeMillis();
 
         if (!initialized) {
 //          System.out.println("Creating Gaussian images...");
@@ -276,14 +277,14 @@ public class CxWeibull
 //          System.out.println("Done.");
         }
 
-        long init = System.currentTimeMillis();
+  //      long init = System.currentTimeMillis();
 
         // Create CxArray2d from file image data
 
         CxArray2dVec3Double input = new CxArray2dVec3Double(width,
                 height, 0, 0, CxConvert.toDoubles(bArray), false);
 
-        long createInput = System.currentTimeMillis();
+ //       long createInput = System.currentTimeMillis();
 
         // Create all invariant images
 
@@ -291,7 +292,7 @@ public class CxWeibull
         buildInvariantImages(input);
 //      System.out.println("Done.");
 
-        long buildInvar = System.currentTimeMillis();
+  //      long buildInvar = System.currentTimeMillis();
 
         // Initialize histos, betas, and gammas
 
@@ -319,7 +320,7 @@ public class CxWeibull
             //}
         }
 
-        long initHistos = System.currentTimeMillis();
+ //      long initHistos = System.currentTimeMillis();
 
 //      System.out.println("Done.");
 
@@ -381,7 +382,7 @@ public class CxWeibull
 
 //      System.out.println("Done.");
 
-        long createHistos = System.currentTimeMillis();
+  //      long createHistos = System.currentTimeMillis();
 
 
         // Calculate all Weibull fits
@@ -503,8 +504,8 @@ public class CxWeibull
             }
         }
 
-        long doWeibuls = System.currentTimeMillis();
-
+ //       long doWeibuls = System.currentTimeMillis();
+/*
         System.out.println("     Total weibul time " + (doWeibuls-start));
         System.out.println("            init       " + (init-start));
         System.out.println("            input      " + (createInput-init));
@@ -513,7 +514,7 @@ public class CxWeibull
         System.out.println("            histos     " + (createHistos-initHistos));
         System.out.println("            weibul     " + (doWeibuls-createHistos));
         System.out.println("              invalids " + countIvalids);
-
+*/
     }
 
 

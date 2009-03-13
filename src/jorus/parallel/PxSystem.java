@@ -113,6 +113,7 @@ public class PxSystem {
     
     private static boolean initialized = false;
 
+    /*
     private static long timeBarrierSBT;
     private static long countBarrierSBT;
 
@@ -151,7 +152,8 @@ public class PxSystem {
     private static long countBorderExchange;
     private static long dataInBorderExchange;
     private static long dataOutBorderExchange;
-
+*/
+    
     /** * Public Methods ********************************************** */
 
     public static void initParallelSystem(String name, String size)
@@ -287,7 +289,7 @@ public class PxSystem {
     }
 
     public static void printStatistics() {
-
+/*
         long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
         + timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
         + timeScatter0FT + timeGather0FT + timeBroadcastSBT
@@ -381,7 +383,7 @@ public class PxSystem {
 
         dataInBorderExchange = 0;
         dataOutBorderExchange = 0;
-
+*/
     }
 
     public static void exitParallelSystem() throws Exception {
@@ -409,7 +411,7 @@ public class PxSystem {
 
     public static void barrierSBT() throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+    //    long start = System.nanoTime();
 
         int mask = 1;
         for (int i = 0; i < logCPUs; i++) {
@@ -459,15 +461,19 @@ public class PxSystem {
         }
 
         // Added -- J
-        timeBarrierSBT += System.nanoTime() - start;
-        countBarrierSBT++;
+     //   timeBarrierSBT += System.nanoTime() - start;
+    //    countBarrierSBT++;
     }
 
     public static double reduceValueToRootOFT(double val, CxRedOp op)
     throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+    //    long start = System.nanoTime();
 
+        if (nrCPUs == 1) { 
+            return val;
+        }
+        
         double result = val;
 
         if (myCPU == 0) {
@@ -493,8 +499,8 @@ public class PxSystem {
         }
 
         // Added -- J
-        timeReduceValueToRoot0FT += System.nanoTime() - start;
-        countReduceValueToRoot0FT++;
+      //  timeReduceValueToRoot0FT += System.nanoTime() - start;
+      //  countReduceValueToRoot0FT++;
 
         return result;
     }
@@ -502,8 +508,12 @@ public class PxSystem {
     public static double[] reduceArrayToRootOFT(double[] a, CxRedOpArray op)
     throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+     //   long start = System.nanoTime();
 
+        if (nrCPUs == 1) {
+            return a;
+        }
+        
         if (myCPU == 0) {
             double[] recvArray = new double[a.length];
 
@@ -518,7 +528,7 @@ public class PxSystem {
                 r.finish();
                 op.doIt(a, recvArray);
 
-                dataInReduceArrayToRoot0FT += a.length * 8; 
+     //           dataInReduceArrayToRoot0FT += a.length * 8; 
             }
         } else {
             //           if (sps[0] == null) {
@@ -529,12 +539,12 @@ public class PxSystem {
             w.writeArray(a);
             w.finish();
 
-            dataOutReduceArrayToRoot0FT += a.length * 8; 
+     //       dataOutReduceArrayToRoot0FT += a.length * 8; 
         }
 
         // Added -- J
-        timeReduceArrayToRoot0FT += System.nanoTime() - start;
-        countReduceArrayToRoot0FT++;
+    //    timeReduceArrayToRoot0FT += System.nanoTime() - start;
+    //    countReduceArrayToRoot0FT++;
 
         return a;
     }
@@ -677,7 +687,7 @@ public class PxSystem {
             return a;
         }
 
-        long start = System.nanoTime();
+      //  long start = System.nanoTime();
 
         // Start by dividing the array into 'nrCPUs' partitions. This is a bit tricky, since the array 
         // size my not be dividable by nrCPUs. We ensure here that the difference in size is at most 1.
@@ -764,13 +774,13 @@ public class PxSystem {
                 wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
                 wm.finish();
 
-                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
+         //       dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
                 ReadMessage rm = rp.receive();
                 rm.readArray(tmp, 0, sizes[receivePartition]);
                 rm.finish();
 
-                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
+           //     dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
             } else { 
 
@@ -778,13 +788,13 @@ public class PxSystem {
                 rm.readArray(tmp, 0, sizes[receivePartition]);
                 rm.finish();
 
-                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
+          //      dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
                 WriteMessage wm = sp.newMessage();
                 wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
                 wm.finish();
 
-                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
+           //     dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
             }
 
             op.doItRange(a, tmp, index[receivePartition], sizes[receivePartition]);	
@@ -808,13 +818,13 @@ public class PxSystem {
                 wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
                 wm.finish();
 
-                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
+         //       dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
                 ReadMessage rm = rp.receive();
                 rm.readArray(a, index[receivePartition], sizes[receivePartition]);
                 rm.finish();
 
-                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
+         //       dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
             } else { 
 
@@ -822,13 +832,13 @@ public class PxSystem {
                 rm.readArray(a, index[receivePartition], sizes[receivePartition]);
                 rm.finish();
 
-                dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
+         //       dataInReduceArrayToAll0FT += sizes[receivePartition] * 8;
 
                 WriteMessage wm = sp.newMessage();
                 wm.writeArray(a, index[sendPartition], sizes[sendPartition]);
                 wm.finish();
 
-                dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
+         //       dataOutReduceArrayToAll0FT += sizes[sendPartition] * 8;
 
             }
 
@@ -838,8 +848,8 @@ public class PxSystem {
         }
 
         // Added -- J
-        timeReduceArrayToAll0FT += System.nanoTime() - start;
-        countReduceArrayToAll0FT++;
+      //  timeReduceArrayToAll0FT += System.nanoTime() - start;
+     //   countReduceArrayToAll0FT++;
 
         return a;
     }
@@ -848,7 +858,7 @@ public class PxSystem {
         throws Exception {
 
         // Added -- J
-        long start = System.nanoTime();
+    //    long start = System.nanoTime();
 
         final double [] tmp = new double[a.length];
         
@@ -885,10 +895,10 @@ public class PxSystem {
 
         // Added -- J
      
-        timeReduceArrayToAll0FT += System.nanoTime() - start;
-        dataInReduceArrayToAll0FT += a.length * 8 * logCPUs;
-        dataOutReduceArrayToAll0FT += a.length * 8 * logCPUs;
-        countReduceArrayToAll0FT++;
+      //  timeReduceArrayToAll0FT += System.nanoTime() - start;
+     //   dataInReduceArrayToAll0FT += a.length * 8 * logCPUs;
+     //   dataOutReduceArrayToAll0FT += a.length * 8 * logCPUs;
+     //   countReduceArrayToAll0FT++;
      
         return a;
     }
@@ -896,7 +906,7 @@ public class PxSystem {
     public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
     throws Exception {
 //      Added -- J
-        long start = System.nanoTime();
+  //      long start = System.nanoTime();
 
         if (myCPU == 0) {
             double[] recvArray = new double[a.length];
@@ -910,7 +920,7 @@ public class PxSystem {
                 r.readArray(recvArray);
                 r.finish();
 
-                dataInReduceArrayToAll0FT += a.length * 8;
+       //         dataInReduceArrayToAll0FT += a.length * 8;
 
                 op.doIt(a, recvArray);
             }
@@ -923,7 +933,7 @@ public class PxSystem {
                 w.writeArray(a);
                 w.finish();
 
-                dataOutReduceArrayToAll0FT += a.length * 8;
+      //          dataOutReduceArrayToAll0FT += a.length * 8;
             }
         } else {
 //          if (sps[0] == null) {
@@ -934,7 +944,7 @@ public class PxSystem {
             w.writeArray(a);
             w.finish();
 
-            dataOutReduceArrayToAll0FT += a.length * 8;
+      //      dataOutReduceArrayToAll0FT += a.length * 8;
 
 //          if (rps[0] == null) {
 //          rps[0] = ibis.createReceivePort(portType, COMM_ID + 0);
@@ -944,30 +954,48 @@ public class PxSystem {
             r.readArray(a);
             r.finish();
 
-            dataInReduceArrayToAll0FT += a.length * 8;
+      //      dataInReduceArrayToAll0FT += a.length * 8;
 
         }
 
         // Added -- J
-        timeReduceArrayToAll0FT += System.nanoTime() - start;
-        countReduceArrayToAll0FT++;
+     //   timeReduceArrayToAll0FT += System.nanoTime() - start;
+     //   countReduceArrayToAll0FT++;
 
         return a;
     }
 
     public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
         throws Exception {
+       
+        if (nrCPUs == 1) { 
+            return a;
+        }
         
-        //return reduceArrayToAllOFT_Ring(a, op);
-        return reduceArrayToAllOFT_Binomial(a, op);
-        //return reduceArrayToAllOFT_Flat_Orig(a, op);
+        switch (allreduce) { 
+        case ALLREDUCE_TREE:
+            return reduceArrayToAllOFT_Binomial(a, op);
+        case ALLREDUCE_RING:
+            return reduceArrayToAllOFT_Ring(a, op);
+        case ALLREDUCE_FLAT: 
+            return reduceArrayToAllOFT_Flat_Orig(a, op);
+        default: 
+            System.err.println("WARNING: Unknown allreduce implementation " +
+                        "selected, using default!");
+            return reduceArrayToAllOFT_Binomial(a, op);
+        }
     }	
 
     public static void scatterOFT(CxArray2d a) throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+     //   long start = System.nanoTime();
 
-        
+        if (nrCPUs == 1) { 
+            // On 1 CPU we simply create an alias to the same data
+            a.setPartialData(a.getWidth(), a.getHeight(), a.getDataReadWrite(), 
+                    CxArray2d.VALID, CxArray2d.PARTIAL);
+            return;
+        }
         
         if (a instanceof CxArray2dDoubles) {
             doScatterOFT((CxArray2dDoubles) a);
@@ -978,14 +1006,16 @@ public class PxSystem {
         a.setDistType(CxArray2d.PARTIAL);
 
         // Added -- J
-        timeScatter0FT += System.nanoTime() - start;
-        countScatter0FT++;
+       // timeScatter0FT += System.nanoTime() - start;
+      //  countScatter0FT++;
     }
 
     public static void gatherOFT(CxArray2d a) throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+      //  long start = System.nanoTime();
 
+        // NOTE: the single CPU case is handled in doGather -- J
+        
         if (a instanceof CxArray2dDoubles) {
             doGatherOFT((CxArray2dDoubles) a);
         } else {
@@ -994,14 +1024,18 @@ public class PxSystem {
         a.setGlobalState(CxArray2d.VALID);
 
         // Added -- J
-        timeGather0FT += System.nanoTime() - start;
-        countGather0FT++;
+      //  timeGather0FT += System.nanoTime() - start;
+      //  countGather0FT++;
     }
 
     public static void broadcastSBT(CxArray2d a) throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+     //   long start = System.nanoTime();
 
+        if (nrCPUs == 1) { 
+            return;
+        }
+        
         if (a instanceof CxArray2dDoubles) {
             doBroadcastSBT((CxArray2dDoubles) a);
         } else {
@@ -1011,12 +1045,17 @@ public class PxSystem {
         a.setDistType(CxArray2d.FULL);
 
         // Added -- J
-        timeBroadcastSBT += System.nanoTime() - start;
-        countBroadcastSBT++;
+   //     timeBroadcastSBT += System.nanoTime() - start;
+     //   countBroadcastSBT++;
     }
 
     public static void borderExchange(double[] a, int width, int height,
             int off, int stride, int ySize) throws Exception {	
+        
+        if (nrCPUs == 1) {
+            return;
+        }
+        
         borderExchange_Jason(a, width, height, off, stride, ySize);		
     }
 
@@ -1024,7 +1063,7 @@ public class PxSystem {
             int off, int stride, int ySize) throws Exception {
 
         // Added -- J
-        long start = System.nanoTime();
+ //       long start = System.nanoTime();
 
         // Border exchange in vertical direction (top <---> bottom)
         int prevCPU = myCPU - 1;
@@ -1064,7 +1103,7 @@ public class PxSystem {
                 w.writeArray(a, off - stride / 2, xSize * ySize);
                 w.finish();
 
-                dataOutBorderExchange += xSize * ySize * 8;
+       //         dataOutBorderExchange += xSize * ySize * 8;
             }
 
             if (nextCPU < PxSystem.nrCPUs()) {
@@ -1072,7 +1111,7 @@ public class PxSystem {
                 w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
                 w.finish();
 
-                dataOutBorderExchange += xSize * ySize * 8;             
+         //       dataOutBorderExchange += xSize * ySize * 8;             
             }
 
             if (prevCPU >= 0) {
@@ -1080,7 +1119,7 @@ public class PxSystem {
                 r.readArray(a, 0, xSize * ySize);
                 r.finish();				
 
-                dataInBorderExchange += xSize * ySize * 8;
+        //        dataInBorderExchange += xSize * ySize * 8;
             }
 
             if (nextCPU < PxSystem.nrCPUs()) {
@@ -1088,7 +1127,7 @@ public class PxSystem {
                 r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
                 r.finish();
 
-                dataInBorderExchange += xSize * ySize * 8;        
+         //       dataInBorderExchange += xSize * ySize * 8;        
             }
 
         } else { 
@@ -1098,7 +1137,7 @@ public class PxSystem {
                 r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
                 r.finish();
 
-                dataInBorderExchange += xSize * ySize * 8;
+        //        dataInBorderExchange += xSize * ySize * 8;
             }
 
             if (prevCPU >= 0) {
@@ -1106,7 +1145,7 @@ public class PxSystem {
                 r.readArray(a, 0, xSize * ySize);
                 r.finish();
 
-                dataInBorderExchange += xSize * ySize * 8;
+          //      dataInBorderExchange += xSize * ySize * 8;
             }
 
             if (nextCPU < PxSystem.nrCPUs()) {
@@ -1114,7 +1153,7 @@ public class PxSystem {
                 w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
                 w.finish();
 
-                dataOutBorderExchange += xSize * ySize * 8;
+        //        dataOutBorderExchange += xSize * ySize * 8;
             }
 
             if (prevCPU >= 0) {
@@ -1122,19 +1161,19 @@ public class PxSystem {
                 w.writeArray(a, off - stride / 2, xSize * ySize);
                 w.finish();                     
 
-                dataOutBorderExchange += xSize * ySize * 8;
+          //      dataOutBorderExchange += xSize * ySize * 8;
             }
         }
 
         // Added -- J
-        timeBorderExchange += System.nanoTime() - start;
-        countBorderExchange++;
+     //   timeBorderExchange += System.nanoTime() - start;
+     //   countBorderExchange++;
     }
 
     public static void borderExchange_Orig(double[] a, int width, int height,
             int off, int stride, int ySize) throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+    //    long start = System.nanoTime();
 
         // Border exchange in vertical direction (top <---> bottom)
         int part1 = myCPU - 1;
@@ -1152,7 +1191,7 @@ public class PxSystem {
             w.writeArray(a, off - stride / 2, xSize * ySize);
             w.finish();
 
-            dataOutBorderExchange += xSize * ySize * 8;
+        //    dataOutBorderExchange += xSize * ySize * 8;
         }
 
         if (part2 < PxSystem.nrCPUs()) {
@@ -1164,7 +1203,7 @@ public class PxSystem {
             r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
             r.finish();
 
-            dataInBorderExchange += xSize * ySize * 8;
+       //     dataInBorderExchange += xSize * ySize * 8;
 
             // Send to second partner and receive from first partner
 
@@ -1177,7 +1216,7 @@ public class PxSystem {
                     * ySize);
             w.finish();
 
-            dataOutBorderExchange += xSize * ySize * 8;
+         //   dataOutBorderExchange += xSize * ySize * 8;
 
         }
         if (part1 >= 0) {
@@ -1189,12 +1228,12 @@ public class PxSystem {
             r.readArray(a, 0, xSize * ySize);
             r.finish();
 
-            dataInBorderExchange += xSize * ySize * 8;
+         //   dataInBorderExchange += xSize * ySize * 8;
         }
 
         // Added -- J
-        timeBorderExchange += System.nanoTime() - start;
-        countBorderExchange++;
+     //   timeBorderExchange += System.nanoTime() - start;
+     //   countBorderExchange++;
     }
 
     public static int getPartHeight(int height, int CPUnr) {
@@ -1222,14 +1261,6 @@ public class PxSystem {
         // Here we assume CPU 0 (root) to have a full & valid structure
         // which is scattered to the partial structs of all nodes. East
         // and west borders are also communicated (not north and south).
-
-        if (nrCPUs == 1) { 
-            // On 1 CPU we simply create an alias to the same data
-            a.setPartialData(a.getWidth(), a.getHeight(), a.getDataReadWrite(), 
-                    CxArray2d.NONE, CxArray2d.NONE);
-            return;
-        }
-        
         
         int globH = a.getHeight();
         int extent = a.getExtent();
@@ -1258,7 +1289,7 @@ public class PxSystem {
                 w.finish();
 
                 // Added-- J
-                dataOutScatter0FT += 8 * xSize * ySize;               
+         //       dataOutScatter0FT += 8 * xSize * ySize;               
             }
 
             int start = xSize * bHeight;
@@ -1277,7 +1308,7 @@ public class PxSystem {
             r.finish();
 
             // Added-- J
-            dataInScatter0FT += 8 * xSize * ySize;               
+        //    dataInScatter0FT += 8 * xSize * ySize;               
         }
     }
 
@@ -1287,12 +1318,12 @@ public class PxSystem {
         // to the global structure of CPU 0; east and west borders are
         // also communicated (not north and south).
 
-        if (nrCPUs == 0) {
+        if (nrCPUs == 1) {
             
             double [] data = a.getDataReadWrite();
             double [] pdata = a.getDataReadOnly();
             
-            if (data == pdata) { 
+            if (a.getDataReadWrite() == a.getDataReadOnly()) { 
                 // Data is an alias, so we don't do anything
             } else { 
                 System.arraycopy(pdata, 0, data, 0, pdata.length);
@@ -1323,7 +1354,7 @@ public class PxSystem {
                 r.finish();
 
                 // Added -- J.
-                dataInGather0FT += 8 * xSize * ySize;
+        //        dataInGather0FT += 8 * xSize * ySize;
             }
             int start = xSize * bHeight;
 
@@ -1344,7 +1375,7 @@ public class PxSystem {
             w.finish();
 
             // Added -- J.
-            dataOutGather0FT += 8 * xSize * ySize;
+         //   dataOutGather0FT += 8 * xSize * ySize;
         }
     }
 
@@ -1377,7 +1408,7 @@ public class PxSystem {
                     w.writeArray(a.getPartialDataReadOnly(), offset, length);
                     w.finish();
 
-                    dataOutBroadcastSBT += length * 8;
+            //        dataOutBroadcastSBT += length * 8;
                 } else {
 //                  if (rps[partner] == null) {
 //                  rps[partner] = ibis.createReceivePort(portType, COMM_ID
@@ -1388,7 +1419,7 @@ public class PxSystem {
                     r.readArray(a.getPartialDataWriteOnly(), offset, length);
                     r.finish();
 
-                    dataInBroadcastSBT += length * 8; 
+            //        dataInBroadcastSBT += length * 8; 
                 }
             }
             mask >>= 1;
@@ -1397,8 +1428,12 @@ public class PxSystem {
 
     public static int broadcastValue(int value) throws Exception {
         // Added -- J
-        long start = System.nanoTime();
+   //     long start = System.nanoTime();
 
+        if (nrCPUs == 1) { 
+            return value;
+        }
+        
         int mask = 1 << (logCPUs - 1);
         for (int i = 0; i < logCPUs; i++) {
             int partner = myCPU ^ mask;
@@ -1426,8 +1461,8 @@ public class PxSystem {
         }
 
         // Added -- J
-        timeBroadcastValue += System.nanoTime() - start;
-        countBroadcastValue++;
+      //  timeBroadcastValue += System.nanoTime() - start;
+      //  countBroadcastValue++;
 
         return value;
     }

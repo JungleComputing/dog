@@ -184,11 +184,9 @@ public class Server implements Upcall {
         RGB24Image img = null;
 
         long start = System.currentTimeMillis();
-        long request = start;
-        long decompress = start;
-        long endop;
-        long commdone;
-        long end;
+        long opStart = 0;
+        long opEnd = 0;
+        long end = 0;
 
         if (master) {
 
@@ -197,16 +195,16 @@ public class Server implements Upcall {
 
             r = getRequest(DEFAULT_TIMEOUT);
 
-            request = System.currentTimeMillis();
-
             System.err.println(PxSystem.myCPU() + " Got request " + r);
+      
             if (r == null) {
                 return;
             }
+           
             operation = r.operation;
             img = r.image.toRGB24();
 
-            decompress = System.currentTimeMillis();
+            opStart = System.currentTimeMillis();
 
             try {
                 PxSystem.broadcastValue(img.width);
@@ -230,8 +228,6 @@ public class Server implements Upcall {
             }
         }
 
-        commdone = System.currentTimeMillis();
-
         switch (operation) {
         case Request.OPERATION_LEARN:
         case Request.OPERATION_RECOGNIZE: {
@@ -252,6 +248,7 @@ public class Server implements Upcall {
             reply = new Integer(123);
             break;
         }
+
         default: {
             if (master) {
                 System.out.println("Unknown operation: " + r.operation);
@@ -259,7 +256,7 @@ public class Server implements Upcall {
         }
         }
 
-        endop = System.currentTimeMillis();
+        opEnd = System.currentTimeMillis();
 
         if (master) {
             System.err.println("Sending reply....");
@@ -274,7 +271,7 @@ public class Server implements Upcall {
         }
 
         end = System.currentTimeMillis();
-
+/*
         System.out.println("Total time   " + (end - start) + " ms.");
         System.out.println("  request    " + (request - start) + " ms.");
         System.out.println("  decompress " + (decompress - request) + " ms.");
@@ -283,7 +280,15 @@ public class Server implements Upcall {
         System.out.println("  reply      " + (end - endop) + " ms.");
 
         PxSystem.printStatistics();
+*/
+        
+        if (master) { 
 
+            System.out.println("Time = " + (end-start) 
+                    + " (pre: " + (opStart - start) 
+                    + " operation: " + (opEnd - opStart) 
+                    + " post: " + (end-opEnd) + " )");
+        }
     }
 
     private void run() {
