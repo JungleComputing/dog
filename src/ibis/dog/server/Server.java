@@ -278,12 +278,11 @@ public class Server implements Upcall {
         System.out.println("  bcast      " + (commdone - decompress) + " ms.");
         System.out.println("  op         " + (endop - commdone) + " ms.");
         System.out.println("  reply      " + (end - endop) + " ms.");
-
-        PxSystem.printStatistics();
 */
         
         if (master) { 
-
+            PxSystem.printStatistics();
+            
             System.out.println("Time = " + (end-start) 
                     + " (pre: " + (opStart - start) 
                     + " operation: " + (opEnd - opStart) 

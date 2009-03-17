@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for i in external/ibis/*.jar
+for i in external/ipl/*.jar
 do
     CP=$CP:$i
 done

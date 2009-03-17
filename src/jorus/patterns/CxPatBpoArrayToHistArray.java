@@ -12,8 +12,7 @@ public class CxPatBpoArrayToHistArray {
 
         double [][] result = new double[a2.length][nBins];
 
-
-        if (PxSystem.initialized()) {				// run parallel
+        if (PxSystem.initialized()) { // run parallel
 
             // FIXME: inefficient!
             double [] buffer = new double[a2.length * nBins];

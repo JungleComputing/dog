@@ -315,9 +315,9 @@ public class CxWeibull
             Arrays.fill(gammas[j], 0.);
 
             // No need to initialize, they are overwritten below! -- J
-            //for (int i=0; i<NR_RFIELDS; i++) {
-            //     Arrays.fill(histos[j][i], 0.);
-            //}
+            for (int i=0; i<NR_RFIELDS; i++) {
+                Arrays.fill(histos[j][i], 0.);
+            }
         }
 
  //      long initHistos = System.currentTimeMillis();
@@ -329,8 +329,7 @@ public class CxWeibull
 
 //      System.out.println("Calculating all histograms...");
 
-        /*
-		for (int i=0; i<NR_RFIELDS; i++) {
+  		for (int i=0; i<NR_RFIELDS; i++) {
 
 			histos[EX2EY2][i] =
 					Ex2Ey2.impreciseHistogram(rfIm[i], NR_BINS, 0., 1.);
@@ -362,9 +361,8 @@ public class CxWeibull
 			histos[CLLR2][i] =
 					Cll135.impreciseHistogram(rfIm[i], NR_BINS, -1.,1.);
 		}
-         */
-
-
+  
+/*
         histos[EX2EY2] = Ex2Ey2.impreciseHistograms(rfIm, NR_BINS, 0., 1.);
         histos[WX]     = Wx.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[WR1]    = W45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
@@ -378,7 +376,7 @@ public class CxWeibull
         histos[CLLR1]  = Cll45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[CLLY]   = Clly.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[CLLR2]  = Cll135.impreciseHistograms(rfIm, NR_BINS, -1.,1.);
-
+*/
 
 //      System.out.println("Done.");
 

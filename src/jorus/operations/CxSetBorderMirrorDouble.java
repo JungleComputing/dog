@@ -98,6 +98,10 @@ public class CxSetBorderMirrorDouble extends CxSetBorder<double[]>
 
 		if (numX > 0) {
 
+                        // NOTE: Horus has code here to exchange the top/bottom 
+                        // data. In the dog demo this is nog triggered due to 
+                        // the data layout. 
+                    
 			// Mirror left part NOT including upper and lower "corners"
 
 			for (int j=0; j<h; j++) {
