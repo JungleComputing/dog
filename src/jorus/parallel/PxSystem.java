@@ -81,22 +81,15 @@ public class PxSystem {
 
     // Experimental -- J.
 
-    private static ArrayList reduceToAllData = new ArrayList(); 
-
     private static class ReduceToAllUpcallHandler implements MessageUpcall {
-
         public void upcall(ReadMessage rm) throws IOException, ClassNotFoundException {
-            synchronized (reduceToAllData) {
-                reduceToAllData.add(rm.readObject());
-
-                if (reduceToAllData.size() == 1) { 
-                    // potential waiters
-                    reduceToAllData.notifyAll();
-                }
-            }
+        	handleIncomingExchange(rm);
         } 
     }
 
+    private static double [][] exchange;
+    private static boolean [] exchangeSet;
+    
     // End -- J
 
     /** * GENERAL 'PARALLEL WORLD' INFORMATION ************************ */
@@ -221,11 +214,15 @@ public class PxSystem {
             world[i] = ibis.registry().getElectionResult(rank);
         }
 
+        // Hack -- J
+        exchange = new double[nrCPUs][];
+        exchangeSet = new boolean[nrCPUs];
+        
         // Initialize Send/ReceivePorts to/from all participants
         NR_PORTS = nrCPUs;
         sps = new SendPort[NR_PORTS];
         rps = new ReceivePort[NR_PORTS];
-
+        
         // Added -- J.
         //
         // Init all send and receive ports here. This will give 
@@ -742,7 +739,8 @@ public class PxSystem {
         return a;
     }
 
-    public static double[] reduceArrayToAllOFT_BinomialSimple(double[] a, 
+    @SuppressWarnings("unchecked")
+	public static double[] reduceArrayToAllOFT_BinomialSimple(double[] a, 
             CxRedOpArray op) throws Exception {
 
         // Added -- J
@@ -753,7 +751,10 @@ public class PxSystem {
         int mask = 1;
 
         for (int i=0; i<logCPUs; i++) {
-
+            
+            exchange(myCPU ^ mask, a, tmp);
+            
+            /*
             final int partner = myCPU ^ mask;
 
             if (myCPU > partner) {
@@ -774,6 +775,7 @@ public class PxSystem {
                 w.writeArray(a);
                 w.finish();
             }
+            */
             
             op.doIt(a, tmp);
             
@@ -790,6 +792,56 @@ public class PxSystem {
         return a;
     }
     
+    private static void handleIncomingExchange(ReadMessage m) 
+    	throws IOException { 
+    	
+    	int target = m.readInt();
+    	
+    	// TODO: try polling here!
+    	synchronized (exchange) {
+    		while (exchange[target] == null) { 
+    			try {
+    				exchange.wait();
+    			} catch (Exception e) {
+					// TODO: handle exception
+				}
+    		}
+    		
+    		m.readArray(exchange[target]);
+    		exchangeSet[target] = true;
+    	}
+    	
+    }
+    	
+    private static void exchange(int target, double [] out, double [] in) 
+    	throws IOException { 
+    	
+    	synchronized (exchange) {
+    		exchange[target] = in;
+    		exchange.notifyAll();
+    	}
+    	
+        WriteMessage w = sps[target].newMessage();
+        w.writeInt(myCPU);
+        w.writeArray(out);
+        w.finish();
+
+        // TODO: try polling here!
+        synchronized (exchange) {        	
+        	while (!exchangeSet[target]) {
+        		try {
+        			exchange.wait();
+        		} catch (Exception e) {
+					// ignored
+				}
+        	}
+    	
+        	exchangeSet[target] = false;
+        	exchange[target] = null;
+        	
+        	// side effect: out has been filled
+        }
+    }
     
     public static double[] reduceArrayToAllOFT_RecursiveHalving(double[] a, 
             CxRedOpArray op) throws Exception {
@@ -1086,7 +1138,7 @@ public class PxSystem {
                 w.finish();
             } else {  
                 ReadMessage r = rps[rank+1].receive();
-                r.readArray(tmp);
+                r.readArray(a);
                 r.finish();
             }
         }
