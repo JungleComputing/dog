@@ -37,13 +37,17 @@ public class CxPatGenConv2dSep
             dst = s1.clone();
         }
 
-        if (PxSystem.initialized()) {				// run parallel
+        if (PxSystem.initialized()) {		
+            
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            
+            // run parallel
             try {
-
                 if (dst.getLocalState() != CxArray2d.VALID ||
                         dst.getDistType() != CxArray2d.PARTIAL) {
-                    if (PxSystem.myCPU() == 0) System.out.println("GENCONV SCATTER 1...");
-                    PxSystem.scatterOFT(dst);
+                    if (rank == 0) System.out.println("GENCONV SCATTER 1...");
+                    px.scatter(dst);
                 }
 
                 CxPatSetBorder.dispatch(dst, numX, 0, sbo);

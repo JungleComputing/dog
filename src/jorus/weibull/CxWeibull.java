@@ -19,6 +19,7 @@ import java.util.Arrays;
 
 import jorus.array.*;
 import jorus.pixel.*;
+import jorus.parallel.PxSystem;
 import jorus.patterns.*;
 
 
@@ -269,20 +270,17 @@ public class CxWeibull
             byte[] bArray, double[] vector)
     {
 
-  //      long start = System.currentTimeMillis();
-
         if (!initialized) {
-//          System.out.println("Creating Gaussian images...");
             initialize(width, height);
-//          System.out.println("Done.");
         }
 
-  //      long init = System.currentTimeMillis();
-
         // Create CxArray2d from file image data
-
-        CxArray2dVec3Double input = new CxArray2dVec3Double(width,
-                height, 0, 0, CxConvert.toDoubles(bArray), false);
+        CxArray2dVec3Byte data = new CxArray2dVec3Byte(width, height, 0, 0, bArray, false);
+        CxArray2dVec3Double input = new CxArray2dVec3Double(width, height, 0, 0, false);
+        CxPatSet.dispatch(input, data);
+        
+    //    CxArray2dVec3Double input = new CxArray2dVec3Double(width,
+     //           height, 0, 0, CxConvert.toDoubles(bArray), false);
 
  //       long createInput = System.currentTimeMillis();
 
@@ -329,6 +327,7 @@ public class CxWeibull
 
 //      System.out.println("Calculating all histograms...");
 
+        /*
   		for (int i=0; i<NR_RFIELDS; i++) {
 
 			histos[EX2EY2][i] =
@@ -362,7 +361,8 @@ public class CxWeibull
 					Cll135.impreciseHistogram(rfIm[i], NR_BINS, -1.,1.);
 		}
   
-/*
+*/
+        
         histos[EX2EY2] = Ex2Ey2.impreciseHistograms(rfIm, NR_BINS, 0., 1.);
         histos[WX]     = Wx.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[WR1]    = W45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
@@ -376,7 +376,7 @@ public class CxWeibull
         histos[CLLR1]  = Cll45.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[CLLY]   = Clly.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[CLLR2]  = Cll135.impreciseHistograms(rfIm, NR_BINS, -1.,1.);
-*/
+
 
 //      System.out.println("Done.");
 

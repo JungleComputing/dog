@@ -11,6 +11,7 @@ package jorus.parallel;
 
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisCapabilities;
+import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisFactory;
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.MessageUpcall;
@@ -21,125 +22,87 @@ import ibis.ipl.SendPort;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Properties;
 
+import javax.print.attribute.standard.PDLOverrideSupported;
+
 import jorus.array.CxArray2d;
+import jorus.array.CxArray2dBytes;
 import jorus.array.CxArray2dDoubles;
 import jorus.operations.CxRedOp;
 import jorus.operations.CxRedOpArray;
+import jorus.parallel.array.ByteArrayUtil;
 
 public class PxSystem {
+
     /** * Ibis Capabilities & PortTypes ******************************* */
-
-    private static final int ALLREDUCE_FLAT = 0;
-    private static final int ALLREDUCE_RING = 1;
-    private static final int ALLREDUCE_TREE = 2;    
-    private static final int ALLREDUCE_MPICH = 3;
     
-    private static final int ALLREDUCE_MAX = 3;
-    
-    // NOTE: set to arbitrary value!
-    private static int ALLREDUCE_SHORT_MSG = 2048;
-
-    private static PortType portType = new PortType(
+    private static final PortType portType = new PortType(
             PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
             PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_ONE);
 
-
-    // These are experimental to see which reduce to all implementation performs best -- J.
-    /*	private static PortType portTypeOneToMany = new PortType(
-			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
-			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_ONE_TO_MANY);
-
-	private static PortType portTypeManyToOne = new PortType(
-			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_DATA,
-			PortType.RECEIVE_EXPLICIT, PortType.CONNECTION_MANY_TO_ONE);
-
-	private static PortType portTypeManyToOneUpcalls = new PortType(
-			PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_OBJECT_IBIS,
-			PortType.RECEIVE_AUTO_UPCALLS, PortType.CONNECTION_MANY_TO_ONE);
-     */	
-    // End -- J
-
-
-    private static IbisCapabilities ibisCapabilities = new IbisCapabilities(
+    private static final IbisCapabilities ibisCapabilities = new IbisCapabilities(
             IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.CLOSED_WORLD);
-
-
-    /** * Send & ReceivePorts to/from all particpipants *************** */
-
-    private static int NR_PORTS = 0;
-
-    private static SendPort[] sps = null;
-    private static ReceivePort[] rps = null;
-
-//  private static ReceivePort rpReduce = null;
-//  private static SendPort spReduce = null;
 
     private static final String COMM_ID = "px_comm";
 
-    // Experimental -- J.
+    private final Ibis ibis;
 
-    private static class ReduceToAllUpcallHandler implements MessageUpcall {
-        public void upcall(ReadMessage rm) throws IOException, ClassNotFoundException {
-        	handleIncomingExchange(rm);
-        } 
-    }
+    private final IbisIdentifier[] world;
 
-    private static double [][] exchange;
-    private static boolean [] exchangeSet;
+    private final int nrCPUs;
+
+    private final int logCPUs;
+
+    private final int maxCPUs;
+
+    private final int myCPU;
+
+    private final SendPort[] sps;
+
+    private final ReceivePort[] rps;
     
-    // End -- J
-
-    /** * GENERAL 'PARALLEL WORLD' INFORMATION ************************ */
-
-    private static Ibis ibis = null;
-
-    private static IbisIdentifier[] world = null;
-
-    private static int nrCPUs = -1;
-
-    private static int logCPUs = -1;
-
-    private static int maxCPUs = -1;
-
-    private static int myCPU = -1;
-
-    private static int allreduce = ALLREDUCE_TREE;
+    private final Collectives<byte []> byteCollectives;
+    private final Collectives<short []> shortCollectives;
+    private final Collectives<int []> intCollectives;
+    private final Collectives<long []> longCollectives;
+    private final Collectives<float []> floatCollectives;
+    private final Collectives<double []> doubleCollectives;
     
-    private static boolean initialized = false;
-
-    private static long timeBarrierSBT;
-    private static long countBarrierSBT;
+    private final Barrier barrier;
+    
+    private static PxSystem system;
+   
+    private static long timeBarrier;
+    private static long countBarrier;
 
     private static long timeReduceValueToRoot0FT;
     private static long countReduceValueToRoot0FT;
 
-    private static long timeReduceArrayToRoot0FT;
-    private static long countReduceArrayToRoot0FT;
-    private static long dataInReduceArrayToRoot0FT;
-    private static long dataOutReduceArrayToRoot0FT;
+    private static long timeReduceArrayToRoot;
+    private static long countReduceArrayToRoot;
+    private static long dataInReduceArrayToRoot;
+    private static long dataOutReduceArrayToRoot;
 
-    private static long timeReduceArrayToAll0FT;
-    private static long countReduceArrayToAll0FT;
-    private static long dataInReduceArrayToAll0FT;
-    private static long dataOutReduceArrayToAll0FT;
+    private static long timeReduceArrayToAll;
+    private static long countReduceArrayToAll;
+    private static long dataInReduceArrayToAll;
+    private static long dataOutReduceArrayToAll;
 
-    private static long timeScatter0FT;
-    private static long countScatter0FT;
-    private static long dataInScatter0FT;
-    private static long dataOutScatter0FT;
+    private static long timeScatter;
+    private static long countScatter;
+    private static long dataInScatter;
+    private static long dataOutScatter;
 
-    private static long timeGather0FT;
-    private static long countGather0FT;
-    private static long dataInGather0FT;
-    private static long dataOutGather0FT;
+    private static long timeGather;
+    private static long countGather;
+    private static long dataInGather;
+    private static long dataOutGather;
 
-    private static long timeBroadcastSBT;
-    private static long countBroadcastSBT;
-    private static long dataInBroadcastSBT;
-    private static long dataOutBroadcastSBT;
+    private static long timeBroadcast;
+    private static long countBroadcast;
+    private static long dataInBroadcast;
+    private static long dataOutBroadcast;
 
     private static long timeBroadcastValue;
     private static long countBroadcastValue;
@@ -149,32 +112,31 @@ public class PxSystem {
     private static long dataInBorderExchange;
     private static long dataOutBorderExchange;
 
+    public static PxSystem init(String name, String size)
+        throws Exception {
     
-    /** * Public Methods ********************************************** */
+        if (system != null) { 
+            throw new Exception("PxSystem allready initialized");
+        }
+        
+        system = new PxSystem(name, size);
+        
+        return system;
+    }
+    
+    public static boolean initialized() {
+        return (system != null);
+    }
+    
+    public static PxSystem get() {
+        return system;
+    }
+    
+    
+    
+    
+    private PxSystem(String name, String size) throws Exception { 
 
-    public static void initParallelSystem(String name, String size)
-    throws Exception {
-        
-        String tmp = System.getProperty("PxSystem.allreduce");
-        
-        if (tmp != null && tmp.length() > 0) { 
-            allreduce = Integer.parseInt(tmp);
-        
-            if (allreduce < 0 && allreduce > ALLREDUCE_MAX) { 
-                throw new Exception("Illegal allreduce implementation selected");
-            }
-        }
-        
-        tmp = System.getProperty("PxSystem.allreduce.short");
-        
-        if (tmp != null && tmp.length() > 0) { 
-            ALLREDUCE_SHORT_MSG = Integer.parseInt(tmp);
-        
-            if (ALLREDUCE_SHORT_MSG < 0) { 
-                throw new Exception("Illegal allreduce short message size selected");
-            }
-        }
-        
         Properties props = new Properties();
         props.setProperty("ibis.pool.name", name);
         props.setProperty("ibis.pool.size", size);
@@ -182,9 +144,7 @@ public class PxSystem {
         String internalImpl = System.getProperty("PxSystem.impl");
         
         if (internalImpl != null) { 
-            
             System.out.println("PxSystem using implemementation: " + internalImpl);
-            
             props.setProperty("ibis.implementation", internalImpl);
         }
         
@@ -193,16 +153,21 @@ public class PxSystem {
         // ibis = IbisFactory.createIbis(ibisCapabilities, null, portType);
         ibis = IbisFactory.createIbis(ibisCapabilities, props, true, null,
                 portType); // portTypeOneToMany, portTypeManyToOne, portTypeManyToOneUpcalls);
+        
         nrCPUs = ibis.registry().getPoolSize();
         myCPU = (int) ibis.registry().getSequenceNumber("counter");
-        logCPUs = (int) (Math.log((double) nrCPUs) / Math.log(2.0));
-        maxCPUs = (int) Math.pow(2, logCPUs);
+        
+        int tmpLog = (int) (Math.log((double) nrCPUs) / Math.log(2.0));
+        int tmpMax = (int) Math.pow(2, tmpLog);
 
-        if (maxCPUs < nrCPUs) {
-            logCPUs++;
-            maxCPUs *= 2;
+        if (tmpMax < nrCPUs) {
+            tmpLog++;
+            tmpMax *= 2;
         }
 
+        logCPUs = tmpLog;
+        maxCPUs = tmpMax;
+        
         // Let each node elect itself as the Ibis with 'myCPU' as rank.
         // Then, obtain Ibis identifiers for all CPUs.
 
@@ -214,14 +179,9 @@ public class PxSystem {
             world[i] = ibis.registry().getElectionResult(rank);
         }
 
-        // Hack -- J
-        exchange = new double[nrCPUs][];
-        exchangeSet = new boolean[nrCPUs];
-        
         // Initialize Send/ReceivePorts to/from all participants
-        NR_PORTS = nrCPUs;
-        sps = new SendPort[NR_PORTS];
-        rps = new ReceivePort[NR_PORTS];
+        sps = new SendPort[nrCPUs];
+        rps = new ReceivePort[nrCPUs];
         
         // Added -- J.
         //
@@ -242,7 +202,6 @@ public class PxSystem {
             if (i != myCPU) {
             
                 System.out.println("Connecting to " + i);
-                
                 if (i > myCPU) {
 
                     System.out.println("Need to wait");
@@ -268,32 +227,28 @@ public class PxSystem {
             }
         }
 
-        initialized = true;
-
-        if (myCPU == 0) { 
-
-            String version = "UNKNOWN";
-
-            switch (allreduce) {
-            case ALLREDUCE_FLAT:
-                version = "FLAT";
-                break;
-            case ALLREDUCE_RING:
-                version = "RING";
-                break;
-            case ALLREDUCE_TREE:
-                version = "TREE";
-                break;
-            case ALLREDUCE_MPICH:
-                version = "MPICH";
-                break;            
-            }
-
-            System.out.println("Selected " + version + " allreduce");
-        }
+        // Init collectives
+        
+        Properties p = System.getProperties();
+      
+        String type = p.getProperty("jorus.barrier", "Flat");
+        String clazz = "jorus.parallel.collectives." + type + "Barrier";
+        
+        System.out.println("Loading " + type + " barrier");
+        
+        barrier = (Barrier) Collective.loadImplementation(clazz, this, byte[].class);
+        
+        byteCollectives = new Collectives<byte[]>(p, this, byte[].class);
+        shortCollectives = new Collectives<short[]>(p, this, short[].class);
+        intCollectives = new Collectives<int[]>(p, this, int[].class);
+        longCollectives = new Collectives<long[]>(p, this, long[].class);
+        floatCollectives = new Collectives<float[]>(p, this, float[].class);
+        doubleCollectives = new Collectives<double[]>(p, this, double[].class);
     }
-
-    private static double getThroughput(long data, long nanos) { 
+    
+    /** * Public Methods ********************************************** */
+        
+    private double getThroughput(long data, long nanos) { 
 
         double Mbits = (data * 8.0) / 1000000.0;
         double sec = nanos / (1000.0 * 1000.0 * 1000.0);
@@ -301,56 +256,55 @@ public class PxSystem {
         return (Mbits / sec);
     }
 
-    public static void printStatistics() {
-
-        long totalTime = timeBarrierSBT + timeReduceValueToRoot0FT
-        + timeReduceArrayToRoot0FT + timeReduceArrayToAll0FT
-        + timeScatter0FT + timeGather0FT + timeBroadcastSBT
+    public void printStatistics() {
+        long totalTime = timeBarrier + timeReduceValueToRoot0FT
+        + timeReduceArrayToRoot + timeReduceArrayToAll
+        + timeScatter + timeGather + timeBroadcast
         + timeBroadcastValue + timeBorderExchange;
 
-        long totalCount = countBarrierSBT + countReduceValueToRoot0FT
-        + countReduceArrayToRoot0FT + countReduceArrayToAll0FT
-        + countScatter0FT + countGather0FT + countBroadcastSBT
+        long totalCount = countBarrier + countReduceValueToRoot0FT
+        + countReduceArrayToRoot + countReduceArrayToAll
+        + countScatter + countGather + countBroadcast
         + countBroadcastValue + countBorderExchange;
 
         System.out.printf("Total communication time %.2f usec, count %d\n", (totalTime / 1000.0), totalCount);
-        System.out.printf("            barrier time %.2f usec, count %d\n", (timeBarrierSBT / 1000.0), countBarrierSBT);
+        System.out.printf("            barrier time %.2f usec, count %d\n", (timeBarrier / 1000.0), countBarrier);
         System.out.printf("     broadcastValue time %.2f usec, count %d\n", (timeBroadcastValue / 1000.0), countBroadcastValue);
         System.out.printf("          reduceV2R time %.2f usec, count %d\n", (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
         System.out.printf("          reduceA2R time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                (timeReduceArrayToRoot0FT / 1000.0), 
-                countReduceArrayToRoot0FT, 
-                dataInReduceArrayToRoot0FT, 
-                dataOutReduceArrayToRoot0FT, 
-                getThroughput(dataInReduceArrayToRoot0FT + dataOutReduceArrayToRoot0FT, timeReduceArrayToRoot0FT));
+                (timeReduceArrayToRoot / 1000.0), 
+                countReduceArrayToRoot, 
+                dataInReduceArrayToRoot, 
+                dataOutReduceArrayToRoot, 
+                getThroughput(dataInReduceArrayToRoot + dataOutReduceArrayToRoot, timeReduceArrayToRoot));
 
         System.out.printf("          reduceA2A time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                (timeReduceArrayToAll0FT / 1000.0), 
-                countReduceArrayToAll0FT, 
-                dataInReduceArrayToAll0FT, 
-                dataOutReduceArrayToAll0FT, 
-                getThroughput(dataInReduceArrayToAll0FT + dataOutReduceArrayToAll0FT, timeReduceArrayToAll0FT));
+                (timeReduceArrayToAll / 1000.0), 
+                countReduceArrayToAll, 
+                dataInReduceArrayToAll, 
+                dataOutReduceArrayToAll, 
+                getThroughput(dataInReduceArrayToAll + dataOutReduceArrayToAll, timeReduceArrayToAll));
 
         System.out.printf("            scatter time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                (timeScatter0FT / 1000.0), 
-                countScatter0FT, 
-                dataInScatter0FT, 
-                dataOutScatter0FT, 
-                getThroughput(dataInScatter0FT + dataOutScatter0FT, timeScatter0FT));
+                (timeScatter / 1000.0), 
+                countScatter, 
+                dataInScatter, 
+                dataOutScatter, 
+                getThroughput(dataInScatter + dataOutScatter, timeScatter));
 
         System.out.printf("             gather time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                (timeGather0FT / 1000.0), 
-                countGather0FT, 
-                dataInGather0FT,
-                dataOutGather0FT, 
-                getThroughput(dataInGather0FT + dataOutGather0FT, timeGather0FT));
+                (timeGather / 1000.0), 
+                countGather, 
+                dataInGather,
+                dataOutGather, 
+                getThroughput(dataInGather + dataOutGather, timeGather));
 
         System.out.printf("       broadcastSBT time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
-                (timeBroadcastSBT / 1000.0), 
-                countBroadcastSBT, 
-                dataInBroadcastSBT, 
-                dataOutBroadcastSBT, 
-                getThroughput(dataInBroadcastSBT + dataOutBroadcastSBT, timeBroadcastSBT));
+                (timeBroadcast / 1000.0), 
+                countBroadcast, 
+                dataInBroadcast, 
+                dataOutBroadcast, 
+                getThroughput(dataInBroadcast + dataOutBroadcast, timeBroadcast));
 
         System.out.printf("     borderExchange time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n", 
                 (timeBorderExchange / 1000.0), 
@@ -359,70 +313,348 @@ public class PxSystem {
                 dataOutBorderExchange,
                 getThroughput(dataInBorderExchange + dataOutBorderExchange, timeBorderExchange));
 
-        timeBarrierSBT = 0;
+        timeBarrier = 0;
         timeReduceValueToRoot0FT = 0;
-        timeReduceArrayToRoot0FT = 0;
-        timeReduceArrayToAll0FT = 0;
-        timeScatter0FT = 0;
-        timeGather0FT = 0;
-        timeBroadcastSBT = 0;
+        timeReduceArrayToRoot = 0;
+        timeReduceArrayToAll = 0;
+        timeScatter = 0;
+        timeGather = 0;
+        timeBroadcast = 0;
         timeBroadcastValue = 0;
         timeBorderExchange = 0;
 
-        countBarrierSBT = 0;
+        countBarrier = 0;
         countReduceValueToRoot0FT = 0;
-        countReduceArrayToRoot0FT = 0;
-        countReduceArrayToAll0FT = 0;
-        countScatter0FT = 0;
-        countGather0FT = 0;
-        countBroadcastSBT = 0;
+        countReduceArrayToRoot = 0;
+        countReduceArrayToAll = 0;
+        countScatter = 0;
+        countGather = 0;
+        countBroadcast = 0;
         countBroadcastValue = 0;
         countBorderExchange = 0;
 
-        dataInReduceArrayToRoot0FT = 0;
-        dataOutReduceArrayToRoot0FT = 0;
+        dataInReduceArrayToRoot = 0;
+        dataOutReduceArrayToRoot = 0;
 
-        dataInReduceArrayToAll0FT = 0;
-        dataOutReduceArrayToAll0FT = 0;
+        dataInReduceArrayToAll = 0;
+        dataOutReduceArrayToAll = 0;
 
-        dataInScatter0FT = 0;
-        dataOutScatter0FT = 0;
+        dataInScatter = 0;
+        dataOutScatter = 0;
 
-        dataInGather0FT = 0;
-        dataOutGather0FT = 0;
+        dataInGather = 0;
+        dataOutGather = 0;
 
-        dataInBroadcastSBT = 0;
-        dataOutBroadcastSBT = 0;
+        dataInBroadcast = 0;
+        dataOutBroadcast = 0;
 
         dataInBorderExchange = 0;
         dataOutBorderExchange = 0;
-
     }
 
-    public static void exitParallelSystem() throws Exception {
-        for (int i = 0; i < NR_PORTS; i++) {
+    public void exitParallelSystem() throws Exception {
+        
+        for (int i = 0; i < nrCPUs; i++) {
             if (sps[i] != null)
                 sps[i].close();
             if (rps[i] != null)
                 rps[i].close();
         }
         ibis.end();
-        initialized = false;
     }
 
-    public static boolean initialized() {
-        return initialized;
-    }
-
-    public static int myCPU() {
+    public int myCPU() {
         return myCPU;
     }
 
-    public static int nrCPUs() {
+    public int nrCPUs() {
         return nrCPUs;
     }
+/*
+    public Collectives<?> getCollective(Class<?> c) throws Exception { 
+        
+        // FIXME: ugly -- J
+        if (!c.isArray()) { 
+            throw new Exception("Illegal Collective type: " + c.getName());
+        }
+     
+        Class component = c.getComponentType();
+        
+        if (component.equals(byte.class)) { 
+            return byteCollectives;
+        } else if (component.equals(short.class)) { 
+            return shortCollectives;
+        } else if (component.equals(int.class)) { 
+            return intCollectives;
+        } else if (component.equals(long.class)) { 
+            return longCollectives;
+        } else if (component.equals(float.class)) { 
+            return floatCollectives;
+        } else if (component.equals(double.class)) { 
+            return doubleCollectives;
+        } else { 
+            throw new Exception("Illegal Collectives type: " + c.getName());
+        }
+    } 
+  */
+    
+    public void barrier() throws Exception { 
+    
+        if (nrCPUs == 1) { 
+            return;
+        }
+        
+        long start = System.nanoTime();
+        
+        barrier.barrier();
+   
+        timeBarrier += System.nanoTime() - start;
+        countBarrier++;
+    }
+    
+    public void reduceValueToRoot(double data, CxRedOp op) throws Exception { 
+    
+        if (nrCPUs == 1) { 
+            return;
+        }
+        
+        throw new RuntimeException("Not implemented!");
+        // TODO: implement!
+    }
+    
+    public double [] reduceArrayToRoot(double [] data, CxRedOpArray op) throws Exception { 
+        
+        if (nrCPUs == 1) { 
+            return data;
+        }
+    
+        long start = System.nanoTime();
+        
+        double [] result = doubleCollectives.reduceArrayToRoot.reduceArrayToRoot(data, op);
 
-    public static void barrierSBT() throws Exception {
+        timeReduceArrayToRoot += System.nanoTime() - start;
+        countReduceArrayToRoot++;
+        
+        return result;
+    }
+    
+    public double [] reduceArrayToAll(double [] data, CxRedOpArray op) throws Exception { 
+        
+        if (nrCPUs == 1) { 
+            return data;
+        }
+        
+        long start = System.nanoTime();
+        
+        double [] result = doubleCollectives.reduceArrayToAll.reduceArrayToAll(data, op);
+    
+        timeReduceArrayToAll += System.nanoTime() - start;
+        countReduceArrayToAll++;
+        
+        return result;
+    }
+   
+    public byte [] reduceArrayToAll(byte [] data, CxRedOpArray op) throws Exception { 
+        
+        if (nrCPUs == 1) { 
+            return data;
+        }
+        
+        long start = System.nanoTime();
+        
+        byte [] result = byteCollectives.reduceArrayToAll.reduceArrayToAll(data, op);
+    
+        timeReduceArrayToAll += System.nanoTime() - start;
+        countReduceArrayToAll++;
+        
+        return result;
+    }
+    
+    public void broadcastArray(double [] data) throws Exception {
+        
+        if (nrCPUs == 1) { 
+            return;
+        }
+        
+        long start = System.nanoTime();
+        
+        doubleCollectives.broadcast.broadcast(data);
+    
+        timeBroadcast += System.nanoTime() - start;
+        countBroadcast++;
+    }
+
+    public void broadcastArray(int [] data) throws Exception {
+        
+        if (nrCPUs == 1) { 
+            return;
+        }
+        
+        long start = System.nanoTime();
+        
+        intCollectives.broadcast.broadcast(data);
+    
+        // Added -- J
+        timeBroadcast += System.nanoTime() - start;
+        countBroadcast++;
+    
+    }
+    
+    public void broadcast(CxArray2dDoubles a) throws Exception {
+        throw new RuntimeException("Not implemented");
+    }
+    
+    public void scatter(CxArray2d a) throws Exception {
+        
+        if (nrCPUs == 1) { 
+            // On 1 CPU we simply create an alias to the same data
+            a.setPartialData(a.getWidth(), a.getHeight(), a.getDataReadWrite(), 
+                    CxArray2d.VALID, CxArray2d.PARTIAL);
+            return;
+        }
+        
+        long start = System.nanoTime();
+          
+        if (a instanceof CxArray2dBytes) { 
+            scatterBytes((CxArray2dBytes) a);
+        } else if (a instanceof CxArray2dDoubles) { 
+            scatterDoubles((CxArray2dDoubles) a);
+        } else { 
+            throw new RuntimeException("Not implemented");
+        }
+
+        a.setLocalState(CxArray2d.VALID);
+        a.setDistType(CxArray2d.PARTIAL);
+
+        // Added -- J
+        timeScatter += System.nanoTime() - start;
+        countScatter++;
+        
+    } 
+    
+    private void scatterDoubles(CxArray2dDoubles a) throws Exception {
+        // Here we assume CPU 0 (root) to have a full & valid structure
+        // which is scattered to the partial structs of all nodes. East
+        // and west borders are also communicated (not north and south).
+        
+        int globH = a.getHeight();
+        int extent = a.getExtent();
+        int pWidth = a.getWidth();
+        int pHeight = getPartHeight(globH, myCPU);
+        int bWidth = a.getBorderWidth();
+        int bHeight = a.getBorderHeight();
+
+        int len = (pWidth + bWidth * 2) * (pHeight + bHeight * 2) * extent;
+        
+        double[] pData = null;
+        
+        if (a.hasPartialData()) { 
+            
+            pData = a.getPartialDataReadWrite();
+        
+            if (pData.length != len) {
+                pData = null;
+            }
+        } 
+        
+        if (pData == null) { 
+            pData = new double[len];
+            a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
+        }
+
+        int xSize = (pWidth + bWidth * 2) * extent;
+
+        int [] offsets = new int[nrCPUs];
+        int [] sizes = new int[nrCPUs];
+        
+        //offsets[0] = xSize * bHeight;
+        //sizes[0] = pData.length - 2 * xSize * bHeight;
+        
+        for (int partner = 0; partner < nrCPUs; partner++) {
+            offsets[partner] = xSize * (getLclStartY(globH, partner) + bHeight);
+            sizes[partner] = xSize * getPartHeight(globH, partner); 
+        }
+            
+        
+        //if (myCPU == 0) {
+        /*
+            int [] offsets = new int[nrCPUs];
+            int [] sizes = new int[nrCPUs];
+            
+            offsets[0] = xSize * bHeight;
+            sizes[0] = pData.length - 2 * xSize * bHeight;
+            
+            for (int partner = 1; partner < nrCPUs; partner++) {
+                offsets[partner] = xSize * (getLclStartY(globH, partner) + bHeight);
+                sizes[partner] = xSize * getPartHeight(globH, partner); 
+            }
+         */
+           
+       //     doubleCollectives.scatter.scatter(a.getDataReadOnly(), offsets, sizes, 
+        //            pData, 0, sizes[0]);
+        
+      //  } else {
+        
+      //      int size = xSize * getPartHeight(globH, myCPU);
+      //      int offset = xSize * bHeight;
+      
+            doubleCollectives.scatter.scatter(a.getDataReadOnly(), offsets, sizes, 
+                    pData, 0, sizes[myCPU]);
+     //   }
+    }
+
+    private void scatterBytes(CxArray2dBytes a) throws Exception {
+        // Here we assume CPU 0 (root) to have a full & valid structure
+        // which is scattered to the partial structs of all nodes. East
+        // and west borders are also communicated (not north and south).
+        
+        int globH = a.getHeight();
+        int extent = a.getExtent();
+        int pWidth = a.getWidth();
+        int pHeight = getPartHeight(globH, myCPU);
+        int bWidth = a.getBorderWidth();
+        int bHeight = a.getBorderHeight();
+
+        int len = (pWidth + bWidth * 2) * (pHeight + bHeight * 2) * extent;
+        
+        byte[] pData = null;
+        
+        if (a.hasPartialData()) { 
+            
+            pData = a.getPartialDataReadWrite();
+        
+            if (pData.length != len) {
+                pData = null;
+            }
+        } 
+        
+        if (pData == null) { 
+            pData = new byte[len];
+            a.setPartialData(pWidth, pHeight, pData, CxArray2d.NONE, CxArray2d.NONE);
+        }
+
+        int xSize = (pWidth + bWidth * 2) * extent;
+
+        int [] offsets = new int[nrCPUs];
+        int [] sizes = new int[nrCPUs];
+        
+        for (int partner = 0; partner < nrCPUs; partner++) {
+            offsets[partner] = xSize * (getLclStartY(globH, partner) + bHeight);
+            sizes[partner] = xSize * getPartHeight(globH, partner); 
+        }
+        
+        byteCollectives.scatter.scatter(a.getDataReadOnly(), offsets, sizes, 
+                pData, 0, sizes[myCPU]);
+    }
+
+    
+    public void gather(CxArray2dDoubles a) throws Exception {
+        throw new RuntimeException("Not implemented");
+    }
+    
+    
+    /*
+    public void barrierSBT() throws Exception {
         // Added -- J
         long start = System.nanoTime();
 
@@ -477,7 +709,9 @@ public class PxSystem {
         timeBarrierSBT += System.nanoTime() - start;
         countBarrierSBT++;
     }
-
+*/
+    
+    /*
     public static double reduceValueToRootOFT(double val, CxRedOp op)
     throws Exception {
         // Added -- J
@@ -517,9 +751,12 @@ public class PxSystem {
 
         return result;
     }
-
-    public static double[] reduceArrayToRootOFT(double[] a, CxRedOpArray op)
-    throws Exception {
+*/
+    
+    /*   
+    public static double[] reduceArrayToRootOFT_Flat(double[] a, CxRedOpArray op)
+        throws Exception {
+        
         // Added -- J
         long start = System.nanoTime();
 
@@ -561,9 +798,10 @@ public class PxSystem {
 
         return a;
     }
-    
-    
-    public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
+    */
+
+/*
+     public static double[] reduceArrayToAllOFT_Ring(double [] a, CxRedOpArray op) throws Exception {
         // Added -- J
 
         if (nrCPUs == 1) { 
@@ -624,22 +862,6 @@ public class PxSystem {
 //      }
 
         final SendPort sp = sps[sendPartner];
-
-        /*
-        SendPortIdentifier [] s = rp.connectedTo();
-
-        while (s.length == 0) { 
-            //System.out.println("EEP: no connections to RP yet!");
-
-            try { 
-                Thread.sleep(10);
-            } catch (Exception e) {
-                // ignore
-            }
-
-            s = rp.connectedTo();			
-        }
-*/
         
         // Determine the starting partition for this node.
         int sendPartition = myCPU;
@@ -738,9 +960,10 @@ public class PxSystem {
 
         return a;
     }
-
+*/
+    /*
     @SuppressWarnings("unchecked")
-	public static double[] reduceArrayToAllOFT_BinomialSimple(double[] a, 
+    public static double[] reduceArrayToAllOFT_BinomialSimple(double[] a, 
             CxRedOpArray op) throws Exception {
 
         // Added -- J
@@ -752,9 +975,6 @@ public class PxSystem {
 
         for (int i=0; i<logCPUs; i++) {
             
-            exchange(myCPU ^ mask, a, tmp);
-            
-            /*
             final int partner = myCPU ^ mask;
 
             if (myCPU > partner) {
@@ -775,7 +995,6 @@ public class PxSystem {
                 w.writeArray(a);
                 w.finish();
             }
-            */
             
             op.doIt(a, tmp);
             
@@ -791,59 +1010,10 @@ public class PxSystem {
      
         return a;
     }
+*/
     
-    private static void handleIncomingExchange(ReadMessage m) 
-    	throws IOException { 
-    	
-    	int target = m.readInt();
-    	
-    	// TODO: try polling here!
-    	synchronized (exchange) {
-    		while (exchange[target] == null) { 
-    			try {
-    				exchange.wait();
-    			} catch (Exception e) {
-					// TODO: handle exception
-				}
-    		}
-    		
-    		m.readArray(exchange[target]);
-    		exchangeSet[target] = true;
-    	}
-    	
-    }
-    	
-    private static void exchange(int target, double [] out, double [] in) 
-    	throws IOException { 
-    	
-    	synchronized (exchange) {
-    		exchange[target] = in;
-    		exchange.notifyAll();
-    	}
-    	
-        WriteMessage w = sps[target].newMessage();
-        w.writeInt(myCPU);
-        w.writeArray(out);
-        w.finish();
-
-        // TODO: try polling here!
-        synchronized (exchange) {        	
-        	while (!exchangeSet[target]) {
-        		try {
-        			exchange.wait();
-        		} catch (Exception e) {
-					// ignored
-				}
-        	}
-    	
-        	exchangeSet[target] = false;
-        	exchange[target] = null;
-        	
-        	// side effect: out has been filled
-        }
-    }
-    
-    public static double[] reduceArrayToAllOFT_RecursiveHalving(double[] a, 
+      
+   /* public static double[] reduceArrayToAllOFT_RecursiveHalving(double[] a, 
             CxRedOpArray op) throws Exception {
  
         // NOTE: this is a port of the MPICH allreduce algorithm, which uses 
@@ -870,43 +1040,43 @@ public class PxSystem {
         int rem = comm_size - pof2;
         int newrank;
         
-        /* In the non-power-of-two case, all even-numbered
+         In the non-power-of-two case, all even-numbered
            processes of rank < 2*rem send their data to
            (rank+1). These even-numbered processes no longer
            participate in the algorithm until the very end. The
-           remaining processes form a nice power-of-two. */
+           remaining processes form a nice power-of-two. 
         
         if (rank < 2*rem) {
             
           //  System.out.println("ALLREDUCE: Adjust processes (PRE)!");
             
-            if (rank % 2 == 0) { /* even */
+            if (rank % 2 == 0) {  even 
                 WriteMessage w = sps[rank+1].newMessage();
                 w.writeArray(a);
                 w.finish();
             
-                /* temporarily set the rank to -1 so that this
+                 temporarily set the rank to -1 so that this
                    process does not pariticipate in recursive
-                   doubling */
+                   doubling 
                 newrank = -1;
                 
-            } else { /* odd */
+            } else {  odd 
                 
                 ReadMessage r = rps[rank-1].receive();
                 r.readArray(tmp);
                 r.finish();
             
-                /* do the reduction on received data. since the
+                 do the reduction on received data. since the
                    ordering is right, it doesn't matter whether
-                   the operation is commutative or not. */
+                   the operation is commutative or not. 
             
                 op.doIt(a, tmp);
                 
-                /* change the rank */
+                 change the rank 
                 newrank = rank / 2;
             }
             
-        } else { /* rank >= 2*rem */
+        } else {  rank >= 2*rem 
         
             newrank = rank - rem;
         }
@@ -919,7 +1089,7 @@ public class PxSystem {
         if (newrank != -1) {
             
             if (((a.length * 8) <= ALLREDUCE_SHORT_MSG) || (count < pof2)) { 
-                /* use recursive doubling */                
+                 use recursive doubling                 
 
             //    System.out.println("ALLREDUCE: Using doubling");
 
@@ -929,11 +1099,11 @@ public class PxSystem {
                 while (mask < pof2) {
                     int newdst = newrank ^ mask;
                     
-                    /* find real rank of dest */
+                     find real rank of dest 
                     int dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
                     
-                    /* Send the most current data, which is in a. Receive
-                       into tmp */
+                     Send the most current data, which is in a. Receive
+                       into tmp 
                     
                     if (myCPU > dst) {
                         WriteMessage w = sps[dst].newMessage();
@@ -954,19 +1124,19 @@ public class PxSystem {
                         w.finish();
                     }
                     
-                    /* tmp contains data received in this step.
-                       a contains data accumulated so far */
+                     tmp contains data received in this step.
+                       a contains data accumulated so far 
                     
                     op.doIt(a, tmp);            
                     
                     mask <<= 1;
                 }
             } else {
-                /* do a reduce-scatter followed by allgather */
+                 do a reduce-scatter followed by allgather 
                      
-                /* for the reduce-scatter, calculate the count that
+                 for the reduce-scatter, calculate the count that
                    each process receives and the displacement within
-                   the buffer */
+                   the buffer 
                      
          //       System.out.println("ALLREDUCE: Using halving");
                 
@@ -993,7 +1163,7 @@ public class PxSystem {
                 while (mask < pof2) {
                     
                     int newdst = newrank ^ mask;
-                    /* find real rank of dest */
+                     find real rank of dest 
                     int dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
 
                     int send_cnt = 0;
@@ -1020,7 +1190,7 @@ public class PxSystem {
                         }
                     }
 
-                    /* Send data from a. Receive into tmp */
+                     Send data from a. Receive into tmp 
                     if (myCPU > dst) {
                         WriteMessage w = sps[dst].newMessage();
                         w.writeArray(a, disps[send_idx], send_cnt);
@@ -1039,37 +1209,37 @@ public class PxSystem {
                         w.finish();                    
                     }
                     
-                    /* tmp contains data received in this step.
-                       a contains data accumulated so far */
+                     tmp contains data received in this step.
+                       a contains data accumulated so far 
                     op.doItRange(a, tmp, disps[recv_idx], recv_cnt);            
 
-                    /* update send_idx for next iteration */
+                     update send_idx for next iteration 
                     send_idx = recv_idx;
                     mask <<= 1;
 
-                    /* update last_idx, but not in last iteration
+                     update last_idx, but not in last iteration
                        because the value is needed in the allgather
-                       step below. */
+                       step below. 
                     
                     if (mask < pof2) { 
                         last_idx = recv_idx + pof2/mask;
                     } 
                 }
 
-                /* now do the allgather */
+                 now do the allgather 
                 mask >>= 1;
                     
                 while (mask > 0) {
                     int newdst = newrank ^ mask;
 
-                    /* find real rank of dest */
+                     find real rank of dest 
                     int dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
 
                     int send_cnt = 0; 
                     int recv_cnt = 0;
 
                     if (newrank < newdst) {
-                        /* update last_idx except on first iteration */
+                         update last_idx except on first iteration 
                         if (mask != pof2/2) {
                             last_idx = last_idx + pof2/(mask*2);
                         }
@@ -1095,7 +1265,7 @@ public class PxSystem {
                         }
                     }
 
-                    /* Send data from a. Receive into tmp */
+                     Send data from a. Receive into tmp 
                     if (myCPU > dst) {
                         WriteMessage w = sps[dst].newMessage();
                         w.writeArray(a, disps[send_idx], send_cnt);
@@ -1123,16 +1293,16 @@ public class PxSystem {
             }
         }
 
-        /* In the non-power-of-two case, all odd-numbered
+         In the non-power-of-two case, all odd-numbered
            processes of rank < 2*rem send the result to
-          (rank-1), the ranks who didn't participate above. */
+          (rank-1), the ranks who didn't participate above. 
         
         if (rank < 2*rem) {
             
      //       System.out.println("ALLREDUCE: Adjust processes (POST)!");
 
             
-            if (rank % 2 == 1) { /* odd */
+            if (rank % 2 == 1) {  odd 
                 WriteMessage w = sps[rank-1].newMessage();
                 w.writeArray(a);
                 w.finish();
@@ -1151,7 +1321,8 @@ public class PxSystem {
      
         return a;
     }
-    
+    */
+    /*
     public static double[] reduceArrayToAllOFT_Flat_Orig(double[] a, CxRedOpArray op)
     throws Exception {
 //      Added -- J
@@ -1213,7 +1384,9 @@ public class PxSystem {
 
         return a;
     }
-
+*/
+    
+    /*
     public static double[] reduceArrayToAllOFT(double[] a, CxRedOpArray op)
         throws Exception {
        
@@ -1299,7 +1472,9 @@ public class PxSystem {
         timeBroadcastSBT += System.nanoTime() - start;
         countBroadcastSBT++;
     }
-
+*/
+    
+/*
     public static void borderExchange(double[] a, int width, int height,
             int off, int stride, int ySize) throws Exception {	
         
@@ -1309,8 +1484,9 @@ public class PxSystem {
         
         borderExchange_Jason(a, width, height, off, stride, ySize);		
     }
-
-    public static void borderExchange_Jason(double[] a, int width, int height,
+*/
+    
+    public void borderExchange(double[] a, int width, int height,
             int off, int stride, int ySize) throws Exception {
 
         // Added -- J
@@ -1321,30 +1497,7 @@ public class PxSystem {
         int nextCPU = myCPU + 1;
 
         int xSize = width + stride;
-
-        // Do some necessary initialisations. Note that these are only performed
-        // the first time the operation is used. 
-        /*
-        if (prevCPU >= 0 && rps[prevCPU] == null) {
-            rps[prevCPU] = ibis.createReceivePort(portType, COMM_ID + prevCPU);
-            rps[prevCPU].enableConnections();
-        }
-
-        if (nextCPU < PxSystem.nrCPUs() && rps[nextCPU] == null) {
-            rps[nextCPU] = ibis.createReceivePort(portType, COMM_ID + nextCPU);
-            rps[nextCPU].enableConnections();
-        }
-
-        if (prevCPU >= 0 && sps[prevCPU] == null) {
-            sps[prevCPU] = ibis.createSendPort(portType);
-            sps[prevCPU].connect(world[prevCPU], COMM_ID + myCPU);
-        }
-
-        if (nextCPU < PxSystem.nrCPUs() && sps[nextCPU] == null) {
-            sps[nextCPU] = ibis.createSendPort(portType);
-            sps[nextCPU].connect(world[nextCPU], COMM_ID + myCPU);
-        }*/
-
+    
 //      System.out.println("Border exchange: " + xSize + "x" + ySize + " (" + (xSize*ySize) + ")");
 
         if ((myCPU & 1) == 0) { 
@@ -1357,7 +1510,7 @@ public class PxSystem {
        //         dataOutBorderExchange += xSize * ySize * 8;
             }
 
-            if (nextCPU < PxSystem.nrCPUs()) {
+            if (nextCPU < nrCPUs) {
                 WriteMessage w = sps[nextCPU].newMessage();
                 w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
                 w.finish();
@@ -1373,7 +1526,7 @@ public class PxSystem {
         //        dataInBorderExchange += xSize * ySize * 8;
             }
 
-            if (nextCPU < PxSystem.nrCPUs()) {
+            if (nextCPU < nrCPUs) {
                 ReadMessage r = rps[nextCPU].receive();
                 r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
                 r.finish();
@@ -1383,7 +1536,7 @@ public class PxSystem {
 
         } else { 
 
-            if (nextCPU < PxSystem.nrCPUs()) {
+            if (nextCPU < nrCPUs) {
                 ReadMessage r = rps[nextCPU].receive();
                 r.readArray(a, off - stride / 2 + height * xSize, xSize * ySize);
                 r.finish();
@@ -1399,7 +1552,7 @@ public class PxSystem {
           //      dataInBorderExchange += xSize * ySize * 8;
             }
 
-            if (nextCPU < PxSystem.nrCPUs()) {
+            if (nextCPU < nrCPUs) {
                 WriteMessage w = sps[nextCPU].newMessage();
                 w.writeArray(a, off - stride / 2 + (height - ySize) * xSize, xSize * ySize);
                 w.finish();
@@ -1421,6 +1574,7 @@ public class PxSystem {
         countBorderExchange++;
     }
 
+    /*
     public static void borderExchange_Orig(double[] a, int width, int height,
             int off, int stride, int ySize) throws Exception {
         // Added -- J
@@ -1486,8 +1640,9 @@ public class PxSystem {
         timeBorderExchange += System.nanoTime() - start;
         countBorderExchange++;
     }
-
-    public static int getPartHeight(int height, int CPUnr) {
+*/
+    
+    public int getPartHeight(int height, int CPUnr) {
         int minLocalH = height / nrCPUs;
         int overflowH = height % nrCPUs;
 
@@ -1497,7 +1652,7 @@ public class PxSystem {
         return minLocalH;
     }
 
-    public static int getLclStartY(int height, int CPUnr) {
+    public int getLclStartY(int height, int CPUnr) {
         int minLocalH = height / nrCPUs;
         int overflowH = height % nrCPUs;
 
@@ -1508,6 +1663,7 @@ public class PxSystem {
         }
     }
 
+    /*
     private static void doScatterOFT(CxArray2dDoubles a) throws Exception {
         // Here we assume CPU 0 (root) to have a full & valid structure
         // which is scattered to the partial structs of all nodes. East
@@ -1716,5 +1872,25 @@ public class PxSystem {
         countBroadcastValue++;
 
         return value;
+    }
+
+    */
+    
+    public ReadMessage receive(int src) throws IOException {
+    
+        if (rps[src] == null) { 
+            // create ?
+        }
+        
+        return rps[src].receive();
+    }
+
+    public WriteMessage newMessage(int dest) throws IOException {
+    
+        if (sps[dest] == null) { 
+            // connect ?
+        }
+        
+        return sps[dest].newMessage();
     }
 }

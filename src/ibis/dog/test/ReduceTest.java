@@ -10,7 +10,7 @@ public class ReduceTest {
 	public static void main(String [] args) { 
 
 		int count = 2000;
-		int repeat = 10;
+		int repeat = 1000;
 		
 		if (args.length != 3) { 
 			System.err.println("Usage: ReduceTest <poolname> <poolsize> <arraysize>");
@@ -24,7 +24,7 @@ public class ReduceTest {
 		Arrays.fill(array, 1.0);
 		
 		try {
-			PxSystem.initParallelSystem(args[0], args[1]);
+			PxSystem px = PxSystem.init(args[0], args[1]);
 
 			final CxRedOpAddDoubleArray op = new CxRedOpAddDoubleArray();
 			
@@ -33,17 +33,17 @@ public class ReduceTest {
 				long start = System.currentTimeMillis();
 
                                 for (int c=0;c<count;c++) { 
-                                        PxSystem.reduceArrayToAllOFT(array, op);                                   
+                                        px.reduceArrayToAll(array, op);                                   
                                 }
                                 
 				long end = System.currentTimeMillis();				
 			
 				System.out.println(count + " reduceArrayToAll took " + (end-start) + " ms.");
 				
-				PxSystem.printStatistics();
+				px.printStatistics();
 			}
 		
-			PxSystem.exitParallelSystem();
+			px.exitParallelSystem();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

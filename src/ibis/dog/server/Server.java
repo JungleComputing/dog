@@ -31,11 +31,15 @@ public class Server implements Upcall {
 
     private LinkedList<Request> requests = new LinkedList<Request>();
 
-    private Server(String[] args) throws IbisCreationFailedException,
+    private final PxSystem px;
+    
+    private Server(PxSystem px, String[] args) throws IbisCreationFailedException,
             IOException {
         // Node 0 needs to provide an Ibis to contact the outside world.
 
-        if (master = (PxSystem.myCPU() == 0)) {
+        this.px = px;
+        
+        if (master = (px.myCPU() == 0)) {
 
             comm = new Communication("Server", this);
 
@@ -195,7 +199,7 @@ public class Server implements Upcall {
 
             r = getRequest(DEFAULT_TIMEOUT);
 
-            System.err.println(PxSystem.myCPU() + " Got request " + r);
+            System.err.println(px.myCPU() + " Got request " + r);
       
             if (r == null) {
                 return;
@@ -206,26 +210,30 @@ public class Server implements Upcall {
 
             opStart = System.currentTimeMillis();
 
+            int [] tmp = new int [] { img.width, img.height, operation };
+            
             try {
-                PxSystem.broadcastValue(img.width);
-                PxSystem.broadcastValue(img.height);
-                PxSystem.broadcastValue(operation);
+                px.broadcastArray(tmp);
             } catch (Exception e) {
                 // TODO: REACT TO FAILURE PROPERLY
                 e.printStackTrace(System.err);
             }
 
         } else {
-
+            
+            int [] tmp = new int[3];
+            
             try {
-                int width = PxSystem.broadcastValue(0);
-                int height = PxSystem.broadcastValue(0);
-                operation = (byte) PxSystem.broadcastValue(0);
-                img = new RGB24Image(width, height);
+                px.broadcastArray(tmp);
             } catch (Exception e) {
                 // TODO: REACT TO FAILURE PROPERLY
                 e.printStackTrace(System.err);
             }
+            
+            int width = tmp[0];
+            int height = tmp[1];
+            operation = (byte) tmp[2];
+            img = new RGB24Image(width, height);
         }
 
         switch (operation) {
@@ -281,7 +289,7 @@ public class Server implements Upcall {
 */
         
         if (master) { 
-            PxSystem.printStatistics();
+            px.printStatistics();
             
             System.out.println("Time = " + (end-start) 
                     + " (pre: " + (opStart - start) 
@@ -330,18 +338,20 @@ public class Server implements Upcall {
 
         System.out.println("Initializing Parallel System...");
         try {
-            PxSystem.initParallelSystem(poolName, poolSize);
+            PxSystem.init(poolName, poolSize);
         } catch (Exception e) {
             System.err.println("Could not initialize Parallel system");
             e.printStackTrace(System.err);
             System.exit(1);
         }
 
-        System.out.println("nrCPUs = " + PxSystem.nrCPUs());
-        System.out.println("myCPU = " + PxSystem.myCPU());
+        PxSystem px = PxSystem.get();
+        
+        System.out.println("nrCPUs = " + px.nrCPUs());
+        System.out.println("myCPU = " + px.myCPU());
 
         try {
-            new Server(args).run();
+            new Server(px, args).run();
         } catch (Throwable e) {
             System.err.println("Server died unexpectedly!");
             e.printStackTrace(System.err);
@@ -349,7 +359,7 @@ public class Server implements Upcall {
 
         System.out.println("Exit Parallel System...");
         try {
-            PxSystem.exitParallelSystem();
+            px.exitParallelSystem();
         } catch (Exception e) {
             // Nothing we can do now...
         }

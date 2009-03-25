@@ -23,9 +23,11 @@ public class CxPatBpo
     {
         CxArray2d dst = s1;
        
-     
-
         if (PxSystem.initialized()) {				// run parallel
+       
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            
             try {
 
                 if (s1.getLocalState() != CxArray2d.VALID ||
@@ -33,8 +35,8 @@ public class CxPatBpo
 
                     if (s1.getGlobalState() != CxArray2d.NONE) { 
 
-                        if (PxSystem.myCPU() == 0) System.out.println("BPO SCATTER 1...");
-                        PxSystem.scatterOFT(dst);
+                        if (rank == 0) System.out.println("BPO SCATTER 1...");
+                        px.scatter(dst);
                    
                     } else { 
                         // Added -- J
@@ -42,7 +44,7 @@ public class CxPatBpo
                         // A hack that assumes dst is a target data structure which we do not need to 
                         // scatter. We only initialize the local partitions.
 
-                        final int pHeight = PxSystem.getPartHeight(s1.getHeight(), PxSystem.myCPU());
+                        final int pHeight = px.getPartHeight(s1.getHeight(), rank);
 
                         final double[] pData = new double[(s1.getWidth() + s1.getBorderWidth() * 2)
                                                           * (pHeight + s1.getBorderHeight() * 2) * s1.getExtent()];
@@ -53,8 +55,8 @@ public class CxPatBpo
                 
                 if (s2.getLocalState() != CxArray2d.VALID ||
                         s2.getDistType() != CxArray2d.PARTIAL) {
-                    if (PxSystem.myCPU() == 0) System.out.println("BPO SCATTER 2...");
-                    PxSystem.scatterOFT(s2);
+                    if (rank == 0) System.out.println("BPO SCATTER 2...");
+                    px.scatter(s2);
                 }
                 
                 if (!inplace) dst = s1.clone();

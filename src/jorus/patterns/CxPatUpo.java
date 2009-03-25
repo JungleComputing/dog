@@ -68,6 +68,11 @@ public class CxPatUpo
         CxArray2d dst = s1;
 
         if (PxSystem.initialized()) {                           // run parallel
+            
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            final int size = px.nrCPUs();
+            
             try {
 
                 if (s1.getLocalState() != CxArray2d.VALID ||
@@ -79,7 +84,7 @@ public class CxPatUpo
                     if (s1.getGlobalState() != CxArray2d.NONE) { 
 
                    //     if (PxSystem.myCPU() == 0) System.out.println("UPO SCATTER 1...");
-                        PxSystem.scatterOFT(dst);
+                        px.scatter(dst);
 
                     } else { 
                         // Added -- J
@@ -87,8 +92,7 @@ public class CxPatUpo
                         // A hack that assumes dst is a target data structure which we do not need to 
                         // scatter. We only initialize the local partitions.
 
-                        final int pHeight = PxSystem.getPartHeight(
-                                s1.getHeight(), PxSystem.myCPU());
+                        final int pHeight = px.getPartHeight(s1.getHeight(), rank);
 
                         final double[] pData = 
                             new double[(s1.getWidth() + s1.getBorderWidth() * 2)

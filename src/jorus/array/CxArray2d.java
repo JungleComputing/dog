@@ -282,7 +282,11 @@ public abstract class CxArray2d<T>
         return pheight;
     }
 
-
+    public boolean hasPartialData() { 
+        return (pdata != null);
+    }
+    
+    
     public T getPartialDataReadOnly()
     {
         if (pdata == null) { 

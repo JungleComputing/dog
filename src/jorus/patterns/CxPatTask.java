@@ -20,16 +20,22 @@ public class CxPatTask
 {
     // This must be generalized to allow any type of task to be executed
 
-
+    private static final CxRedOpAddDoubleArray add = new CxRedOpAddDoubleArray();
+    
     public static void dispatch(CxWeibullFit task, int iMax, int jMax)
     {
         if (PxSystem.initialized()) {				// run parallel
+            
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            final int size = px.nrCPUs();
+            
+            
             try {
                 int taskNr = 0;
                 for (int j=0; j<jMax; j++) {
                     for (int i=0; i<iMax; i++) {
-                        if (taskNr %
-                                PxSystem.nrCPUs() == PxSystem.myCPU()) {
+                        if (taskNr % size == rank) {
                             task.doIt(i, j);
                         }
 
@@ -38,10 +44,8 @@ public class CxPatTask
                     }
                 }
                 for (int j=0; j<jMax; j++) {
-                    PxSystem.reduceArrayToRootOFT(task.getBetas(j),
-                            new CxRedOpAddDoubleArray());
-                    PxSystem.reduceArrayToRootOFT(task.getGammas(j),
-                            new CxRedOpAddDoubleArray());
+                    px.reduceArrayToRoot(task.getBetas(j), add);
+                    px.reduceArrayToRoot(task.getGammas(j), add);
                 }
             } catch (Exception e) {
                 System.err.println("Failed to perform operation!");

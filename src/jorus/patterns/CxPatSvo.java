@@ -24,6 +24,10 @@ public class CxPatSvo
         CxArray2d dst = s1;
 
         if (PxSystem.initialized()) {				// run parallel
+            
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            
             try {
 
                 if (s1.getLocalState() != CxArray2d.VALID ||
@@ -34,8 +38,8 @@ public class CxPatSvo
 
                     if (s1.getGlobalState() != CxArray2d.NONE) { 
 
-                        if (PxSystem.myCPU() == 0) System.out.println("SVO SCATTER 1...");
-                        PxSystem.scatterOFT(dst);
+                        if (rank == 0) System.out.println("SVO SCATTER 1...");
+                        px.scatter(dst);
 
                     } else { 
                         // Added -- J
@@ -43,8 +47,7 @@ public class CxPatSvo
                         // A hack that assumes dst is a target data structure which we do not need to 
                         // scatter. We only initialize the local partitions.
 
-                        final int pHeight = PxSystem.getPartHeight(
-                                s1.getHeight(), PxSystem.myCPU());
+                        final int pHeight = px.getPartHeight(s1.getHeight(),rank);
 
                         final double[] pData = 
                             new double[(s1.getWidth() + s1.getBorderWidth() * 2)
@@ -60,8 +63,7 @@ public class CxPatSvo
 
                 svo.init(s1, true);
 
-                int start = PxSystem.getLclStartY(s1.getHeight(),
-                        PxSystem.myCPU());
+                int start = px.getLclStartY(s1.getHeight(), rank);
 
                 if ((y >= start) && (y < start+s1.getPartialHeight())) {
                     svo.doIt(dst.getPartialDataWriteOnly(), x, y - start);

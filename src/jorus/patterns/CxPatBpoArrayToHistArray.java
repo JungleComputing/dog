@@ -6,14 +6,19 @@ import jorus.operations.CxRedOpAddDoubleArray;
 import jorus.parallel.PxSystem;
 
 public class CxPatBpoArrayToHistArray {
-
+    
+    private static final CxRedOpAddDoubleArray reduceop = new CxRedOpAddDoubleArray();
+    
     public static double [][] dispatch(CxArray2d s1, CxArray2d [] a2, 
             int nBins, double minVal, double maxVal, CxBpoToHist bpo) {
 
         double [][] result = new double[a2.length][nBins];
 
         if (PxSystem.initialized()) { // run parallel
-
+            
+            final PxSystem px = PxSystem.get();
+            final int rank = px.myCPU();
+            
             // FIXME: inefficient!
             double [] buffer = new double[a2.length * nBins];
             double [] dst = new double[nBins];
@@ -21,8 +26,8 @@ public class CxPatBpoArrayToHistArray {
             try {
                 if (s1.getLocalState() != CxArray2d.VALID ||
                         s1.getDistType() != CxArray2d.PARTIAL) {
-                    if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 1...");
-                    PxSystem.scatterOFT(s1);
+                    if (rank == 0) System.out.println("BPO2HIST SCATTER 1...");
+                    px.scatter(s1);
                 }
 
                 for (int i=0;i<a2.length;i++) {
@@ -31,8 +36,8 @@ public class CxPatBpoArrayToHistArray {
 
                     if (s2.getLocalState() != CxArray2d.VALID ||
                             s2.getDistType() != CxArray2d.PARTIAL) {
-                        if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST SCATTER 2...");
-                        PxSystem.scatterOFT(s2);
+                        if (rank == 0) System.out.println("BPO2HIST SCATTER 2...");
+                        px.scatter(s2);
                     }
 
                     bpo.init(s1, s2, true);
@@ -44,7 +49,7 @@ public class CxPatBpoArrayToHistArray {
                 }
 
 //              if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST ALLREDUCE..");
-                PxSystem.reduceArrayToAllOFT(buffer, new CxRedOpAddDoubleArray());
+                px.reduceArrayToAll(buffer, reduceop);
 
                 // FIXME: inefficient
                 for (int i=0;i<result.length;i++) {
