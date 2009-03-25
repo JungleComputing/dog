@@ -10,7 +10,7 @@ public class ReduceTest {
 	public static void main(String [] args) { 
 
 		int count = 2000;
-		int repeat = 1000;
+		int repeat = 10;
 		
 		if (args.length != 3) { 
 			System.err.println("Usage: ReduceTest <poolname> <poolsize> <arraysize>");

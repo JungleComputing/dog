@@ -8,10 +8,31 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
 
     private static final int ALLREDUCE_SHORT_MSG = 2048;
 
+    private int [] counts; 
+    private int [] displacements; 
+    
     public MPICHReduceArrayToAll(PxSystem system, Class c) throws Exception {
         super(system, c);
     }
 
+    private int [] getCounts(int size) { 
+        
+        if (counts == null || counts.length != size) { 
+            counts = new int[size];
+        }
+    
+        return counts;
+    }
+    
+    private int [] getDisplacements(int size) { 
+   
+        if (displacements == null || displacements.length != size) { 
+            displacements = new int[size];
+        }
+    
+        return displacements;     
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
     public T reduceArrayToAll(T data, CxRedOpArray<T> op) throws Exception {
@@ -106,8 +127,8 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
                    each process receives and the displacement within
                    the buffer */
 
-                final int [] cnts = new int [pof2];
-                final int [] disps = new int [pof2];
+                final int [] cnts = getCounts(pof2);         // new int [pof2];
+                final int [] disps = getDisplacements(pof2); // new int [pof2];
 
                 for (int i=0; i<(pof2-1); i++) {
                     cnts[i] = length/pof2;
