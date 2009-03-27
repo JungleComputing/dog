@@ -14,8 +14,6 @@ public final class FlatReduceArrayToRoot<T> extends ReduceArrayToRoot<T> {
     @Override
     public T reduceArrayToRoot(T data, CxRedOpArray<T> op) throws Exception {
    
-  //      long start = System.nanoTime();
-
         final int length = util.getLength(data);
         
         if (rank == 0) {
@@ -27,11 +25,11 @@ public final class FlatReduceArrayToRoot<T> extends ReduceArrayToRoot<T> {
                 op.doIt(data, tmp);
             }
       
+            util.release(tmp);
+            
         } else {
             comm.send(0, data, 0, length);
         }
-
-    //    addTime(System.nanoTime() - start);
    
         return data;
     }

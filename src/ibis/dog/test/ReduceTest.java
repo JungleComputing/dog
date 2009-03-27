@@ -41,6 +41,8 @@ public class ReduceTest {
 				System.out.println(count + " reduceArrayToAll took " + (end-start) + " ms.");
 				
 				px.printStatistics();
+                                
+                                System.gc();
 			}
 		
 			px.exitParallelSystem();

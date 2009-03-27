@@ -32,13 +32,13 @@ public class Server implements Upcall {
     private LinkedList<Request> requests = new LinkedList<Request>();
 
     private final PxSystem px;
-    
+
     private Server(PxSystem px, String[] args) throws IbisCreationFailedException,
-            IOException {
+    IOException {
         // Node 0 needs to provide an Ibis to contact the outside world.
 
         this.px = px;
-        
+
         if (master = (px.myCPU() == 0)) {
 
             comm = new Communication("Server", this);
@@ -200,18 +200,18 @@ public class Server implements Upcall {
             r = getRequest(DEFAULT_TIMEOUT);
 
             System.err.println(px.myCPU() + " Got request " + r);
-      
+
             if (r == null) {
                 return;
             }
-           
+
             operation = r.operation;
             img = r.image.toRGB24();
 
             opStart = System.currentTimeMillis();
 
             int [] tmp = new int [] { img.width, img.height, operation };
-            
+
             try {
                 px.broadcastArray(tmp);
             } catch (Exception e) {
@@ -220,16 +220,16 @@ public class Server implements Upcall {
             }
 
         } else {
-            
+
             int [] tmp = new int[3];
-            
+
             try {
                 px.broadcastArray(tmp);
             } catch (Exception e) {
                 // TODO: REACT TO FAILURE PROPERLY
                 e.printStackTrace(System.err);
             }
-            
+
             int width = tmp[0];
             int height = tmp[1];
             operation = (byte) tmp[2];
@@ -247,11 +247,11 @@ public class Server implements Upcall {
 
             break;
         }
-            // case Request.OPERATION_LABELING: {
-            // pxhi.doTrecLabeling(img.width, img.height, img.pixels);
-            // reply = img;
-            // break;
-            // }
+        // case Request.OPERATION_LABELING: {
+        // pxhi.doTrecLabeling(img.width, img.height, img.pixels);
+        // reply = img;
+        // break;
+        // }
         case Request.OPERATION_DUMMY: {
             reply = new Integer(123);
             break;
@@ -279,18 +279,18 @@ public class Server implements Upcall {
         }
 
         end = System.currentTimeMillis();
-/*
+        /*
         System.out.println("Total time   " + (end - start) + " ms.");
         System.out.println("  request    " + (request - start) + " ms.");
         System.out.println("  decompress " + (decompress - request) + " ms.");
         System.out.println("  bcast      " + (commdone - decompress) + " ms.");
         System.out.println("  op         " + (endop - commdone) + " ms.");
         System.out.println("  reply      " + (end - endop) + " ms.");
-*/
-        
+         */
+
         if (master) { 
             px.printStatistics();
-            
+
             System.out.println("Time = " + (end-start) 
                     + " (pre: " + (opStart - start) 
                     + " operation: " + (opEnd - opStart) 
@@ -311,6 +311,7 @@ public class Server implements Upcall {
                 }
             } else {
                 processRequest(master);
+                System.gc();
             }
         }
     }
@@ -332,7 +333,7 @@ public class Server implements Upcall {
         if (poolName == null || poolSize == null) {
 
             System.err
-                    .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
+            .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
             System.exit(1);
         }
 
@@ -346,7 +347,7 @@ public class Server implements Upcall {
         }
 
         PxSystem px = PxSystem.get();
-        
+
         System.out.println("nrCPUs = " + px.nrCPUs());
         System.out.println("myCPU = " + px.myCPU());
 

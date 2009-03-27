@@ -6,12 +6,6 @@ import jorus.parallel.array.FloatArrayUtil;
 import jorus.parallel.array.IntArrayUtil;
 import jorus.parallel.array.LongArrayUtil;
 import jorus.parallel.array.ShortArrayUtil;
-import jorus.parallel.comm.ByteArrayCommunicationUtil;
-import jorus.parallel.comm.DoubleArrayCommunicationUtil;
-import jorus.parallel.comm.FloatArrayCommunicationUtil;
-import jorus.parallel.comm.IntArrayCommunicationUtil;
-import jorus.parallel.comm.LongArrayCommunicationUtil;
-import jorus.parallel.comm.ShortArrayCommunicationUtil;
 
 public abstract class ArrayUtil<T> {
     

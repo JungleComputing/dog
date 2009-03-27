@@ -30,6 +30,8 @@ public final class FlatReduceArrayToAll<T> extends ReduceArrayToAll<T> {
             for (int partner = 1; partner < size; partner++) {
                 comm.send(partner, data, 0, length);
             }
+    
+            util.release(tmp);
       
         } else {
             comm.send(0, data, 0, length);
