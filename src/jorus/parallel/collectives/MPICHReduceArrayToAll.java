@@ -8,29 +8,38 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
 
     private static final int ALLREDUCE_SHORT_MSG = 2048;
 
-    private int [] counts; 
-    private int [] displacements; 
+    private final int [] counts; 
+    private final int [] displacements; 
+    
+    private final int pof2;
+    private final int rem;
+    private final int newrank;
     
     public MPICHReduceArrayToAll(PxSystem system, Class c) throws Exception {
         super(system, c);
-    }
 
-    private int [] getCounts(int size) { 
+        // We need to find nearest power-of-two less than or equal to 
+        // the number of participating machines.
         
-        if (counts == null || counts.length != size) { 
-            counts = new int[size];
+        int tmp = 1;
+        while (tmp <= size) tmp <<= 1;
+        tmp >>=1;
+
+        pof2 = tmp;
+        rem = size - pof2;
+        
+        counts = new int[pof2];
+        displacements = new int[pof2];
+        
+        if (rank < 2*rem) {
+            if (rank % 2 == 0) { /* even */
+                newrank = -1;
+            } else { /* odd */
+                newrank = rank / 2;
+            }
+        } else { /* rank >= 2*rem */
+            newrank = rank - rem;
         }
-    
-        return counts;
-    }
-    
-    private int [] getDisplacements(int size) { 
-   
-        if (displacements == null || displacements.length != size) { 
-            displacements = new int[size];
-        }
-    
-        return displacements;     
     }
     
     @SuppressWarnings("unchecked")
@@ -48,16 +57,6 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
         final int length = util.getLength(data);
         final T tmp = (T) util.create(length);
 
-        // Next, we need to find nearest power-of-two less than or equal to 
-        // the number of participating machines.
-
-        int pof2 = 1;
-        while (pof2 <= size) pof2 <<= 1;
-        pof2 >>=1;
-
-        int rem = size - pof2;
-        int newrank;
-
         /* In the non-power-of-two case, all even-numbered
            processes of rank < 2*rem send their data to
            (rank+1). These even-numbered processes no longer
@@ -73,8 +72,6 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
                 /* temporarily set the rank to -1 so that this
                    process does not pariticipate in recursive
                    doubling */
-                newrank = -1;
-
             } else { /* odd */
                 comm.receive(rank-1, tmp, 0, length);
                 /* do the reduction on received data. since the
@@ -82,15 +79,9 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
                    the operation is commutative or not. */
 
                 op.doIt(data, tmp);
-
-                /* change the rank */
-                newrank = rank / 2;
             }
-
-        } else { /* rank >= 2*rem */
-            newrank = rank - rem;
         }
-
+        
         // We will now perform a reduce using recursive doubling when there is 
         // little data, or recursive halving followed by an allgather when there
         // is enough data. Some machines will be left out here if the number of 
@@ -127,8 +118,8 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
                    each process receives and the displacement within
                    the buffer */
 
-                final int [] cnts = getCounts(pof2);         // new int [pof2];
-                final int [] disps = getDisplacements(pof2); // new int [pof2];
+                final int [] cnts = counts;
+                final int [] disps = displacements;
 
                 for (int i=0; i<(pof2-1); i++) {
                     cnts[i] = length/pof2;
@@ -149,9 +140,9 @@ public final class MPICHReduceArrayToAll<T> extends ReduceArrayToAll<T> {
 
                 while (mask < pof2) {
 
-                    int newdst = newrank ^ mask;
+                    final int newdst = newrank ^ mask;
                     /* find real rank of dest */
-                    int dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
+                    final int dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
 
                     int send_cnt = 0;
                     int recv_cnt = 0;
