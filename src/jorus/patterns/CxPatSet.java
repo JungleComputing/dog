@@ -26,13 +26,15 @@ public class CxPatSet {
                
                     byte [] tmp = (byte[]) src.getPartialDataReadOnly();
                     
-                    dst.setPartialData(src.getPartialWidth(), src.getPartialHeight(), new double[tmp.length], 
+                    dst.setPartialData(src.getPartialWidth(), 
+                            src.getPartialHeight(), new double[tmp.length], 
                             CxArray2d.VALID, CxArray2d.PARTIAL);
                 }
                 
                 CxBpoConvertByteDouble tmp = new CxBpoConvertByteDouble();
                 tmp.init(dst, src, true);
-                tmp.doIt((double [])dst.getPartialDataWriteOnly(), (byte [])src.getPartialDataReadWrite());
+                tmp.doIt((double [])dst.getPartialDataWriteOnly(), 
+                        (byte [])src.getPartialDataReadWrite());
 
                 dst.setGlobalState(CxArray2d.INVALID);
                 
@@ -44,8 +46,14 @@ public class CxPatSet {
                 e.printStackTrace(System.err);
             }
 
-        } else {                        
-            throw new RuntimeException("Not implemented");
+        } else {
+            CxBpoConvertByteDouble tmp = new CxBpoConvertByteDouble();
+            
+            tmp.init(dst, src, false);
+            tmp.doIt((double [])dst.getDataWriteOnly(), 
+                    (byte [])src.getDataReadWrite());
+
+            dst.setGlobalState(CxArray2d.INVALID);
         }
 
         return dst;
