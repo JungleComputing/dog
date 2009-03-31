@@ -75,7 +75,23 @@ public class CxPatBpo
                 e.printStackTrace(System.err);
             }
 
-        } else {			
+        } else {
+            if (s1.getGlobalState() == CxArray2d.NONE) {
+                // Added -- J
+                //
+                // A hack that assumes dst is a target data structure which we
+                // do not need to
+                // scatter. We only initialize the local partitions.
+
+                final double[] data = new double[(s1.getWidth() + s1
+                        .getBorderWidth() * 2)
+                        * (s1.getHeight() + s1.getBorderHeight() * 2)
+                        * s1.getExtent()];
+
+                s1.setData(s1.getWidth(), s1.getHeight(), data, CxArray2d.VALID);
+            }
+
+            
             if (!inplace) dst = s1.clone();
             
             // run sequential

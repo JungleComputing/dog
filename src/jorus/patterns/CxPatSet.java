@@ -47,6 +47,14 @@ public class CxPatSet {
             }
 
         } else {
+            if (!dst.hasData()) {
+
+                byte[] tmp = (byte[]) src.getDataReadOnly();
+
+                dst.setData(src.getWidth(), src.getHeight(),
+                        new double[tmp.length], CxArray2d.VALID);
+            }
+            
             CxBpoConvertByteDouble tmp = new CxBpoConvertByteDouble();
             
             tmp.init(dst, src, false);
