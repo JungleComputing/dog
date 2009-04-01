@@ -12,15 +12,15 @@
 package jorus.weibull;
 
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.util.Arrays;
 
-import jorus.array.*;
-import jorus.pixel.*;
-import jorus.parallel.PxSystem;
-import jorus.patterns.*;
+import jorus.array.CxArray2dScalarDouble;
+import jorus.array.CxArray2dVec3Byte;
+import jorus.array.CxArray2dVec3Double;
+import jorus.patterns.CxPatSet;
+import jorus.patterns.CxPatTask;
+import jorus.pixel.CxPixelScalarDouble;
+import jorus.pixel.CxPixelVec3Double;
 
 
 public class CxWeibull
@@ -95,7 +95,7 @@ public class CxWeibull
 
     //    System.out.println("Memory used: " + mu.getUsed());
 
-        long start = System.currentTimeMillis();
+ //       long start = System.currentTimeMillis();
 
         double	sigma = 30.0 * (double)inImH / 576;
         int     centerx = inImW/2;

@@ -77,7 +77,14 @@ public class TestServer {
         long end = System.currentTimeMillis();
         
         if (master) {
-            System.out.println("Time = " + (end-start));
+       
+            double tmp = 0.0;
+            
+            for (int i=0;i<vector.vector.length;i++) { 
+                tmp += vector.vector[i];
+            }
+            
+            System.out.println("Time = " + (end-start) + " CHECK: " + tmp);
             px.printStatistics();
         } 
         

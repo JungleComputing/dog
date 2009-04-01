@@ -10,8 +10,6 @@
 package jorus.array;
 
 import jorus.pixel.CxPixel;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 
 public abstract class CxArray2d<T> {
     /** * Private Properties ****************************************** */
@@ -146,13 +144,18 @@ public abstract class CxArray2d<T> {
 
             final int off = ((orig.width + 2 * orig.bwidth) * orig.bheight + orig.bwidth)
                     * extent;
+            
             final int stride = orig.bwidth * extent * 2;
 
             for (int j = 0; j < orig.height; j++) {
 
                 final int srcPtr = off + j * (orig.width * extent + stride);
-                final int dstPtr = j * (width * extent);
 
+                // This is not correct ?
+                // final int dstPtr = j * (width * extent);
+
+                final int dstPtr = j * (pwidth + 2 * newBW) * extent;
+                
                 System.arraycopy(orig.data, srcPtr, data, dstPtr, width
                         * extent);
             }
