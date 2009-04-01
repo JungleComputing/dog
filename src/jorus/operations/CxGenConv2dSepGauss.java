@@ -39,7 +39,7 @@ public class CxGenConv2dSepGauss extends CxGenConv2dSep<double[]>
                 dst[dstPtr] = 0.;		// neutral element of addition
      
                 for (int k=0; k<kw_H; k++) {
-                    dst[dstPtr] += src[srcPtr+k] * ker[k];;
+                    dst[dstPtr] += src[srcPtr+k] * ker[k];
                 }
             }
         }
