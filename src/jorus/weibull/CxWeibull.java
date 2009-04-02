@@ -377,6 +377,22 @@ public class CxWeibull
         histos[CLLY]   = Clly.impreciseHistograms(rfIm, NR_BINS, -1., 1.);
         histos[CLLR2]  = Cll135.impreciseHistograms(rfIm, NR_BINS, -1.,1.);
 
+        
+      /*  
+        for (int i=0;i<NR_INVAR_IMS;i++) {
+            
+            
+            for (int j=0;j<NR_RFIELDS;j++) {
+                double sum = 0.0;
+            
+                for (int b=0;b<NR_BINS;b++) {
+                    sum += histos[i][j][b];
+                }
+
+                System.out.println("sum hist [" + i + "][" + j + "] = " + sum);
+            } 
+        }
+        */
 
 //      System.out.println("Done.");
 
@@ -390,20 +406,35 @@ public class CxWeibull
         fit.init(new FitWeibull(), histos, betas, gammas, NR_BINS);
         CxPatTask.dispatch(fit, NR_RFIELDS, NR_INVAR_IMS);
 //      System.out.println("Done.");
-
+        
+        // Sanity check 
+        /*
+        for (int i=0;i<NR_INVAR_IMS;i++) {
+            System.out.print(i + ": [");
+            for (int j=0;j<NR_RFIELDS;j++) {
+                System.out.printf(" %.6f", betas[i][j]);                
+            }
+            
+            System.out.println(" ]");
+        }*/
+        
+    //    System.exit(1);
 
         // Extract all final betas and gammas (ignore EX2EY2)
 
-        double	xxb, xyb, yyb;
-        double	xxg, xyg, yyg;
-
         for (int j=1; j<NR_INVAR_IMS; j+=4) {
             for (int i=0; i<NR_RFIELDS; i++) {
-                xxb = 0.; xyb = 0.; yyb = 0.;
-                xxg = 0.; xyg = 0.; yyg = 0.;
+                double xxb = 0.; 
+                double xyb = 0.; 
+                double yyb = 0.;
+                double xxg = 0.; 
+                double xyg = 0.; 
+                double yyg = 0.;
 
-                xxb += betas[j][i];  yyb += betas[j+2][i];
-                xxg += gammas[j][i]; yyg += gammas[j+2][i];
+                xxb += betas[j][i];  
+                yyb += betas[j+2][i];
+                xxg += gammas[j][i]; 
+                yyg += gammas[j+2][i];
 
                 xxb += 0.5*betas[j+1][i]*Math.sqrt(2.0);
                 xyb += 0.5*betas[j+1][i]*Math.sqrt(2.0);

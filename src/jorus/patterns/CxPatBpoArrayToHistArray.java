@@ -1,5 +1,7 @@
 package jorus.patterns;
 
+import java.util.Arrays;
+
 import jorus.array.CxArray2d;
 import jorus.operations.CxBpoToHist;
 import jorus.operations.CxRedOpAddDoubleArray;
@@ -46,11 +48,34 @@ public class CxPatBpoArrayToHistArray {
                             s2.getPartialDataReadOnly(), nBins, minVal, maxVal);
 
                     System.arraycopy(dst, 0, buffer, i*nBins, nBins);
+                    
+                    // Clear the dst array for the next pass!
+                    Arrays.fill(dst, 0.0);
                 }
-
+                
+                /*
+                double sum = 0.0;
+                
+                for (int i=0;i<buffer.length;i++) { 
+                    sum += buffer[i];                    
+                }
+                
+                System.out.println("PRE: " + sum);
+                */
+                
 //              if (PxSystem.myCPU() == 0) System.out.println("BPO2HIST ALLREDUCE..");
                 px.reduceArrayToAll(buffer, reduceop);
 
+                /*
+                sum = 0.0;
+                
+                for (int i=0;i<buffer.length;i++) { 
+                    sum += buffer[i];                    
+                }
+                
+                System.out.println("POST: " + sum);
+                */
+                
                 // FIXME: inefficient
                 for (int i=0;i<result.length;i++) {
                     System.arraycopy(buffer, i*nBins, result[i], 0, nBins);

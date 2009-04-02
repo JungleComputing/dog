@@ -27,8 +27,6 @@ public class CxBpoToHistDouble extends CxBpoToHist<double[]>
                             
 				final int index = (int) (nBins*(s1[s1Ptr]-minVal)/range);
                                 
-			//	System.out.println("  " + i + "x" + j + " " + index);
-                                
 				if (index >= 0 && index < nBins) {
 					dst[index] += s2[s2Ptr];
                                 }
