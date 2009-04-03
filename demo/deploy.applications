@@ -8,6 +8,6 @@ client.input.files = images
 client.system.properties = java.library.path=lib,
 
 image-compute.main.class = ibis.dog.server.Server
-image-compute.jvm.options = -Xmx512M,-Xms512M
+image-compute.jvm.options = -Xmx2048M,-Xms2048M
 
 broker.main.class = ibis.dog.broker.Broker

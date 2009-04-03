@@ -97,6 +97,7 @@
 		<delete failonerror="false" dir="${distdir}" />
 		<delete failonerror="false" dir="prestage-client" />
 		<delete failonerror="false" dir="prestage-server" />
+		<delete failonerror="false" dir="lib-server" />
 	</target>
 
 	<target name="distclean" depends="clean">
