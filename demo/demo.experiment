@@ -1,45 +1,50 @@
-# Details of job "job-0"
-Broker.application.name = broker
+default.process.count = 8
+default.resource.count = 8
+default.application.name = Server
+
+Broker.application.name = Broker
 Broker.process.count = 1
 Broker.cluster.name = local
 Broker.resource.count = 1
 
-Client.application.name = client
+Client.application.name = Client
 Client.process.count = 1
 Client.cluster.name = local
 Client.resource.count = 1
 
-VU.application.name = image-compute
-VU.process.count = 8
-VU.cluster.name = VU
-VU.resource.count = 8
+#globus
 
-Delft.application.name = image-compute
-Delft.process.count = 8
-Delft.cluster.name = Delft
-Delft.resource.count = 8
+DAS3-VU.cluster.name = DAS3-VU
 
-Uva.application.name = image-compute
-Uva.process.count = 8
-Uva.cluster.name = UvA
-Uva.resource.count = 8
+DAS3-Uva.cluster.name = DAS3-UvA
 
-Leiden.application.name = image-compute
-Leiden.process.count = 8
-Leiden.cluster.name = Leiden
-Leiden.resource.count = 8
+DAS3-Leiden.cluster.name = DAS3-Leiden
 
-MultimediaN.application.name = image-compute
-MultimediaN.process.count = 8
-MultimediaN.cluster.name = MultimediaN
-MultimediaN.resource.count = 8
+DAS3-MultimediaN.cluster.name = DAS3-MultimediaN
 
-DesktopGrid.application.name = image-compute
-DesktopGrid.process.count = 8
+#auto-zorilla
+
+Intrigger-Chiba.cluster.name = Intrigger-Chiba
+Intrigger-Chiba.resource.count = 0
+
+Intrigger-Tsukuba.cluster.name = Intrigger-Tsukuba
+Intrigger-Tsukuba.resource.count = 0
+
+#zorilla
+
 DesktopGrid.cluster.name = DesktopGrid
 DesktopGrid.resource.count = 0
 
-#Chiba.application.name = image-compute
-#Chiba.process.count = 8
-#Chiba.cluster.name = Chiba
-#Chiba.resource.count = 8
+EC2.cluster.name = EC2
+
+#ssh/script
+
+Yorda.cluster.name = Yorda
+
+Hiroshi.cluster.name = Hiroshi
+
+
+#ssh
+
+Laptop.cluster.name = Laptop
+
