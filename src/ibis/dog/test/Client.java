@@ -8,6 +8,7 @@ import ibis.dog.shared.Reply;
 import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
+import ibis.ipl.IbisIdentifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -278,6 +279,11 @@ public class Client extends Thread implements Upcall {
 
     private synchronized void log(String text) {
         System.out.println(text);
+    }
+
+    @Override
+    public void gone(IbisIdentifier ibis) {
+        //IGNORE
     }
 
 }

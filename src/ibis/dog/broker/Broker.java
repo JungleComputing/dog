@@ -6,6 +6,7 @@ import ibis.dog.shared.MachineDescription;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 import ibis.ipl.IbisCreationFailedException;
+import ibis.ipl.IbisIdentifier;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -40,22 +41,11 @@ public class Broker implements Upcall {
         communication.elect("Broker");
     }
 
-    private void pingServers() {
-
-        // System.out.println("Ping to all servers to check if they are
-        // alive...");
-
-        ServerDescription[] servers = getServers();
-
-        for (ServerDescription s : servers) {
-            try {
-                communication.send(s, Communication.SERVER_REGISTERED);
-            } catch (Exception cre) {
-                System.err.println("warning: cannot reach server: "
-                        + s.getName());
-                cre.printStackTrace(System.err);
-                // FIXME: ignore errors for now
-                // removeServer(s);
+    public synchronized void gone(IbisIdentifier ibis) {
+        for(ServerDescription s: servers.toArray(new ServerDescription[0])) {
+            if (ibis.equals(s.getIbisIdentifier())) {
+                removeServer(s);
+                System.err.println("removed server: " + s + ", now " + servers.size() + " servers");
             }
         }
     }
@@ -130,8 +120,8 @@ public class Broker implements Upcall {
         try {
             while (true) {
                 Thread.sleep(UPDATE_INTERVAL);
-                pingServers();
                 database.save();
+                System.err.println("Now " + servers.size() + " servers");
             }
         } catch (Throwable e) {
             System.err.println("Broker died unexpectedly!");

@@ -9,6 +9,8 @@ import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
 import ibis.ipl.IbisCreationFailedException;
+import ibis.ipl.IbisIdentifier;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -59,6 +61,13 @@ public class Server implements Upcall {
         System.out.println("Ending server");
         unregister();
         comm.end();
+        try {
+            px.exitParallelSystem();
+        } catch (Exception e) {
+            System.err.println("error on exiting parallel system");
+            e.printStackTrace(System.err);
+            	
+        }
     }
 
     private synchronized void registered(boolean value) {
@@ -364,5 +373,10 @@ public class Server implements Upcall {
         } catch (Exception e) {
             // Nothing we can do now...
         }
+    }
+
+    @Override
+    public void gone(IbisIdentifier ibis) {
+        //IGNORE
     }
 }

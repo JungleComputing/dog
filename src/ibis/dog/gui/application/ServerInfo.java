@@ -113,8 +113,8 @@ public class ServerInfo extends JPanel implements ActionListener,
     }
 
     public void updateServers(ServerData[] servers) {
-        if (servers == null || servers.length == 0) {
-            return;
+        if (servers == null) {
+            servers = new ServerData[0];
         }
         
         logger.info("Updating server list, now " + servers.length);

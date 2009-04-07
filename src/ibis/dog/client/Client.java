@@ -11,6 +11,7 @@ import ibis.dog.shared.Reply;
 import ibis.dog.shared.Request;
 import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
+import ibis.ipl.IbisIdentifier;
 import ibis.video4j.VideoConsumer;
 
 import java.util.SortedMap;
@@ -379,6 +380,11 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     public void setFrameRateConsumer(FramerateConsumer frameRateConsumer) {
         framerateConsumer = frameRateConsumer;
+    }
+
+    @Override
+    public void gone(IbisIdentifier ibis) {
+       //IGNORE
     }
 
 }

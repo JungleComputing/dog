@@ -1,5 +1,4 @@
 default.process.count = 8
-default.resource.count = 8
 default.application.name = Server
 
 Broker.application.name = Broker
@@ -15,12 +14,16 @@ Client.resource.count = 1
 #globus
 
 DAS3-VU.cluster.name = DAS3-VU
+DAS3-VU.resource.count = 8
 
-DAS3-Uva.cluster.name = DAS3-UvA
+DAS3-UvA.cluster.name = DAS3-UvA
+DAS3-UvA.resource.count = 8
 
 DAS3-Leiden.cluster.name = DAS3-Leiden
+DAS3-Leiden.resource.count = 8
 
 DAS3-MultimediaN.cluster.name = DAS3-MultimediaN
+DAS3-MultimediaN.resource.count = 8
 
 #auto-zorilla
 
@@ -43,8 +46,8 @@ Yorda.cluster.name = Yorda
 
 Hiroshi.cluster.name = Hiroshi
 
-
 #ssh
 
 Laptop.cluster.name = Laptop
-
+Laptop.resource.count = 1
+Laptop.process.count = 1

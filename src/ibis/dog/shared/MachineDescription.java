@@ -57,6 +57,10 @@ public class MachineDescription implements Serializable {
         }            
     }
     
+    public IbisIdentifier getIbisIdentifier() {
+        return ibisID;
+    }
+    
     public int hashCode() { 
 
         // Note: this method should return the same result for two 

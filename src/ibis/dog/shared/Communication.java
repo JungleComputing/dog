@@ -11,13 +11,14 @@ import ibis.ipl.PortType;
 import ibis.ipl.ReadMessage;
 import ibis.ipl.ReceivePort;
 import ibis.ipl.ReceivePortConnectUpcall;
+import ibis.ipl.RegistryEventHandler;
 import ibis.ipl.SendPort;
 import ibis.ipl.SendPortIdentifier;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
 
-public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
+public class Communication implements MessageUpcall, ReceivePortConnectUpcall, RegistryEventHandler {
 
     public static final int DEFAULT_TIMEOUT = 30000;
 
@@ -47,7 +48,7 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
             PortType.CONNECTION_UPCALLS);
 
     private final IbisCapabilities ibisCapabilities = new IbisCapabilities(
-            IbisCapabilities.MALLEABLE, IbisCapabilities.ELECTIONS_STRICT);
+            IbisCapabilities.MALLEABLE, IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED);
 
     private Ibis ibis;
 
@@ -68,7 +69,7 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         System.out.println("PROP:" + System.getProperties());
 
         // Create an Ibis
-        ibis = IbisFactory.createIbis(ibisCapabilities, null, true, null,
+        ibis = IbisFactory.createIbis(ibisCapabilities, null, true, this,
             portType);
 
         System.out.println("####### DONE starting ibis");
@@ -226,6 +227,41 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall {
         }
 
         return location.getLevel(location.numberOfLevels() - 1);
+    }
+
+    @Override
+    public void died(IbisIdentifier corpse) {
+        upcall.gone(corpse);
+    }
+
+    @Override
+    public void electionResult(String electionName, IbisIdentifier winner) {
+        //IGNORE
+    }
+
+    @Override
+    public void gotSignal(String signal, IbisIdentifier source) {
+        //IGNORE
+    }
+
+    @Override
+    public void joined(IbisIdentifier joinedIbis) {
+        //IGNORE
+    }
+
+    @Override
+    public void left(IbisIdentifier leftIbis) {
+        upcall.gone(leftIbis);
+    }
+
+    @Override
+    public void poolClosed() {
+        //IGNORe
+    }
+
+    @Override
+    public void poolTerminated(IbisIdentifier source) {
+        //IGNORE
     }
 
 }
