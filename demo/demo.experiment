@@ -45,6 +45,8 @@ EC2.cluster.name = EC2
 Yorda.cluster.name = Yorda
 
 Hiroshi.cluster.name = Hiroshi
+Hiroshi.resource.count = 4
+Hiroshi.process.count = 4
 
 #ssh
 

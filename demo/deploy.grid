@@ -113,6 +113,7 @@ Intrigger-Tsukuba.latitude = 34.59704151614417
 Intrigger-Tsukuba.longitude = 136.7578125
 Intrigger-Tsukuba.start.zorilla = true
 Intrigger-Tsukuba.cache.dir = dog-demo-cache
+Intrigger-Tsukuba.node.host.names = tsukuba001
 
 
 # Details of cluster "DesktopGrid"
@@ -144,8 +145,8 @@ Yorda.java.path = /home/sara/fjseins/jre1.6.0_06/bin/java
 Yorda.job.wrapper.script = demo/yorda.script
 Yorda.user.name = fjseins
 Yorda.cache.dir = dog-demo-cache
-Yorda.nodes = 1
-Yorda.cores = 1
+Yorda.nodes = 20
+Yorda.cores = 20
 Yorda.latitude = 42.009509
 Yorda.longitude = -87.556915
 
@@ -157,10 +158,11 @@ Hiroshi.java.path = /home/fjseins/jre1.6.0_06/bin/java
 Hiroshi.job.wrapper.script = demo/hiroshi.script
 Hiroshi.user.name = fjseins
 #Hiroshi.cache.dir = dog-demo-cache
-Hiroshi.nodes = 1
-Hiroshi.cores = 1
+Hiroshi.nodes = 8
+Hiroshi.cores = 8
 Hiroshi.latitude = -33.722055
 Hiroshi.longitude = 151.274872
+Hiroshi.server.system.properties=smartsockets.external.manual=129.78.10.77
 
 # Standalone machine
 Laptop.server.adaptor = SshTrilead

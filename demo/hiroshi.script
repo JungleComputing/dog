@@ -8,9 +8,9 @@ JAVA=$1
 shift
 ARGS=$*
 
-for i in `seq 1 $NR_PROCS`;
+for i in `seq 0 9`;
 do
-	ssh -t -t sakaki0$i "cd `pwd` ; $JAVA $ARGS"&
+	ssh -t -t sakaki0$i "cd /home/fjseins/`pwd | cut -d '/' -f 5` ; $JAVA $ARGS"&
 done  
 
 wait
