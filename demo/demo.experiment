@@ -31,7 +31,7 @@ Intrigger-Chiba.cluster.name = Intrigger-Chiba
 Intrigger-Chiba.resource.count = 0
 
 Intrigger-Tsukuba.cluster.name = Intrigger-Tsukuba
-Intrigger-Tsukuba.resource.count = 0
+Intrigger-Tsukuba.resource.count = 8
 
 #zorilla
 

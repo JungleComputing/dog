@@ -7,7 +7,6 @@ Client.input.files = images
 Client.system.properties = java.library.path=lib/prestage-client,
 
 Server.main.class = ibis.dog.server.Server
-Server.jvm.options = -Xmx2048M,-Xms2048M
 Server.memory.size = 850
 server.libs = prestage-server
 

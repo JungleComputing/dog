@@ -113,7 +113,7 @@ Intrigger-Tsukuba.latitude = 34.59704151614417
 Intrigger-Tsukuba.longitude = 136.7578125
 Intrigger-Tsukuba.start.zorilla = true
 Intrigger-Tsukuba.cache.dir = dog-demo-cache
-Intrigger-Tsukuba.node.host.names = tsukuba001
+Intrigger-Tsukuba.node.hostnames = tsukuba001
 
 
 # Details of cluster "DesktopGrid"
