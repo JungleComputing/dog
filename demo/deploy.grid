@@ -166,13 +166,13 @@ Hiroshi.server.system.properties=smartsockets.external.manual=129.78.10.77
 
 # Standalone machine
 Laptop.server.adaptor = SshTrilead
-Laptop.server.uri = ssh://ceres.cs.vu.nl
+Laptop.server.uri = ssh://sedna.cs.vu.nl
 Laptop.job.adaptor = SshTrilead
-Laptop.job.uri = ssh://ceres.cs.vu.nl
+Laptop.job.uri = ssh://sedna.cs.vu.nl
 Laptop.file.adaptors = SshTrilead,Local
 Laptop.java.path = /usr/bin/java
 #Laptop.job.wrapper.script = demo/multicore.script
-#Laptop.cache.dir = dog-demo-cache
+Laptop.cache.dir = dog-demo-cache
 Laptop.nodes = 1
 Laptop.cores = 1
 Laptop.latitude = 52.336062

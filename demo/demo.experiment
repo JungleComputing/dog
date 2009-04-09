@@ -36,6 +36,7 @@ Intrigger-Tsukuba.resource.count = 8
 #zorilla
 
 DesktopGrid.cluster.name = DesktopGrid
+DesktopGrid.process.count = 4
 DesktopGrid.resource.count = 0
 
 EC2.cluster.name = EC2
