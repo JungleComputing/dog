@@ -11,10 +11,8 @@ package jorus.parallel;
 
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisCapabilities;
-import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisFactory;
 import ibis.ipl.IbisIdentifier;
-import ibis.ipl.MessageUpcall;
 import ibis.ipl.PortType;
 import ibis.ipl.ReadMessage;
 import ibis.ipl.ReceivePort;
@@ -24,16 +22,15 @@ import ibis.ipl.WriteMessage;
 import java.io.IOException;
 import java.util.Properties;
 
-import javax.print.attribute.standard.PDLOverrideSupported;
-
 import jorus.array.CxArray2d;
 import jorus.array.CxArray2dBytes;
 import jorus.array.CxArray2dDoubles;
 import jorus.operations.CxRedOp;
 import jorus.operations.CxRedOpArray;
-import jorus.parallel.array.ByteArrayUtil;
 
 public class PxSystem {
+    
+    private static final int CLOSE_TIMEOUT = 1000;
 
     /** * Ibis Capabilities & PortTypes ******************************* */
     
@@ -358,7 +355,7 @@ public class PxSystem {
             if (sps[i] != null)
                 sps[i].close();
             if (rps[i] != null)
-                rps[i].close();
+                rps[i].close(CLOSE_TIMEOUT);
         }
         ibis.end();
     }

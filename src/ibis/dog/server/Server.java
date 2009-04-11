@@ -35,6 +35,8 @@ public class Server implements Upcall {
 
     private final PxSystem px;
 
+    private boolean ended = false;
+
     private Server(PxSystem px, String[] args) throws IbisCreationFailedException,
     IOException {
         // Node 0 needs to provide an Ibis to contact the outside world.
@@ -55,9 +57,19 @@ public class Server implements Upcall {
             me = new ServerDescription(comm.getMachineDescription(), comm
                     .getLocation());
         }
+
+    }
+    
+    private synchronized void setEnded() {
+        ended = true;
+    }
+    
+    private synchronized boolean hasEnded() {
+        return ended;
     }
 
     private void end() {
+        setEnded();
         System.out.println("Ending server");
         unregister();
         comm.end();
@@ -66,7 +78,6 @@ public class Server implements Upcall {
         } catch (Exception e) {
             System.err.println("error on exiting parallel system");
             e.printStackTrace(System.err);
-            	
         }
     }
 
@@ -83,7 +94,7 @@ public class Server implements Upcall {
         long start = System.currentTimeMillis();
         long timeLeft = timeout;
 
-        while (!registered && timeLeft > 0) {
+        while (!registered && timeLeft > 0 && !ended) {
             try {
                 wait(timeLeft);
             } catch (InterruptedException e) {
@@ -149,7 +160,7 @@ public class Server implements Upcall {
         long start = System.currentTimeMillis();
         long timeLeft = timeout;
 
-        while (requests.size() == 0 && timeLeft > 0) {
+        while (requests.size() == 0 && timeLeft > 0 && !ended) {
             try {
                 wait(timeLeft);
             } catch (InterruptedException e) {
@@ -308,7 +319,7 @@ public class Server implements Upcall {
     }
 
     private void run() {
-        while (true) {
+        while (!hasEnded()) {
             if (master && !getRegistered()) {
                 if (!register(DEFAULT_TIMEOUT)) {
                     System.err.println("Server not registered yet...");
