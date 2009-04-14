@@ -1,5 +1,6 @@
 default.process.count = 8
 default.application.name = Server
+default.runtime=60
 
 Broker.application.name = Broker
 Broker.process.count = 1
@@ -19,8 +20,8 @@ DAS3-VU.resource.count = 8
 DAS3-UvA.cluster.name = DAS3-UvA
 DAS3-UvA.resource.count = 8
 
-DAS3-Leiden.cluster.name = DAS3-Leiden
-DAS3-Leiden.resource.count = 8
+#DAS3-Leiden.cluster.name = DAS3-Leiden
+#DAS3-Leiden.resource.count = 8
 
 DAS3-MultimediaN.cluster.name = DAS3-MultimediaN
 DAS3-MultimediaN.resource.count = 8
@@ -39,7 +40,7 @@ DesktopGrid.cluster.name = DesktopGrid
 DesktopGrid.process.count = 4
 DesktopGrid.resource.count = 0
 
-EC2.cluster.name = EC2
+#EC2.cluster.name = EC2
 
 #ssh/script
 
@@ -51,6 +52,6 @@ Hiroshi.process.count = 4
 
 #ssh
 
-Laptop.cluster.name = Laptop
-Laptop.resource.count = 1
-Laptop.process.count = 1
+#Laptop.cluster.name = Laptop
+#Laptop.resource.count = 1
+#Laptop.process.count = 1
