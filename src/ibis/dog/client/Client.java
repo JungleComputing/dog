@@ -253,8 +253,11 @@ public class Client extends Thread implements Upcall, VideoConsumer {
                         .findMachine("Broker", "Broker");
 
                 if (broker == null) {
+                    System.err.println("could not find broker to do lookup");
                     return;
                 }
+                
+                System.err.println("Got feature vector from " + r.server + ", sending to broker for database lookup");
 
                 try {
                     comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm

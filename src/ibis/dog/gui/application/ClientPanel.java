@@ -213,6 +213,7 @@ public class ClientPanel extends JPanel implements ActionListener,
     private static void createAndShowGUI(Client app) {
         // Create and set up the window.
         JFrame frame = new JFrame("Application Control");
+        frame.setPreferredSize(new Dimension(1024,768));
 
         // Create and set up the content pane.
         ClientPanel content = new ClientPanel(frame, app);
