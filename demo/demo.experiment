@@ -14,25 +14,25 @@ Client.resource.count = 1
 
 #globus
 
-DAS3-VU.cluster.name = DAS3-VU
-DAS3-VU.resource.count = 8
+VU.cluster.name = VU
+VU.resource.count = 8
 
-DAS3-UvA.cluster.name = DAS3-UvA
-DAS3-UvA.resource.count = 8
+UvA.cluster.name = UvA
+UvA.resource.count = 8
 
-#DAS3-Leiden.cluster.name = DAS3-Leiden
-#DAS3-Leiden.resource.count = 8
+#Leiden.cluster.name = Leiden
+#Leiden.resource.count = 8
 
-DAS3-MultimediaN.cluster.name = DAS3-MultimediaN
-DAS3-MultimediaN.resource.count = 8
+MultimediaN.cluster.name = MultimediaN
+MultimediaN.resource.count = 8
 
 #auto-zorilla
 
-Intrigger-Chiba.cluster.name = Intrigger-Chiba
-Intrigger-Chiba.resource.count = 0
+Chiba.cluster.name = Chiba
+Chiba.resource.count = 0
 
-Intrigger-Tsukuba.cluster.name = Intrigger-Tsukuba
-Intrigger-Tsukuba.resource.count = 8
+Tsukuba.cluster.name = Tsukuba
+Tsukuba.resource.count = 8
 
 #zorilla
 
@@ -52,6 +52,6 @@ Hiroshi.process.count = 4
 
 #ssh
 
-#Laptop.cluster.name = Laptop
-#Laptop.resource.count = 1
-#Laptop.process.count = 1
+Laptop.cluster.name = Laptop
+Laptop.resource.count = 1
+Laptop.process.count = 1

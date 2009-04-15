@@ -90,7 +90,7 @@
 	    <copy todir="lib-zorilla">
 		<fileset dir="external/zorilla" />
 		<fileset dir="external/ipl" />
-		<fileset dir="external/javagat" includes="*.jar,adaptors/LocalAdaptor/*,adaptors/SshTrileadAdaptor/*,adaptors/shared/*" />
+		<fileset dir="external/javagat" includes="*.jar,adaptors/LocalAdaptor/*,adaptors/SshTrileadAdaptor/*" />
 	    </copy>
 
 	</target>

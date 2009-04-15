@@ -45,77 +45,77 @@ default.java.path = /usr/local/package/jdk1.6.0-linux-amd64/bin/java
 # DAS-3
 
 # Details of cluster "VU"
-DAS3-VU.server.uri = any://fs0.das3.cs.vu.nl
-DAS3-VU.job.adaptor = globus
-DAS3-VU.job.uri = any://fs0.das3.cs.vu.nl/jobmanager-sge
-DAS3-VU.file.adaptors = local,globus,sshtrilead
-DAS3-VU.cache.dir = dog-demo-cache
-DAS3-VU.nodes = 85
-DAS3-VU.cores = 340
-DAS3-VU.latitude = 52.336062
-DAS3-VU.longitude = 4.872222
+VU.server.uri = any://fs0.das3.cs.vu.nl
+VU.job.adaptor = globus
+VU.job.uri = any://fs0.das3.cs.vu.nl/jobmanager-sge
+VU.file.adaptors = local,globus,sshtrilead
+VU.cache.dir = dog-demo-cache
+VU.nodes = 85
+VU.cores = 340
+VU.latitude = 52.336062
+VU.longitude = 4.872222
 
 # Details of cluster "UvA"
-DAS3-UvA.server.uri = any://fs2.das3.science.uva.nl
-DAS3-UvA.job.adaptor = globus
-DAS3-UvA.job.uri = any://fs2.das3.science.uva.nl/jobmanager-sge
-DAS3-UvA.file.adaptors = local,globus,sshtrilead
-DAS3-UvA.cache.dir = dog-demo-cache
-DAS3-UvA.nodes = 41
-DAS3-UvA.cores = 164
-DAS3-UvA.latitude = 52.36637614192115
-DAS3-UvA.longitude = 4.925994873046875
+UvA.server.uri = any://fs2.das3.science.uva.nl
+UvA.job.adaptor = globus
+UvA.job.uri = any://fs2.das3.science.uva.nl/jobmanager-sge
+UvA.file.adaptors = local,globus,sshtrilead
+UvA.cache.dir = dog-demo-cache
+UvA.nodes = 41
+UvA.cores = 164
+UvA.latitude = 52.36637614192115
+UvA.longitude = 4.925994873046875
 
 # Details of cluster "Leiden"
-DAS3-Leiden.server.uri = any://fs1.das3.liacs.nl
-DAS3-Leiden.job.adaptor = globus
-DAS3-Leiden.job.uri = any://fs1.das3.liacs.nl/jobmanager-sge
-DAS3-Leiden.file.adaptors = local,globus,sshtrilead
-DAS3-Leiden.cache.dir = dog-demo-cache
-DAS3-Leiden.nodes = 32
-DAS3-Leiden.cores = 64
-DAS3-Leiden.latitude = 52.16
-DAS3-Leiden.longitude = 4.49
+Leiden.server.uri = any://fs1.das3.liacs.nl
+Leiden.job.adaptor = globus
+Leiden.job.uri = any://fs1.das3.liacs.nl/jobmanager-sge
+Leiden.file.adaptors = local,globus,sshtrilead
+Leiden.cache.dir = dog-demo-cache
+Leiden.nodes = 32
+Leiden.cores = 64
+Leiden.latitude = 52.16
+Leiden.longitude = 4.49
 
 # Details of cluster "MultimediaN"
-DAS3-MultimediaN.server.uri = any://fs4.das3.science.uva.nl
-DAS3-MultimediaN.job.adaptor = globus
-DAS3-MultimediaN.job.uri = any://fs4.das3.science.uva.nl/jobmanager-sge
-DAS3-MultimediaN.file.adaptors = local,globus,sshtrilead
-DAS3-MultimediaN.cache.dir = dog-demo-cache
-DAS3-MultimediaN.nodes = 46
-DAS3-MultimediaN.cores = 92
-DAS3-MultimediaN.latitude = 52.3605059352529
-DAS3-MultimediaN.longitude = 4.942474365234375
+MultimediaN.server.uri = any://fs4.das3.science.uva.nl
+MultimediaN.job.adaptor = globus
+MultimediaN.job.uri = any://fs4.das3.science.uva.nl/jobmanager-sge
+MultimediaN.file.adaptors = local,globus,sshtrilead
+MultimediaN.cache.dir = dog-demo-cache
+MultimediaN.nodes = 46
+MultimediaN.cores = 92
+MultimediaN.latitude = 52.3605059352529
+MultimediaN.longitude = 4.942474365234375
 
 ##INTRIGGER
 
 # Details of cluster "Chiba"
-Intrigger-Chiba.server.uri = any://chiba100.intrigger.nii.ac.jp
-Intrigger-Chiba.job.adaptor = Zorilla
-Intrigger-Chiba.job.uri = tbd
-Intrigger-Chiba.java.path = /usr/local/jdk/bin/java
-Intrigger-Chiba.nodes = 58
-Intrigger-Chiba.cores = 116
-Intrigger-Chiba.latitude = 38.27268853598097
-Intrigger-Chiba.longitude = 140.2734375
-Intrigger-Chiba.cache.dir = dog-demo-cache
-Intrigger-Chiba.start.zorilla = true
-Intrigger-Chiba.node.hostnames = chiba1[12-26]
+Chiba.server.uri = any://chiba100.intrigger.nii.ac.jp
+Chiba.job.adaptor = Zorilla
+Chiba.job.uri = tbd
+Chiba.java.path = /usr/local/jdk/bin/java
+Chiba.nodes = 58
+Chiba.cores = 116
+Chiba.latitude = 38.27268853598097
+Chiba.longitude = 140.2734375
+Chiba.cache.dir = dog-demo-cache
+Chiba.start.zorilla = true
+Chiba.node.hostnames = chiba1[12-26]
 
 # Details of cluster "Tsukuba"
 #Tsukuba.server.adaptor = 
-Intrigger-Tsukuba.server.uri = any://163.220.103.168
-Intrigger-Tsukuba.job.adaptor = Zorilla
-Intrigger-Tsukuba.job.uri = tbd
-Intrigger-Tsukuba.java.path = /usr/local/jdk/bin/java
-Intrigger-Tsukuba.nodes = 16
-Intrigger-Tsukuba.cores = 128
-Intrigger-Tsukuba.latitude = 34.59704151614417
-Intrigger-Tsukuba.longitude = 136.7578125
-Intrigger-Tsukuba.start.zorilla = true
-Intrigger-Tsukuba.cache.dir = dog-demo-cache
-Intrigger-Tsukuba.node.hostnames = tsukuba00[1-9]
+Tsukuba.server.uri = any://163.220.103.168
+Tsukuba.job.adaptor = Zorilla
+Tsukuba.job.uri = tbd
+Tsukuba.java.path = /usr/local/jdk/bin/java
+Tsukuba.nodes = 16
+Tsukuba.cores = 128
+Tsukuba.latitude = 34.59704151614417
+Tsukuba.longitude = 136.7578125
+Tsukuba.start.zorilla = true
+Tsukuba.cache.dir = dog-demo-cache
+Tsukuba.node.hostnames = tsukuba00[1-9]
 
 
 # Details of cluster "DesktopGrid"
@@ -168,9 +168,9 @@ Hiroshi.server.system.properties=smartsockets.external.manual=129.78.10.77
 
 # Standalone machine
 Laptop.server.adaptor = SshTrilead
-Laptop.server.uri = ssh://sedna.cs.vu.nl
+Laptop.server.uri = ssh://130.37.193.42
 Laptop.job.adaptor = SshTrilead
-Laptop.job.uri = ssh://sedna.cs.vu.nl
+Laptop.job.uri = ssh://130.37.193.42
 Laptop.file.adaptors = SshTrilead,Local
 Laptop.java.path = /usr/bin/java
 #Laptop.job.wrapper.script = demo/multicore.script
