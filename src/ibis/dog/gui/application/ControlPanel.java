@@ -34,6 +34,9 @@ public class ControlPanel extends JPanel implements ItemListener,
 
     private final Client client;
 
+    Speech speech;
+    boolean speak = true;
+
     public ControlPanel(OutputPanel output, Client client) {
 
         this.output = output;
@@ -63,6 +66,9 @@ public class ControlPanel extends JPanel implements ItemListener,
         speechCheckBox.setSelected(true);
         speechCheckBox.addItemListener(this);
 
+        speech = new Speech(true);
+        speech.speak("Voice initialized");
+
         buttonPanel.add(learnButton);
         buttonPanel.add(recognizeButton);
         buttonPanel.add(speechCheckBox);
@@ -71,58 +77,72 @@ public class ControlPanel extends JPanel implements ItemListener,
     }
 
     // Listens to checkbox
-    public void itemStateChanged(ItemEvent e) {
+    public synchronized void itemStateChanged(ItemEvent e) {
 
         Object source = e.getItemSelectable();
 
         if (source == speechCheckBox) {
             if (output != null) {
-                output.setSpeech(e.getStateChange() == ItemEvent.SELECTED);
+                speak = e.getStateChange() == ItemEvent.SELECTED;
             }
+        }
+    }
+
+    private synchronized void speak(String text) {
+        if (speak) {
+            speech.speak(text);
         }
     }
 
     public void actionPerformed(ActionEvent e) {
-        
+
         if (e.getSource() == learnButton) {
-            
+
             String name = inputField.getText();
-            
+
             if (name.equals("")) {
                 JOptionPane.showMessageDialog(getRootPane(),
-                        "Please enter object name first",
-                        "Error",
+                        "Please enter object name first", "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            //output.write("I will now learn an object called: " + name);
-            
+
+            // output.write("I will now learn an object called: " + name);
+
             boolean success = client.learn(name);
-            
-            if (success) { 
-                JOptionPane.showMessageDialog(getRootPane(), "I have just learned a new object called: \"" + name + "\"");
+
+            if (success) {
+                String text = "I have just learned a new object called: \""
+                        + name + "\"";
+                JOptionPane.showMessageDialog(getRootPane(), text);
+                speak(text);
                 inputField.setText("");
             } else {
-                JOptionPane.showMessageDialog(getRootPane(),
-                        "I failed to learn object called: " + name,
-                        "Error",
+                String text = "I failed to learn object called: " + name;
+                JOptionPane.showMessageDialog(getRootPane(), text, "Error",
                         JOptionPane.ERROR_MESSAGE);
+                speak(text);
             }
-            
-        } else if (e.getSource() == recognizeButton) {
-            
-            String object = client.recognize();
-            
-            if (object != null) {
-                JOptionPane.showMessageDialog(getRootPane(), "This object is a \"" + object + "\"");
 
+        } else if (e.getSource() == recognizeButton) {
+
+            String object = client.recognize();
+
+            if (object != null) {
+                String text = "This object is a \"" + object + "\"";
+                JOptionPane.showMessageDialog(getRootPane(), text);
+                speak(text);
             } else {
-                JOptionPane.showMessageDialog(getRootPane(),
-                        "I do not recognize this object",
-                        "Warning",
+                String text = "I do not recognize this object";
+                JOptionPane.showMessageDialog(getRootPane(), text, "Warning",
                         JOptionPane.WARNING_MESSAGE);
+                speak(text);
             }
         }
     }
+
+    public void exit() {
+        speech.done();
+    }
+
 }

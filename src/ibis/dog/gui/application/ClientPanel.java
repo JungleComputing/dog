@@ -113,7 +113,7 @@ public class ClientPanel extends JPanel implements ActionListener,
 //        add(Box.createRigidArea(new Dimension(0, 5)));
 //        add(new LogoPanel());
         
-        outputPanel.write("Voice initialized", true);
+        
 
         // output = new OutputFrame();
 
@@ -166,7 +166,7 @@ public class ClientPanel extends JPanel implements ActionListener,
 
         System.out.println("Exit called!");
 
-        outputPanel.exit();
+        controlPanel.exit();
 
         client.done();
 
