@@ -382,7 +382,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
         if (outputPanel == null) {
             return;
         }
-        outputPanel.write(text, false);
+        outputPanel.write(text);
     }
 
     public void setFrameRateConsumer(FramerateConsumer frameRateConsumer) {
