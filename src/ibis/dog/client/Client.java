@@ -53,7 +53,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     private Item[] currentResults = null;
 
-    private FeatureVector vector;
+    private FeatureVector vector = null;
 
     // statistics for vector framerate
 
@@ -123,6 +123,10 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
     public boolean learn(String name) {
         FeatureVector vector = getFeatureVector();
+        
+        if (vector == null) {
+            return false;
+        }
 
         // create new database item
         Item item = new Item(vector, name, System.getProperty("user.name"),
