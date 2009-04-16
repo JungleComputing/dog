@@ -17,7 +17,7 @@ public class Speech implements Runnable {
         try { 
             System.out.println("Initializing speech synthesizer...");
 
-            String voiceName = "alan";
+            String voiceName = "kevin16";
 
             VoiceManager voiceManager = VoiceManager.getInstance();
             myVoice = voiceManager.getVoice(voiceName);
@@ -28,7 +28,7 @@ public class Speech implements Runnable {
             }
 
             myVoice.allocate();
-
+            
         } catch (Throwable e) { 
             System.err.println("Failed to init voice!");
             e.printStackTrace(System.err);
