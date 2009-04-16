@@ -114,14 +114,14 @@ public class ControlPanel extends JPanel implements ItemListener,
             if (success) {
                 String text = "I have just learned a new object called: \""
                         + name + "\"";
-                JOptionPane.showMessageDialog(getRootPane(), text);
                 speak(text);
+                JOptionPane.showMessageDialog(getRootPane(), text);
                 inputField.setText("");
             } else {
                 String text = "I failed to learn object called: " + name;
+                speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Error",
                         JOptionPane.ERROR_MESSAGE);
-                speak(text);
             }
 
         } else if (e.getSource() == recognizeButton) {
@@ -130,13 +130,13 @@ public class ControlPanel extends JPanel implements ItemListener,
 
             if (object != null) {
                 String text = "This object is a \"" + object + "\"";
-                JOptionPane.showMessageDialog(getRootPane(), text);
                 speak(text);
+                JOptionPane.showMessageDialog(getRootPane(), text);
             } else {
                 String text = "I do not recognize this object";
+                speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Warning",
                         JOptionPane.WARNING_MESSAGE);
-                speak(text);
             }
         }
     }
