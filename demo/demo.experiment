@@ -20,8 +20,8 @@ VU.resource.count = 8
 UvA.cluster.name = UvA
 UvA.resource.count = 8
 
-#Leiden.cluster.name = Leiden
-#Leiden.resource.count = 8
+Leiden.cluster.name = Leiden
+Leiden.resource.count = 8
 
 MultimediaN.cluster.name = MultimediaN
 MultimediaN.resource.count = 8
