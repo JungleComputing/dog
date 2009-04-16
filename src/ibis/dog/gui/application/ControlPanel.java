@@ -118,7 +118,7 @@ public class ControlPanel extends JPanel implements ItemListener,
                 JOptionPane.showMessageDialog(getRootPane(), text);
                 inputField.setText("");
             } else {
-                String text = "I failed to learn object called: " + name;
+                String text = "I failed to learn object called: \"" + name + "\"";
                 speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Error",
                         JOptionPane.ERROR_MESSAGE);
