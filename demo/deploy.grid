@@ -92,7 +92,7 @@ MultimediaN.longitude = 4.942474365234375
 
 # Details of cluster "Chiba"
 Chiba.server.uri = any://chiba100.intrigger.nii.ac.jp
-Chiba.job.adaptor = Zorilla
+Chiba.job.adaptor = zorilla
 Chiba.job.uri = tbd
 Chiba.java.path = /usr/local/jdk/bin/java
 Chiba.nodes = 58
@@ -106,7 +106,7 @@ Chiba.node.hostnames = chiba1[12-26]
 # Details of cluster "Tsukuba"
 #Tsukuba.server.adaptor = 
 Tsukuba.server.uri = any://163.220.103.168
-Tsukuba.job.adaptor = Zorilla
+Tsukuba.job.adaptor = zorilla
 Tsukuba.job.uri = tbd
 Tsukuba.java.path = /usr/local/jdk/bin/java
 Tsukuba.nodes = 16
@@ -120,7 +120,7 @@ Tsukuba.node.hostnames = tsukuba00[1-9]
 
 # Details of cluster "DesktopGrid"
 DesktopGrid.server.uri = any://zorilla.cs.vu.nl
-DesktopGrid.job.adaptor = Zorilla
+DesktopGrid.job.adaptor = zorilla
 DesktopGrid.job.uri = zorilla:zorilla.cs.vu.nl-5444
 DesktopGrid.java.path = /usr/bin/java
 DesktopGrid.nodes = 20
@@ -130,7 +130,7 @@ DesktopGrid.longitude = 4.8722220000001
 
 # Details of cluster "EC2"
 EC2.server.uri = any://72.44.50.16
-EC2.job.adaptor = Zorilla
+EC2.job.adaptor = zorilla
 EC2.job.uri = zorilla:72.44.50.16-5444
 EC2.java.path = /home/ndrost/jdk1.6.0_10/bin/java
 EC2.server.system.properties = smartsockets.external.stun=true,
