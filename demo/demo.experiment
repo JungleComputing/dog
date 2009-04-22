@@ -14,44 +14,44 @@ Client.resource.count = 1
 
 #globus
 
-VU.cluster.name = VU
-VU.resource.count = 8
+NL-VU.cluster.name = VU
+NL-VU.resource.count = 8
 
-UvA.cluster.name = UvA
-UvA.resource.count = 8
+NL-UvA.cluster.name = UvA
+NL-UvA.resource.count = 8
 
-Leiden.cluster.name = Leiden
-Leiden.resource.count = 8
+NL-Leiden.cluster.name = Leiden
+NL-Leiden.resource.count = 8
 
-MultimediaN.cluster.name = MultimediaN
-MultimediaN.resource.count = 8
+NL-MultimediaN.cluster.name = MultimediaN
+NL-MultimediaN.resource.count = 8
 
 #auto-zorilla
 
-Chiba.cluster.name = Chiba
-Chiba.resource.count = 0
+JP-Chiba.cluster.name = Chiba
+JP-Chiba.resource.count = 0
 
-Tsukuba.cluster.name = Tsukuba
-Tsukuba.resource.count = 8
+JP-Tsukuba.cluster.name = Tsukuba
+JP-Tsukuba.resource.count = 8
 
 #zorilla
 
-DesktopGrid.cluster.name = DesktopGrid
-DesktopGrid.process.count = 4
-DesktopGrid.resource.count = 0
+NL-DesktopGrid.cluster.name = DesktopGrid
+NL-DesktopGrid.process.count = 4
+NL-DesktopGrid.resource.count = 0
 
-#EC2.cluster.name = EC2
+USA-EC2.cluster.name = EC2
 
 #ssh/script
 
-Yorda.cluster.name = Yorda
+USA-Yorda.cluster.name = Yorda
 
-Hiroshi.cluster.name = Hiroshi
-Hiroshi.resource.count = 4
-Hiroshi.process.count = 4
+AU-Hiroshi.cluster.name = Hiroshi
+AU-Hiroshi.resource.count = 4
+AU-Hiroshi.process.count = 4
 
 #ssh
 
-Laptop.cluster.name = Laptop
-Laptop.resource.count = 1
-Laptop.process.count = 1
+NL-Sedna.cluster.name = Sedna
+NL-Sedna.resource.count = 1
+NL-Sedna.process.count = 1

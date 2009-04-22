@@ -167,18 +167,18 @@ Hiroshi.longitude = 151.274872
 Hiroshi.server.system.properties=smartsockets.external.manual=129.78.10.77
 
 # Standalone machine
-Laptop.server.adaptor = SshTrilead
-Laptop.server.uri = ssh://130.37.193.42
-Laptop.job.adaptor = SshTrilead
-Laptop.job.uri = ssh://130.37.193.42
-Laptop.file.adaptors = SshTrilead,Local
-Laptop.java.path = /usr/bin/java
+Sedna.server.adaptor = SshTrilead
+Sedna.server.uri = ssh://130.37.193.42
+Sedna.job.adaptor = SshTrilead
+Sedna.job.uri = ssh://130.37.193.42
+Sedna.file.adaptors = SshTrilead,Local
+Sedna.java.path = /usr/bin/java
 #Laptop.job.wrapper.script = demo/multicore.script
-Laptop.cache.dir = dog-demo-cache
-Laptop.nodes = 1
-Laptop.cores = 1
-Laptop.latitude = 52.336062
-Laptop.longitude = 4.8722220000001
+Sedna.cache.dir = dog-demo-cache
+Sedna.nodes = 1
+Sedna.cores = 1
+Sedna.latitude = 52.336062
+Sedna.longitude = 4.8722220000001
 
 # Settings overriding default "local" cluster
 local.latitude = 52.3360620000001
