@@ -32,6 +32,7 @@
 		<mkdir dir="prestage-client" />
 		<mkdir dir="prestage-server" />
 		<mkdir dir="lib-server" />
+		<mkdir dir="lib-zorilla" />
 	</target>
 
 	<target name="compile" depends="prepare">
@@ -105,6 +106,7 @@
 		<delete failonerror="false" dir="prestage-client" />
 		<delete failonerror="false" dir="prestage-server" />
 		<delete failonerror="false" dir="lib-server" />
+		<delete failonerror="false" dir="lib-zorilla" />
 	</target>
 
 	<target name="distclean" depends="clean">
