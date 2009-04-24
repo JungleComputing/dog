@@ -48,7 +48,7 @@ public class ServerInfo extends JPanel implements ActionListener,
         this.maxServers = maxServers;
         this.counter = counter;
         
-        //setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+        setMinimumSize(new Dimension(100, 200));
         
         setLayout(new GridLayout(maxServers, 2));
 

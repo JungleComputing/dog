@@ -17,6 +17,7 @@ import ibis.ipl.SendPortIdentifier;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class Communication implements MessageUpcall, ReceivePortConnectUpcall, RegistryEventHandler {
 
@@ -45,7 +46,7 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
     private final PortType portType = new PortType(
             PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_OBJECT,
             PortType.RECEIVE_AUTO_UPCALLS, PortType.CONNECTION_MANY_TO_ONE,
-            PortType.CONNECTION_UPCALLS);
+            PortType.CONNECTION_UPCALLS, PortType.CONNECTION_LIGHT);
 
     private final IbisCapabilities ibisCapabilities = new IbisCapabilities(
             IbisCapabilities.MALLEABLE, IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED);
@@ -57,9 +58,13 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
     private final Upcall upcall;
 
     private String myName;
+    
+    private final HashMap<MachineDescription, SendPort> connectionCache;
 
     public Communication(String name, Upcall upcall)
             throws IbisCreationFailedException, IOException {
+        
+        connectionCache = new HashMap<MachineDescription, SendPort>();
 
         this.upcall = upcall;
         myName = name;
@@ -103,6 +108,15 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
     public void send(MachineDescription target, byte opcode) throws IOException {
         send(target, opcode, (Object[]) null);
     }
+    
+//    private SendPort getSendPort(MachineDescription target) {
+//        SendPort result;
+//        
+//        synchronized(this) {
+//            result = connectionCache.get(target);
+//            
+//        }
+//    }
 
     public void send(MachineDescription target, byte opcode, Object... objects)
             throws IOException {

@@ -208,6 +208,7 @@ public class Server implements Upcall {
         RGB24Image img = null;
 
         long start = System.currentTimeMillis();
+        long opReceived = 0;
         long opStart = 0;
         long opEnd = 0;
         long end = 0;
@@ -218,6 +219,9 @@ public class Server implements Upcall {
             // the details.
 
             r = getRequest(DEFAULT_TIMEOUT);
+            
+            opReceived = System.currentTimeMillis();
+
 
             System.err.println(px.myCPU() + " Got request " + r);
 
@@ -312,7 +316,9 @@ public class Server implements Upcall {
             px.printStatistics();
 
             System.out.println("Time = " + (end-start) 
-                    + " (pre: " + (opStart - start) 
+                    + " (receive: " + (opReceived - start)
+                    + " (convert: " + (opStart - opReceived)
+                    
                     + " operation: " + (opEnd - opStart) 
                     + " post: " + (end-opEnd) + " )");
         }

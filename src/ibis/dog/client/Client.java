@@ -364,7 +364,7 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
         while (image != null) {
             sendFrameToServer(image);
-            returnImage(image);
+            //returnImage(image);
             image = getFrame();
         }
 
