@@ -20,7 +20,7 @@ public class OutputPanel extends JPanel {
         textOutput.setLineWrap(true);
         textOutput.setWrapStyleWord(true);
         textOutput.setEditable(false);
-        textOutput.setColumns(40);
+        textOutput.setColumns(35);
         
         JScrollPane textScroll = new JScrollPane(textOutput,
                             JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
