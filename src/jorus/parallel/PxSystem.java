@@ -30,7 +30,7 @@ import jorus.operations.CxRedOpArray;
 
 public class PxSystem {
     
-    private static final int CLOSE_TIMEOUT = 1000;
+    private static final int CLOSE_TIMEOUT = 100;
 
     /** * Ibis Capabilities & PortTypes ******************************* */
     
@@ -128,9 +128,6 @@ public class PxSystem {
     public static PxSystem get() {
         return system;
     }
-    
-    
-    
     
     private PxSystem(String name, String size) throws Exception { 
 
@@ -350,7 +347,6 @@ public class PxSystem {
     }
 
     public void exitParallelSystem() throws Exception {
-        
         for (int i = 0; i < nrCPUs; i++) {
             if (sps[i] != null)
                 sps[i].close();

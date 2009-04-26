@@ -86,13 +86,15 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall,
         ibis = IbisFactory.createIbis(ibisCapabilities, null, true, this,
                 portType);
 
-        System.out.println("####### DONE starting ibis");
 
         // Create the receive port for the broker and switch it on.
         receive = ibis.createReceivePort(portType, name, this, this, null);
         receive.enableConnections();
         receive.enableMessageUpcalls();
-
+        
+        ibis.registry().enableEvents();
+        
+        System.out.println("####### DONE starting ibis");
     }
 
     public void end() {

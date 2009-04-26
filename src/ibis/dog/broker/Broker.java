@@ -42,6 +42,8 @@ public class Broker implements Upcall {
     }
 
     public synchronized void gone(IbisIdentifier ibis) {
+        System.err.println("ibis: " + ibis + " now gone");
+        
         for(ServerDescription s: servers.toArray(new ServerDescription[0])) {
             if (ibis.equals(s.getIbisIdentifier())) {
                 removeServer(s);
@@ -54,12 +56,16 @@ public class Broker implements Upcall {
         if (servers.contains(s)) {
             return false;
         }
+        
+        System.err.println("New server: " + s);
 
         servers.add(s);
         return true;
     }
 
     private synchronized boolean removeServer(ServerDescription s) {
+        System.err.println("Removing server " + s);
+        
         return servers.remove(s);
     }
 
@@ -121,7 +127,9 @@ public class Broker implements Upcall {
             while (true) {
                 Thread.sleep(UPDATE_INTERVAL);
                 database.save();
-                System.err.println("Now " + servers.size() + " servers");
+                synchronized(this) {
+                    System.err.println("Now " + servers.size() + " servers");
+                }
             }
         } catch (Throwable e) {
             System.err.println("Broker died unexpectedly!");
