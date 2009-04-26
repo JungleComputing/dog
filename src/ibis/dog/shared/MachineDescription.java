@@ -77,4 +77,12 @@ public class MachineDescription implements Serializable {
         }
     }
     
+    public String toString() {
+        if (receiveID == null) {
+            return ibisID + ":" + port;
+        } else {
+            return receiveID.toString();
+        }
+    }
+    
 }

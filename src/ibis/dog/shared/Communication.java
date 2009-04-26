@@ -1,5 +1,6 @@
 package ibis.dog.shared;
 
+import ibis.ipl.ConnectionFailedException;
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisCapabilities;
 import ibis.ipl.IbisCreationFailedException;
@@ -18,9 +19,16 @@ import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
-public class Communication implements MessageUpcall, ReceivePortConnectUpcall, RegistryEventHandler {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class Communication implements MessageUpcall, ReceivePortConnectUpcall,
+        RegistryEventHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(Communication.class);
+    
     public static final int DEFAULT_TIMEOUT = 30000;
 
     public static final byte BROKER_REQ_REGISTER = 0;
@@ -46,10 +54,11 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
     private final PortType portType = new PortType(
             PortType.COMMUNICATION_RELIABLE, PortType.SERIALIZATION_OBJECT,
             PortType.RECEIVE_AUTO_UPCALLS, PortType.CONNECTION_MANY_TO_ONE,
-            PortType.CONNECTION_UPCALLS, PortType.CONNECTION_LIGHT);
+            PortType.CONNECTION_UPCALLS);
 
     private final IbisCapabilities ibisCapabilities = new IbisCapabilities(
-            IbisCapabilities.MALLEABLE, IbisCapabilities.ELECTIONS_STRICT, IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED);
+            IbisCapabilities.MALLEABLE, IbisCapabilities.ELECTIONS_STRICT,
+            IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED);
 
     private Ibis ibis;
 
@@ -58,12 +67,12 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
     private final Upcall upcall;
 
     private String myName;
-    
+
     private final HashMap<MachineDescription, SendPort> connectionCache;
 
     public Communication(String name, Upcall upcall)
             throws IbisCreationFailedException, IOException {
-        
+
         connectionCache = new HashMap<MachineDescription, SendPort>();
 
         this.upcall = upcall;
@@ -75,7 +84,7 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
 
         // Create an Ibis
         ibis = IbisFactory.createIbis(ibisCapabilities, null, true, this,
-            portType);
+                portType);
 
         System.out.println("####### DONE starting ibis");
 
@@ -104,35 +113,60 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
 
         return ibis.registry().getElectionResult(name, DEFAULT_TIMEOUT);
     }
+    
+    private SendPort getConnection(MachineDescription target) throws IOException {
+        SendPort result;
+        
+        synchronized(this) {
+            result = connectionCache.get(target);
+        }
+        
+        if (result == null) {
+            
+            result = ibis.createSendPort(portType);
+            
+            if (target.receiveID != null) {
+                result.connect(target.receiveID, DEFAULT_TIMEOUT, true);
+            } else {
+                result.connect(target.ibisID, target.port, DEFAULT_TIMEOUT, true);
+            }
+            
+            synchronized(this) {
+                SendPort old = connectionCache.put(target, result);
+                
+                if (old != null) {
+                    logger.error("Eep! Multiple sendports to a single target: " + target);
+                }
+                
+                if (logger.isDebugEnabled()) {
+                    logger.debug("New connection created to \"" + target + "\", connection size now: "+ connectionCache.size());
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    private synchronized void removeConnection(SendPort connection) {
+        for(Map.Entry<MachineDescription, SendPort> entry: connectionCache.entrySet()) {
+            if (entry.getValue().equals(connection)) {
+                connectionCache.remove(entry.getKey());
+                return;
+            }
+        }
+        logger.warn("Connection " + connection + " not found");
+    }
 
     public void send(MachineDescription target, byte opcode) throws IOException {
         send(target, opcode, (Object[]) null);
     }
     
-//    private SendPort getSendPort(MachineDescription target) {
-//        SendPort result;
-//        
-//        synchronized(this) {
-//            result = connectionCache.get(target);
-//            
-//        }
-//    }
-
     public void send(MachineDescription target, byte opcode, Object... objects)
             throws IOException {
-        // Create a sendport and connect to the target
-
-        // NOTE: This may be expensive !!! -- Jason
-        SendPort sp = ibis.createSendPort(portType);
-
-        if (target.receiveID != null) {
-            sp.connect(target.receiveID, DEFAULT_TIMEOUT, true);
-        } else {
-            sp.connect(target.ibisID, target.port, DEFAULT_TIMEOUT, true);
-        }
+        SendPort connection = getConnection(target);
 
         try {
-            WriteMessage wm = sp.newMessage();
+            WriteMessage wm = connection.newMessage();
             wm.writeByte(opcode);
 
             if (objects != null) {
@@ -146,8 +180,8 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
             }
 
             wm.finish();
-        } finally {
-            sp.close();
+        } catch (Exception e) {
+            removeConnection(connection);
         }
     }
 
@@ -250,17 +284,17 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
 
     @Override
     public void electionResult(String electionName, IbisIdentifier winner) {
-        //IGNORE
+        // IGNORE
     }
 
     @Override
     public void gotSignal(String signal, IbisIdentifier source) {
-        //IGNORE
+        // IGNORE
     }
 
     @Override
     public void joined(IbisIdentifier joinedIbis) {
-        //IGNORE
+        // IGNORE
     }
 
     @Override
@@ -270,12 +304,12 @@ public class Communication implements MessageUpcall, ReceivePortConnectUpcall, R
 
     @Override
     public void poolClosed() {
-        //IGNORe
+        // IGNORe
     }
 
     @Override
     public void poolTerminated(IbisIdentifier source) {
-        //IGNORE
+        // IGNORE
     }
 
 }
