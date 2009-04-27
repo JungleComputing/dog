@@ -127,11 +127,12 @@ DesktopGrid.nodes = 20
 DesktopGrid.cores = 20
 DesktopGrid.latitude = 52.336062
 DesktopGrid.longitude = 4.8722220000001
+DesktopGrid.cache.dir = dog-demo-cache
 
 # Details of cluster "EC2"
-EC2.server.uri = any://72.44.50.16
+EC2.server.uri = any://67.202.31.132
 EC2.job.adaptor = zorilla
-EC2.job.uri = zorilla:72.44.50.16-5444
+EC2.job.uri = zorilla:67.202.31.132-5444
 EC2.java.path = /home/ndrost/jdk1.6.0_10/bin/java
 EC2.server.system.properties = smartsockets.external.stun=true,
 EC2.nodes = 20
@@ -179,6 +180,7 @@ Sedna.nodes = 1
 Sedna.cores = 1
 Sedna.latitude = 52.336062
 Sedna.longitude = 4.8722220000001
+Sedna.cache.dir = dog-demo-cache
 
 # Settings overriding default "local" cluster
 local.latitude = 52.3360620000001
