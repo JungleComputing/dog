@@ -12,7 +12,12 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.SortedMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Broker implements Upcall {
+    
+    private static final Logger logger = LoggerFactory.getLogger(Broker.class);
 
     public static final int UPDATE_INTERVAL = 10000;
 
@@ -76,13 +81,13 @@ public class Broker implements Upcall {
     public void upcall(byte opcode, Object... objects) throws IOException {
         switch (opcode) {
         case Communication.BROKER_REQ_GET_SERVERS:
-            // It a lookup request from a client.
+            logger.debug("got a lookup request from a client");
             communication.send((MachineDescription) objects[0],
                     Communication.CLIENT_REPLY_GETSERVERS,
                     (Object[]) getServers());
             break;
         case Communication.BROKER_REQ_REGISTER:
-            // It is a registration request from a server.
+            logger.debug("got a registration request from a server");
             ServerDescription s = (ServerDescription) objects[0];
 
             boolean accept = addServer(s);
@@ -93,17 +98,17 @@ public class Broker implements Upcall {
 
             break;
         case Communication.BROKER_REQ_UNREGISTER:
-            // It is a de-registration request from a server
+            logger.debug("got a de-registration request from a server");
             ServerDescription server = (ServerDescription) objects[0];
             removeServer(server);
             break;
         case Communication.BROKER_REQ_LEARN:
-            // Request to add something to database
+            logger.debug("got a Request to add something to database");
             Item item = (Item) objects[0];
             database.learn(item);
             break;
         case Communication.BROKER_REQ_RECOGNIZE:
-            // Request to add something to database
+            logger.debug("got a Recognize Request");
             MachineDescription machineDescription = (MachineDescription) objects[0];
             FeatureVector vector = (FeatureVector) objects[1];
             Integer nrOfResults = (Integer) objects[2];
@@ -117,7 +122,7 @@ public class Broker implements Upcall {
                     Communication.CLIENT_REPLY_RECOGNIZE, results, tag);
             break;
         default:
-            System.err.println("Received unknown opcode: " + opcode);
+            logger.error("Received unknown opcode: " + opcode);
         }
     }
 
