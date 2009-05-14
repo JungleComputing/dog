@@ -4,7 +4,7 @@ default.log4j.file = log4j.properties
 Client.main.class = ibis.dog.client.Main
 Client.libs = prestage-client
 Client.input.files = images
-Client.system.properties = java.library.path=lib/prestage-client,
+Client.system.properties = java.library.path=prestage-client
 
 Server.main.class = ibis.dog.server.Server
 Server.memory.size = 850
