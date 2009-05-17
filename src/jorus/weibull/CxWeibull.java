@@ -85,7 +85,7 @@ public class CxWeibull
 
     /*** Private Methods***********************************************/
 
-    private static void initialize(int inImW, int inImH)
+    public static void initialize(int inImW, int inImH)
     {
   //      MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
 

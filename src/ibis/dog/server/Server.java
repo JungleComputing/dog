@@ -2,77 +2,84 @@ package ibis.dog.server;
 
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.MachineDescription;
-import ibis.dog.shared.RGB24Image;
-import ibis.dog.shared.Reply;
-import ibis.dog.shared.Request;
-import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
-import ibis.ipl.IbisCreationFailedException;
+import ibis.imaging4j.Conversion;
+import ibis.imaging4j.Format;
+import ibis.imaging4j.Image;
+import ibis.imaging4j.Scaling;
+import ibis.imaging4j.conversion.Convertor;
+import ibis.imaging4j.effects.Scaler;
 import ibis.ipl.IbisIdentifier;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
 
+    public static final int IMAGE_WIDTH = 1024;
+    public static final int IMAGE_HEIGHT = 768;
+
     public static final int DEFAULT_TIMEOUT = 5000;
 
-    private ServerDescription me;
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private boolean master;
+    private final boolean master;
 
-    private Communication comm;
+    private final Communication communication;
 
-    private boolean registered = false;
-
-    private LinkedList<Request> requests = new LinkedList<Request>();
+    private final LinkedList<ServerRequest> requests;
 
     private final PxSystem px;
 
     private boolean ended = false;
 
-    private Server(PxSystem px, String[] args) throws IbisCreationFailedException,
-    IOException {
-        // Node 0 needs to provide an Ibis to contact the outside world.
+    private Server(String poolName, String poolSize) throws Exception {
+        requests = new LinkedList<ServerRequest>();
 
-        this.px = px;
-
-        if (master = (px.myCPU() == 0)) {
-
-            comm = new Communication("Server", this);
-
-            // Install a shutdown hook that terminates ibis.
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    end();
-                }
-            });
-
-            me = new ServerDescription(comm.getMachineDescription(), comm
-                    .getLocation());
+        System.out.println("Initializing Parallel System...");
+        try {
+            px = PxSystem.init(poolName, poolSize);
+        } catch (Exception e) {
+            logger.error("Could not initialize Parallel system", e);
+            throw e;
         }
 
+        System.out.println("nrCPUs = " + px.nrCPUs());
+        System.out.println("myCPU = " + px.myCPU());
+
+        master = (px.myCPU() == 0);
+
+        // Node 0 needs to provide an Ibis to contact the outside world.
+        if (master) {
+            communication = new Communication("Server", this);
+        } else {
+            communication = null;
+        }
+
+        // do initialisation now instead of after the first request is received.
+        CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
     }
-    
+
     private synchronized void setEnded() {
         ended = true;
     }
-    
+
     private synchronized boolean hasEnded() {
         return ended;
     }
 
-    private void end() {
+    void end() {
+        logger.info("Ending server");
         setEnded();
-        System.out.println("Ending server");
-        unregister();
-        comm.end();
+        if (communication != null) {
+            communication.end();
+        }
         try {
             px.exitParallelSystem();
         } catch (Exception e) {
@@ -81,82 +88,12 @@ public class Server implements Upcall {
         }
     }
 
-    private synchronized void registered(boolean value) {
-        registered = value;
-        notifyAll();
-    }
-
-    private synchronized boolean getRegistered() {
-        return registered;
-    }
-
-    private synchronized boolean waitUntilRegistered(long timeout) {
-        long start = System.currentTimeMillis();
-        long timeLeft = timeout;
-
-        while (!registered && timeLeft > 0 && !ended) {
-            try {
-                wait(timeLeft);
-            } catch (InterruptedException e) {
-                // ignored
-            }
-
-            timeLeft = System.currentTimeMillis() - start;
-        }
-
-        return registered;
-    }
-
-    private void unregister() {
-
-        System.out.println("Server unregistering with broker...");
-        // Try and find the broker.
-        MachineDescription broker = comm.findMachine("Broker", "Broker");
-
-        if (broker == null) {
-            System.err.println("Failed to find broker!");
-            return;
-        }
-
-        try {
-            comm.send(broker, Communication.BROKER_REQ_UNREGISTER, me);
-        } catch (Exception e) {
-            System.err.println("Problem while contacting broker!");
-            e.printStackTrace(System.err);
-        }
-    }
-
-    private boolean register(long timeout) {
-        System.out.println("Server registering with broker...");
-
-        // Try and find the broker.
-        MachineDescription broker = comm.findMachine("Broker", "Broker");
-
-        if (broker == null) {
-            System.err.println("Failed to find broker!");
-            return false;
-        }
-
-        try {
-            comm.send(broker, Communication.BROKER_REQ_REGISTER, me);
-        } catch (Exception e) {
-            System.err.println("Problem while contacting broker!");
-            e.printStackTrace(System.err);
-            return false;
-        }
-
-        waitUntilRegistered(timeout);
-
-        System.out.println("Succesfully registered at broker!");
-        return true;
-    }
-
-    private synchronized void queueRequest(Request request) {
+    private synchronized void queueRequest(ServerRequest request) {
         requests.addLast(request);
         notifyAll();
     }
 
-    private synchronized Request getRequest(long timeout) {
+    private synchronized ServerRequest getRequest(long timeout) {
         long start = System.currentTimeMillis();
         long timeLeft = timeout;
 
@@ -177,35 +114,34 @@ public class Server implements Upcall {
         }
     }
 
-    public void upcall(byte opcode, Object... objects) throws IOException {
-        // We can get messages here from both clients and the broker.
-
-        switch (opcode) {
-        case Communication.SERVER_REGISTERED: {
-            System.out.println("REQ_REGISTERED received...");
-            registered(true);
-            break;
+    @Override
+    public void gotMessage(Object object) {
+        if (!(object instanceof ServerRequest)) {
+            logger
+                    .error("Server Received an unknown request object: "
+                            + object);
+            return;
         }
 
-        case Communication.SERVER_REQUEST: {
-            System.out.println("SERVER_REQUEST received...");
-            queueRequest((Request) objects[0]);
-            break;
-        }
+        ServerRequest request = (ServerRequest) object;
 
-        default: {
-            System.err.println("Server received unknown opcode!");
-            // TODO: what should we do with the message here ?
-        }
-        }
+        logger.info("Server request received...");
+
+        queueRequest(request);
+    }
+
+    @Override
+    public void newServer(IbisIdentifier identifier) {
+        // IGNORE
+    }
+
+    @Override
+    public void serverGone(IbisIdentifier identifier) {
+        // IGNORE
     }
 
     private void processRequest(boolean master) {
-        Request r = null;
-        Serializable reply = null;
-
-        int operation = -1;
-        RGB24Image img = null;
+        ServerRequest request = null;
 
         long start = System.currentTimeMillis();
         long opReceived = 0;
@@ -213,134 +149,117 @@ public class Server implements Upcall {
         long opEnd = 0;
         long end = 0;
 
-        if (master) {
+        int requiredBytes = (int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
+                IMAGE_HEIGHT);
 
+        // allocate empty image
+        byte[] pixels = new byte[requiredBytes];
+
+        if (master) {
             // The master should dequeue a request and broadcast
             // the details.
 
-            r = getRequest(DEFAULT_TIMEOUT);
-            
+            request = getRequest(DEFAULT_TIMEOUT);
+
             opReceived = System.currentTimeMillis();
 
+            System.err.println(px.myCPU() + " Got request " + request);
 
-            System.err.println(px.myCPU() + " Got request " + r);
-
-            if (r == null) {
+            if (request == null) {
                 return;
             }
 
-            operation = r.operation;
-            img = r.image.toRGB24();
+            // FIXME: this could be more efficient, we convert twice now!
+            try {
+                Convertor toargb32 = Conversion.getConvertor(request.getImage()
+                        .getFormat(), Format.ARGB32);
+
+                Image argb32Image = toargb32.convert(request.getImage(), null);
+
+                Scaler scaler = Scaling.getScaler(Format.ARGB32);
+
+                Image scaledArgb32Image = scaler.scale(argb32Image,
+                        IMAGE_WIDTH, IMAGE_HEIGHT);
+
+                Convertor torgb24 = Conversion.getConvertor(Format.ARGB32,
+                        Format.RGB24);
+
+                // create image from existing (empty) pixel byte array
+                Image rgb24Image = new Image(Format.RGB24, IMAGE_WIDTH,
+                        IMAGE_HEIGHT, pixels);
+
+                // fill pixel array
+                torgb24.convert(scaledArgb32Image, rgb24Image);
+
+            } catch (Exception e) {
+                logger.error("Could not convert image", e);
+                return;
+            }
 
             opStart = System.currentTimeMillis();
-
-            int [] tmp = new int [] { img.width, img.height, operation };
-
-            try {
-                px.broadcastArray(tmp);
-            } catch (Exception e) {
-                // TODO: REACT TO FAILURE PROPERLY
-                e.printStackTrace(System.err);
-            }
-
-        } else {
-
-            int [] tmp = new int[3];
-
-            try {
-                px.broadcastArray(tmp);
-            } catch (Exception e) {
-                // TODO: REACT TO FAILURE PROPERLY
-                e.printStackTrace(System.err);
-            }
-
-            int width = tmp[0];
-            int height = tmp[1];
-            operation = (byte) tmp[2];
-            img = new RGB24Image(width, height);
         }
 
-        switch (operation) {
-        case Request.OPERATION_LEARN:
-        case Request.OPERATION_RECOGNIZE: {
-
-            FeatureVector v = new FeatureVector(CxWeibull.getNrInvars(),
-                    CxWeibull.getNrRfields());
-            CxWeibull.doRecognize(img.width, img.height, img.pixels, v.vector);
-            reply = v;
-
-            break;
-        }
-        // case Request.OPERATION_LABELING: {
-        // pxhi.doTrecLabeling(img.width, img.height, img.pixels);
-        // reply = img;
-        // break;
-        // }
-        case Request.OPERATION_DUMMY: {
-            reply = new Integer(123);
-            break;
-        }
-
-        default: {
-            if (master) {
-                System.out.println("Unknown operation: " + r.operation);
-            }
-        }
-        }
+        FeatureVector result = new FeatureVector(CxWeibull.getNrInvars(),
+                CxWeibull.getNrRfields());
+        CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels, result.vector);
 
         opEnd = System.currentTimeMillis();
 
         if (master) {
-            System.err.println("Sending reply....");
+            ServerReply reply = new ServerReply(communication.getIdentifier(),
+                    request.getSequenceNumber(), result);
+
+            logger.info("Sending reply....");
             try {
-                comm.send(r.replyAddress, Communication.CLIENT_REPLY_REQUEST,
-                        new Reply(me, r.sequenceNumber, r.operation, reply));
+                communication.send(request.getReplyAddress(), reply);
             } catch (Exception e) {
-                System.err.println("Failed to return reply to "
-                        + r.replyAddress);
+                logger.error("Failed to return reply to "
+                        + request.getReplyAddress(), e);
             }
-            System.err.println("Reply send....");
+            logger.info("Reply send....");
         }
 
         end = System.currentTimeMillis();
         /*
-        System.out.println("Total time   " + (end - start) + " ms.");
-        System.out.println("  request    " + (request - start) + " ms.");
-        System.out.println("  decompress " + (decompress - request) + " ms.");
-        System.out.println("  bcast      " + (commdone - decompress) + " ms.");
-        System.out.println("  op         " + (endop - commdone) + " ms.");
-        System.out.println("  reply      " + (end - endop) + " ms.");
+         * System.out.println("Total time   " + (end - start) + " ms.");
+         * System.out.println("  request    " + (request - start) + " ms.");
+         * System.out.println("  decompress " + (decompress - request) +
+         * " ms."); System.out.println("  bcast      " + (commdone - decompress)
+         * + " ms."); System.out.println("  op         " + (endop - commdone) +
+         * " ms."); System.out.println("  reply      " + (end - endop) +
+         * " ms.");
          */
 
-        if (master) { 
+        if (master) {
             px.printStatistics();
 
-            System.out.println("Time = " + (end-start) 
-                    + " (receive: " + (opReceived - start)
-                    + " (convert: " + (opStart - opReceived)
-                    
-                    + " operation: " + (opEnd - opStart) 
-                    + " post: " + (end-opEnd) + " )");
+            System.out.println("Time = " + (end - start) + " (receive: "
+                    + (opReceived - start) + " (convert: "
+                    + (opStart - opReceived)
+
+                    + " operation: " + (opEnd - opStart) + " post: "
+                    + (end - opEnd) + " )");
         }
     }
 
     private void run() {
         while (!hasEnded()) {
-            if (master && !getRegistered()) {
-                if (!register(DEFAULT_TIMEOUT)) {
-                    System.err.println("Server not registered yet...");
-                    try {
-                        Thread.sleep(DEFAULT_TIMEOUT);
-                    } catch (InterruptedException e) {
-                        // ignored
-                    }
-                }
-            } else {
-                processRequest(master);
-                System.gc();
-            }
+            processRequest(master);
+            System.gc();
         }
     }
+
+    static class ShutDown extends Thread {
+        final Server server;
+
+        ShutDown(Server server) {
+            this.server = server;
+        }
+
+        public void run() {
+            server.end();
+        }
+    };
 
     public static void main(String[] args) {
         String poolName = null;
@@ -357,43 +276,30 @@ public class Server implements Upcall {
         }
 
         if (poolName == null || poolSize == null) {
-
             System.err
-            .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
+                    .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
             System.exit(1);
         }
 
-        System.out.println("Initializing Parallel System...");
+        Server server = null;
         try {
-            PxSystem.init(poolName, poolSize);
-        } catch (Exception e) {
-            System.err.println("Could not initialize Parallel system");
-            e.printStackTrace(System.err);
-            System.exit(1);
-        }
-
-        PxSystem px = PxSystem.get();
-
-        System.out.println("nrCPUs = " + px.nrCPUs());
-        System.out.println("myCPU = " + px.myCPU());
-
-        try {
-            new Server(px, args).run();
+            server = new Server(poolName, poolSize);
+            // Install a shutdown hook that terminates Ibis.
+            Runtime.getRuntime().addShutdownHook(new ShutDown(server));
+            
+            server.run();
         } catch (Throwable e) {
             System.err.println("Server died unexpectedly!");
             e.printStackTrace(System.err);
         }
 
-        System.out.println("Exit Parallel System...");
         try {
-            px.exitParallelSystem();
+            if (server != null) {
+                server.end();
+            }
         } catch (Exception e) {
             // Nothing we can do now...
         }
     }
 
-    @Override
-    public void gone(IbisIdentifier ibis) {
-        //IGNORE
-    }
 }

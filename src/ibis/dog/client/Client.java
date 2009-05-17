@@ -1,129 +1,88 @@
 package ibis.dog.client;
 
-import ibis.dog.broker.Item;
-import ibis.dog.gui.application.FramerateConsumer;
-import ibis.dog.gui.application.OutputPanel;
+import ibis.dog.database.DatabaseReply;
+import ibis.dog.database.DatabaseRequest;
+import ibis.dog.database.Item;
+import ibis.dog.gui.FramerateConsumer;
+import ibis.dog.gui.OutputPanel;
+import ibis.dog.server.ServerReply;
+import ibis.dog.server.ServerRequest;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.MachineDescription;
-import ibis.dog.shared.RGB32Image;
-import ibis.dog.shared.Reply;
-import ibis.dog.shared.Request;
-import ibis.dog.shared.ServerDescription;
 import ibis.dog.shared.Upcall;
+import ibis.imaging4j.Image;
+import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
 import ibis.video4j.VideoConsumer;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Client extends Thread implements Upcall, VideoConsumer {
+public class Client implements Upcall, VideoConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
-    public static final int DEFAULT_WIDTH = 320;
-
-    public static final int DEFAULT_HEIGHT = 240;
-
     // Communication object.
-    private Communication comm;
+    private final Communication communication;
 
-    // Local machine description (used as reply address for servers).
-    private MachineDescription me;
+    private final MessageListener messageListener;
 
-    // Current operation
-    private byte operation = Request.OPERATION_RECOGNIZE;
+    private final Map<IbisIdentifier, ServerHandler> servers;
 
-    // Current server set.
-    private Servers servers;
-
-    // Current input media, pixels size, and input frame.
-
-    private RGB32Image image;
-
-    private boolean imageValid = false;
+    // current image
+    private Image image = null;
 
     private boolean done = false;
 
-    private int frameNumber = 0;
-
-    private Item[] currentResults = null;
+    private Item currentResult = null;
 
     private FeatureVector vector = null;
 
-    // statistics for vector framerate
+    // statistics for framerate
 
-    private long start;
+    private long processedFrameStart;
+    private long processedFrameCount;
 
-    private int vectorCount = 0;
+    public Client(MessageListener listener) throws IbisCreationFailedException,
+            IOException {
+        this.messageListener = listener;
+        logger.debug("Initializing client");
 
-    private FramerateConsumer framerateConsumer;
+        communication = new Communication("Client", this);
 
-    // Link to the GUI.
-    private ClientListener listener;
+        servers = new HashMap<IbisIdentifier, ServerHandler>();
 
-    private OutputPanel outputPanel = null;;
+        logger.debug("Done initializing client");
 
-    public Client() {
-        super("CLIENT");
+        processedFrameStart = System.currentTimeMillis();
+        processedFrameCount = 0;
     }
 
-    private void init() throws Exception {
-
-        // This may take a while, since it will deploy the server, hub and
-        // broker for us...
-
-        logger.debug("$$$$$$$$$$$$ comm");
-
-        comm = new Communication("Client", this);
-
-        // Install a shutdown hook that terminates ibis.
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                comm.end();
-            }
-        });
-
-        logger.debug("$$$$$$$$$$$$ me");
-
-        me = comm.getMachineDescription();
-
-        logger.debug("$$$$$$$$$$$$ server");
-
-        servers = new Servers(comm);
-
-        logger.debug("$$$$$$$$$$$$ init");
-
-    }
-
-    public synchronized int[] getBuffer(int width, int heigth, int index) {
-
-        if (image == null || image.width != width || image.height != heigth) {
-            image = new RGB32Image(width, heigth);
+    @Override
+    public synchronized void gotImage(Image image) {
+        this.image = new Image(image.getFormat(), image.getWidth(), image.getHeight());
+        try {
+            Image.copy(image, this.image);
+        } catch (Exception e) {
+            logger.error("could not copy image", e);
+            this.image = null;
         }
-
-        imageValid = false;
-        return image.pixels;
     }
-
-    public synchronized void gotImage(int[] image, int index) {
-        imageValid = true;
-        notifyAll();
-    }
-
-    private synchronized void returnImage(RGB32Image image) {
-        if (image == null) {
-            this.image = image;
-        }
+    
+    public synchronized Image getLastImage() {
+        return this.image;
     }
 
     public boolean learn(String name) {
         FeatureVector vector = getFeatureVector();
-        
+
         if (vector == null) {
             return false;
         }
@@ -134,16 +93,17 @@ public class Client extends Thread implements Upcall, VideoConsumer {
 
         // send item to broker
 
-        MachineDescription broker = comm.findMachine("Broker", "Broker");
+        IbisIdentifier database = communication.getDatabase();
 
-        if (broker == null) {
+        if (database == null) {
+            logger.error("database location unknown (not in pool)");
             return false;
         }
 
         try {
-            comm.send(broker, Communication.BROKER_REQ_LEARN, item);
+            communication.send(database, item);
         } catch (Exception e) {
-            logger.error("Could not send item to database@broker", e);
+            logger.error("Could not send item to database", e);
             return false;
         }
 
@@ -151,247 +111,104 @@ public class Client extends Thread implements Upcall, VideoConsumer {
     }
 
     public synchronized String recognize() {
-        if (currentResults == null || currentResults.length == 0) {
+        if (currentResult == null) {
             return null;
         }
 
-        return currentResults[0].getName();
-
-    }
-
-    public synchronized void registerListener(ClientListener l) {
-        this.listener = l;
-    }
-
-    private synchronized void forwardServersToListnener() {
-        if (listener != null) {
-            listener.updateServers(servers.getServers());
-        }
-    }
-
-    private synchronized void setFeatureVector(FeatureVector vector) {
-        this.vector = vector;
-
-        long now = System.currentTimeMillis();
-
-        if (vectorCount == 0) {
-            start = System.currentTimeMillis();
-        } else if (now >= start + 2500) {
-            if (framerateConsumer != null) {
-                framerateConsumer.setProcessedFramerate(vectorCount * 1000.0
-                        / (now - start));
-            }
-            start = now;
-            vectorCount = 0;
-        }
-        vectorCount++;
+        return currentResult.getName();
     }
 
     private synchronized FeatureVector getFeatureVector() {
-        FeatureVector v = vector;
-        // vector = null;
-        return v;
+        return vector;
     }
 
-    public synchronized byte getCurrentOperation() {
-        return operation;
-    }
+    private void processServerReply(ServerReply reply) {
+        logger.debug("Got reply from " + reply.getServer());
 
-    public synchronized void setCurrentOperation(byte operation) {
-        this.operation = operation;
-    }
-
-    public synchronized void done() {
-        System.out.println("Client done!");
-        done = true;
-        notifyAll();
-    }
-
-    private RGB32Image getFrame() {
+        ServerHandler handler = null;
 
         synchronized (this) {
-            while (!done && !imageValid) {
+            handler = servers.get(reply.getServer());
 
-                try {
-                    wait(DEFAULT_TIMEOUT);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            }
-
-            if (done || !imageValid) {
-                return null;
-            }
-
-            RGB32Image result = image;
-            image = null;
-            imageValid = false;
-            frameNumber++;
-            return result;
+            // set vector as current vector
+            this.vector = reply.getResult();
+            processedFrameCount++;
         }
-    }
 
-    public void serverConnected(ServerData server, boolean connected) {
-        server.setConnected(connected);
-    }
+        // tell handler it can send a new request now
+        if (handler != null) {
+            handler.replyReceived();
+        }
 
-    private void processServerReply(Reply r) {
-        // System.err.println("Got reply from " + r.server);
+        // send vector to database for lookup
+        DatabaseRequest request = new DatabaseRequest(
+                DatabaseRequest.Function.RECOGNIZE, 1, null, 0, reply
+                        .getResult(), communication.getIdentifier());
 
-        ServerData data = servers.findServer(r.server);
-        if (data == null) {
-            System.err.println("EEP! server not found!!!" + r.server);
-            return;
+        IbisIdentifier database = communication.getDatabase();
+
+        if (database == null) {
+            logger.error("Could not locate database");
         } else {
-            data.hasFrame(false);
-            if (r.operation == Request.OPERATION_RECOGNIZE) {
-                // feature vector received from server, set "last known vector"
-                // and send a database lookup request to the broker.
-
-                setFeatureVector((FeatureVector) r.result);
-
-                String serverName = r.server.getName();
-                FeatureVector vector = (FeatureVector) r.result;
-
-                MachineDescription broker = comm
-                        .findMachine("Broker", "Broker");
-
-                if (broker == null) {
-                    System.err.println("could not find broker to do lookup");
-                    return;
-                }
-                
-                System.err.println("Got feature vector from " + r.server + ", sending to broker for database lookup");
-
-                try {
-                    comm.send(broker, Communication.BROKER_REQ_RECOGNIZE, comm
-                            .getMachineDescription(), vector, 3, serverName);
-                } catch (Exception e) {
-                    logger
-                            .error(
-                                    "Could not send recognize request to database@broker",
-                                    e);
-                }
-
-            } else if (r.operation == Request.OPERATION_DUMMY) {
-                System.out
-                        .println("Dummy reply received " + (Integer) r.result);
-            } else {
-
-                System.out.println("Unknown reply received (ignored)");
+            try {
+                communication.send(database, request);
+            } catch (IOException e) {
+                logger.error("could not send request to database: " + e);
             }
         }
     }
 
-    private synchronized void processDatabaseLookup(
-            SortedMap<Double, Item> results, String serverName) {
-        this.currentResults = results.values().toArray(new Item[0]);
-
-        if (currentResults == null || currentResults.length == 0) {
-            logger.info(serverName + " doesn't recognize this object");
-            log(serverName + " doesn't recognize this object");
-        } else {
-            logger.info(serverName + " says this is a "
-                    + currentResults[0].getName());
-            log(serverName + " says this is a " + currentResults[0].getName());
-        }
-
-    }
-
-    public void upcall(byte opcode, Object... objects) throws Exception {
-        try {
-            switch (opcode) {
-            case Communication.CLIENT_REPLY_GETSERVERS: {
-                // It a reply to a server lookup request.
-
-                ServerDescription[] s = null;
-                if (objects != null) {
-
-                    s = new ServerDescription[objects.length];
-
-                    for (int i = 0; i < objects.length; i++) {
-                        s[i] = (ServerDescription) objects[i];
-                    }
-                } else {
-                    s = new ServerDescription[0];
-                }
-                servers.setServers(s);
-                forwardServersToListnener();
+    private synchronized void processDatabaseReply(DatabaseReply reply) {
+        if (reply.getResults().isEmpty()) {
+            if (messageListener != null) {
+                messageListener.message(reply.getServer().location().toString()
+                        + " does not recognize this object");
             }
-                break;
-
-            case Communication.CLIENT_REPLY_REQUEST:
-                // It is a reply to a server request.
-                processServerReply((Reply) objects[0]);
-                break;
-            case Communication.CLIENT_REPLY_RECOGNIZE:
-                processDatabaseLookup((SortedMap<Double, Item>) objects[0],
-                        (String) objects[1]);
-                break;
-            default:
-                System.err.println("Received unknown opcode: " + opcode);
-            }
-        } catch (Throwable e) {
-            System.err.println("Upcall failed!!!");
-            e.printStackTrace(System.err);
-            System.exit(1);
-        }
-    }
-
-    private void sendFrameToServer(RGB32Image image) {
-        ServerData target = servers.findIdleServer();
-
-        if (target != null) {
-            logger.debug("Sending frame to " + target.getName());
-
-            target.send(new Request(getCurrentOperation(), 0L, image, me));
-        } else {
-            // System.out.println("Dropping frame");
-        }
-    }
-
-    public void run() {
-
-        try {
-            init();
-        } catch (Exception e) {
-            System.out.println("Failed to init client!");
-            e.printStackTrace();
             return;
         }
+        Double key = reply.getResults().firstKey();
+        this.currentResult = reply.getResults().get(key);
 
-        RGB32Image image = getFrame();
-
-        while (image != null) {
-            sendFrameToServer(image);
-            //returnImage(image);
-            image = getFrame();
+        if (messageListener != null) {
+            messageListener.message(reply.getServer().location().toString()
+                    + " says this is a " + currentResult);
         }
-
-        // We are done, so kill the servers polling, deployment and
-        // communication.
-        servers.done();
-        comm.exit();
     }
-
-    public synchronized void setOutputPanel(OutputPanel outputPanel) {
-        this.outputPanel = outputPanel;
-    }
-
-    private synchronized void log(String text) {
-        if (outputPanel == null) {
-            return;
+    
+    @Override
+    public void gotMessage(Object object) {
+        if (object instanceof ServerReply) {
+            processServerReply((ServerReply) object);
+        } else if (object instanceof DatabaseReply) {
+            processDatabaseReply((DatabaseReply) object);
+        } else {
+            logger.error("unknown message: " + object);
         }
-        outputPanel.write(text);
-    }
-
-    public void setFrameRateConsumer(FramerateConsumer frameRateConsumer) {
-        framerateConsumer = frameRateConsumer;
     }
 
     @Override
-    public void gone(IbisIdentifier ibis) {
-       //IGNORE
+    public synchronized void newServer(IbisIdentifier identifier) {
+        ServerHandler handler = new ServerHandler(identifier, this, communication);
+
+        servers.put(identifier, handler);
+    }
+
+    @Override
+    public synchronized void serverGone(IbisIdentifier identifier) {
+        ServerHandler handler = servers.remove(identifier);
+        
+        if (handler != null) {
+            handler.end();
+        }
+    }
+
+    public synchronized void end() {
+        for(ServerHandler handler: servers.values()) {
+            handler.end();
+        }
+        servers.clear();
+        
+        communication.end();
     }
 
 }
