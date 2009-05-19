@@ -175,38 +175,51 @@ public class Server implements Upcall {
                     return;
                 }
 
-                Image rgb24Image;
-                if (srcFormat == Format.RGB24) {
+                //FIXME: we convert twice here, due to lack of RGB24 convertors and scalers in imaging4J
+                
+                Image argb32Image;
+                if (srcFormat == Format.ARGB32) {
                     // no need to convert
-                    rgb24Image = request.getImage();
+                    argb32Image = request.getImage();
                 } else {
-                    Convertor torgb24 = Conversion.getConvertor(srcFormat,
-                            Format.RGB24);
+                    Convertor toargb32 = Conversion.getConvertor(srcFormat,
+                            Format.ARGB32);
 
-                    if (torgb24 == null) {
+                    if (toargb32 == null) {
                         throw new Exception("cannot convert from " + srcFormat
-                                + " to " + Format.RGB24);
+                                + " to " + Format.ARGB32);
                     }
 
-                    rgb24Image = torgb24.convert(request.getImage(), null);
+                    argb32Image = toargb32.convert(request.getImage(), null);
                 }
 
-                Image image;
-                if (rgb24Image.getWidth() == IMAGE_WIDTH
-                        && rgb24Image.getHeight() == IMAGE_HEIGHT) {
+                Image scaledImage;
+                if (argb32Image.getWidth() == IMAGE_WIDTH
+                        && argb32Image.getHeight() == IMAGE_HEIGHT) {
                     // no need to scale
-                    image = rgb24Image;
+                    scaledImage = argb32Image;
                 } else {
-                    Scaler scaler = Scaling.getScaler(Format.RGB24);
+                    Scaler scaler = Scaling.getScaler(Format.ARGB32);
 
                     if (scaler == null) {
                         throw new Exception("cannot scale "
-                                + rgb24Image.getFormat());
+                                + argb32Image.getFormat());
                     }
 
-                    image = scaler.scale(rgb24Image, IMAGE_WIDTH, IMAGE_HEIGHT);
+                    scaledImage = scaler.scale(argb32Image, IMAGE_WIDTH, IMAGE_HEIGHT);
                 }
-                pixels = image.getData().array();
+                
+                Convertor torgb24 = Conversion.getConvertor(Format.ARGB32,
+                        Format.RGB24);
+
+                if (torgb24 == null) {
+                    throw new Exception("cannot convert from " + Format.ARGB32
+                            + " to " + Format.RGB24);
+                }
+
+                Image rgb24Image = torgb24.convert(scaledImage, null);
+                
+                pixels = rgb24Image.getData().array();
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,

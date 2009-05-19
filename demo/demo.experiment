@@ -15,16 +15,20 @@ Client.resource.count = 1
 #globus
 
 NL-VU.cluster.name = VU
-NL-VU.resource.count = 8
+NL-VU.process.count = 16
+NL-VU.resource.count = 16
 
 NL-UvA.cluster.name = UvA
-NL-UvA.resource.count = 8
+NL-UvA.resource.count = 16
+NL-UvA.process.count = 16
 
 NL-Leiden.cluster.name = Leiden
-NL-Leiden.resource.count = 8
+NL-Leiden.resource.count = 16
+NL-Leiden.process.count = 16
 
 NL-MultimediaN.cluster.name = MultimediaN
-NL-MultimediaN.resource.count = 8
+NL-MultimediaN.resource.count = 16
+NL-MultimediaN.process.count = 16
 
 #auto-zorilla
 

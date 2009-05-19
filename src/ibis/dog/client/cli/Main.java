@@ -1,13 +1,19 @@
-package ibis.dog.cli;
+package ibis.dog.client.cli;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ibis.dog.client.Client;
 import ibis.dog.client.ServerHandler;
+import ibis.dog.client.WebCam;
 import ibis.dog.server.Server;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
 
 
 public class Main {
+    
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     
 //    public static RGB32Image load(File file) throws IOException { 
 //        
@@ -50,14 +56,19 @@ public class Main {
             
             // Install a shutdown hook that terminates ibis.
             Runtime.getRuntime().addShutdownHook(new Main.ShutDown(client));
+
+            //provide fake video @ 30fps
+            //new FakeVideoProvider(client, image, 30);
             
-            //supply a single image
-            client.gotImage(image);
+            WebCam cam = new WebCam(client);
+            cam.selectDevice(cam.availableDevices()[0]);
             
             //do nothing
             while(true) {
-                Thread.sleep(1000);
-                System.err.println("Frames/Sec = " + client.getAndResetFPS());
+                Thread.sleep(5000);
+                logger.info("Input Frames/Sec = " + client.inputFPS());
+                logger.info("Displayed Frames/Sec = " + client.displayedFPS());
+                logger.info("Processed Frames/Sec = " + client.processedFPS());
                 
                 for(ServerHandler handler: client.getServers()) {
                     handler.setEnabled(true);

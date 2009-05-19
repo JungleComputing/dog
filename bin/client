@@ -51,7 +51,7 @@ do
         shift
 done
 
-java -Xms128M -Xmx768M -cp $CP -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.Main $NORMAL
+java -Xms128M -Xmx768M -cp $CP -Djava.library.path=`pwd`/external/native_libraries -Dgat.adaptor.path=./external/deploy/adaptors $SPECIAL ibis.dog.client.gui.Main $NORMAL
 
 
 

@@ -1,4 +1,4 @@
-package ibis.dog.gui;
+package ibis.dog.client.gui;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;

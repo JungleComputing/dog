@@ -3,10 +3,7 @@ package ibis.dog.client;
 import ibis.dog.database.DatabaseReply;
 import ibis.dog.database.DatabaseRequest;
 import ibis.dog.database.Item;
-import ibis.dog.gui.FramerateConsumer;
-import ibis.dog.gui.OutputPanel;
 import ibis.dog.server.ServerReply;
-import ibis.dog.server.ServerRequest;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.Upcall;
@@ -18,7 +15,6 @@ import ibis.video4j.VideoConsumer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,18 +33,27 @@ public class Client implements Upcall, VideoConsumer {
     private final Map<IbisIdentifier, ServerHandler> servers;
 
     // current image
-    private Image image = null;
-
-    private boolean done = false;
+    private Image input = null;
+    private long inputSeqNr = 0;
 
     private Item currentResult = null;
 
     private FeatureVector vector = null;
+    
+    private boolean done = false;
 
-    // statistics for framerate
+    // statistics for frame rate
+
+    private long inputFrameStart;
+    private long inputFrameCount;
+
+    private long displayedFrameStart;
+    private long displayedFrameCount;
+    private long lastDisplayedFrame;
 
     private long processedFrameStart;
     private long processedFrameCount;
+    private long lastProcessedFrame;
 
     public Client(MessageListener listener) throws IbisCreationFailedException,
             IOException {
@@ -61,8 +66,13 @@ public class Client implements Upcall, VideoConsumer {
 
         logger.debug("Done initializing client");
 
-        processedFrameStart = System.currentTimeMillis();
-        processedFrameCount = 0;
+        // initialize fps
+        inputFPS();
+        displayedFPS();
+        processedFPS();
+        
+        lastDisplayedFrame = -1;
+        lastProcessedFrame = -1;
     }
 
     public void log(String message) {
@@ -71,11 +81,51 @@ public class Client implements Upcall, VideoConsumer {
         }
         logger.info(message);
     }
-
-    public synchronized double getAndResetFPS() {
+    
+    public synchronized double inputFPS() {
         long now = System.currentTimeMillis();
-        double result = (double) processedFrameCount
-                / (double) (now - processedFrameStart);
+
+        double result;
+        if (inputFrameCount == 0 || inputFrameStart >= now) {
+            result = 0;
+        } else {
+            result = (double) inputFrameCount * 1000.0
+                    / (double) (now - inputFrameStart);
+        }
+
+        inputFrameCount = 0;
+        inputFrameStart = now;
+
+        return result;
+    }
+
+    public synchronized double displayedFPS() {
+        long now = System.currentTimeMillis();
+
+        double result;
+        if (displayedFrameCount == 0 || displayedFrameStart >= now) {
+            result = 0;
+        } else {
+            result = (double) displayedFrameCount * 1000.0
+                    / (double) (now - displayedFrameStart);
+        }
+
+        displayedFrameCount = 0;
+        displayedFrameStart = now;
+
+        return result;
+    }
+
+    public synchronized double processedFPS() {
+        long now = System.currentTimeMillis();
+
+        double result;
+        if (processedFrameCount == 0 || processedFrameStart >= now) {
+            result = 0;
+        } else {
+            result = (double) processedFrameCount * 1000.0
+                    / (double) (now - processedFrameStart);
+        }
 
         processedFrameCount = 0;
         processedFrameStart = now;
@@ -85,18 +135,46 @@ public class Client implements Upcall, VideoConsumer {
 
     @Override
     public synchronized void gotImage(Image image) {
-        this.image = new Image(image.getFormat(), image.getWidth(), image
-                .getHeight());
-        try {
-            Image.copy(image, this.image);
-        } catch (Exception e) {
-            logger.error("could not copy image", e);
-            this.image = null;
+        if(logger.isDebugEnabled()) {
+            logger.debug("got Image, format = " + image.getFormat() + " width = " + image.getWidth() + ", height = " + image.getHeight() + ", size = " + image.getSize());
         }
+
+        //copy image
+        this.input = new Image(image);
+        
+        inputFrameCount++;
+        inputSeqNr++;
+        notifyAll();
     }
 
-    public synchronized Image getLastImage() {
-        return this.image;
+    public synchronized Image getDisplayImage() {
+        while(lastDisplayedFrame == inputSeqNr) {
+            if (done) {
+                return null;
+            }
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                //IGNORE
+            }
+        }
+        lastDisplayedFrame = inputSeqNr;
+        return input;
+    }
+    
+    public synchronized Image getProcessImage() {
+        while(lastProcessedFrame == inputSeqNr) {
+            if (done) {
+                return null;
+            }
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                //IGNORE
+            }
+        }
+        lastProcessedFrame = inputSeqNr;
+        return input;
     }
 
     public boolean learn(String name) {
@@ -232,6 +310,7 @@ public class Client implements Upcall, VideoConsumer {
     }
 
     public synchronized void end() {
+        done = true;
         for (ServerHandler handler : servers.values()) {
             handler.end();
         }

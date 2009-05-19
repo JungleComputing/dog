@@ -46,11 +46,9 @@ default.java.path = /usr/local/package/jdk1.6.0-linux-amd64/bin/java
 
 # Details of cluster "VU"
 VU.server.uri = any://fs0.das3.cs.vu.nl
-#VU.job.adaptor = globus
-VU.job.adaptor = sshtrilead
+VU.job.adaptor = globus
 VU.job.uri = any://fs0.das3.cs.vu.nl/jobmanager-sge
 VU.file.adaptors = local,globus,sshtrilead
-VU.job.wrapper.script = demo/das3.script
 VU.cache.dir = dog-demo-cache
 VU.nodes = 85
 VU.cores = 340

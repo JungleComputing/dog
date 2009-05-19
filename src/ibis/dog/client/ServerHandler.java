@@ -108,7 +108,7 @@ public class ServerHandler implements Runnable {
     public void run() {
         while (!isDone()) {
             if (isEnabled()) {
-                Image frame = client.getLastImage();
+                Image frame = client.getProcessImage();
                 boolean success = true;
                 
                 if (frame == null) {

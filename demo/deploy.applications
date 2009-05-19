@@ -1,7 +1,7 @@
 default.libs = prestage-server
 default.log4j.file = log4j.properties
 
-Client.main.class = ibis.dog.cli.Main
+Client.main.class = ibis.dog.client.cli.Main
 Client.arguments = bla.png
 Client.libs = prestage-client
 Client.input.files = images

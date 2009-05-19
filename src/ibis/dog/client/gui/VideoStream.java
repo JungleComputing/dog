@@ -1,4 +1,4 @@
-package ibis.dog.gui;
+package ibis.dog.client.gui;
 
 import ibis.video4j.VideoConsumer;
 import ibis.video4j.VideoDeviceFactory;
