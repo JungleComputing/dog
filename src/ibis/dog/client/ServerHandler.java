@@ -31,12 +31,15 @@ public class ServerHandler implements Runnable {
         this.address = address;
         this.client = client;
         this.communication = communication;
+        
+        logger.debug("new Server handler: " + this);
 
         ThreadPool.createNew(this, "Server Handler" + this);
     }
 
     public synchronized void setEnabled(boolean value) {
         enabled = value;
+        notifyAll();
     }
 
     public synchronized boolean isEnabled() {
@@ -67,6 +70,7 @@ public class ServerHandler implements Runnable {
     }
 
     private boolean sendRequest(Image image) {
+        logger.debug("sending request to " + this);
         ServerRequest request = new ServerRequest(0, image, communication
                 .getIdentifier());
 
@@ -96,6 +100,7 @@ public class ServerHandler implements Runnable {
     }
 
     synchronized void replyReceived() {
+        logger.debug("reply received from " + this);
         waitingForReply = false;
         notifyAll();
     }
@@ -104,7 +109,13 @@ public class ServerHandler implements Runnable {
         while (!isDone()) {
             if (isEnabled()) {
                 Image frame = client.getLastImage();
-                boolean success = (frame != null) && sendRequest(frame);
+                boolean success = true;
+                
+                if (frame == null) {
+                    success = false;
+                } else {
+                    success = sendRequest(frame);
+                }
                 if (success) {
                     waitForReply();
                 } else {

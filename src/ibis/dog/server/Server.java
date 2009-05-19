@@ -42,7 +42,7 @@ public class Server implements Upcall {
     private Server(String poolName, String poolSize) throws Exception {
         requests = new LinkedList<ServerRequest>();
 
-        System.out.println("Initializing Parallel System...");
+        logger.info("Initializing PxSystem at " + IMAGE_WIDTH + "x" +IMAGE_HEIGHT);
         try {
             px = PxSystem.init(poolName, poolSize);
         } catch (Exception e) {
@@ -50,20 +50,24 @@ public class Server implements Upcall {
             throw e;
         }
 
-        System.out.println("nrCPUs = " + px.nrCPUs());
-        System.out.println("myCPU = " + px.myCPU());
+        logger.debug("nrCPUs = " + px.nrCPUs());
+        logger.debug("myCPU = " + px.myCPU());
 
         master = (px.myCPU() == 0);
+        
 
         // Node 0 needs to provide an Ibis to contact the outside world.
         if (master) {
-            communication = new Communication("Server", this);
+            logger.info("Local PxSystem initalized. Initializing Global Communication");
+            communication = new Communication(Communication.SERVER_ROLE, this);
+            logger.info("Initializing Weibull at " + IMAGE_WIDTH + "x" +IMAGE_HEIGHT);
         } else {
             communication = null;
         }
 
-        // do initialisation now instead of after the first request is received.
+        // do initialization now instead of after the first request is received.
         CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
+        logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs() + " Initialization done");
     }
 
     private synchronized void setEnded() {
@@ -149,66 +153,81 @@ public class Server implements Upcall {
         long opEnd = 0;
         long end = 0;
 
-        int requiredBytes = (int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
-                IMAGE_HEIGHT);
+        byte[] pixels;
 
-        // allocate empty image
-        byte[] pixels = new byte[requiredBytes];
+        ServerReply reply = null;
+        try {
+            if (master) {
+                // The master should dequeue a request, and prepare it for
+                // processing
 
-        if (master) {
-            // The master should dequeue a request and broadcast
-            // the details.
+                request = getRequest(DEFAULT_TIMEOUT);
+                Format srcFormat = request.getImage().getFormat();
 
-            request = getRequest(DEFAULT_TIMEOUT);
+                opReceived = System.currentTimeMillis();
 
-            opReceived = System.currentTimeMillis();
+                logger.debug(px.myCPU() + " Got request " + request);
 
-            System.err.println(px.myCPU() + " Got request " + request);
+                if (request == null) {
+                    return;
+                }
 
-            if (request == null) {
-                return;
-            }
+                Image rgb24Image;
+                if (srcFormat == Format.RGB24) {
+                    // no need to convert
+                    rgb24Image = request.getImage();
+                } else {
+                    Convertor torgb24 = Conversion.getConvertor(srcFormat,
+                            Format.RGB24);
 
-            // FIXME: this could be more efficient, we convert twice now!
-            try {
-                Convertor toargb32 = Conversion.getConvertor(request.getImage()
-                        .getFormat(), Format.ARGB32);
+                    if (torgb24 == null) {
+                        throw new Exception("cannot convert from " + srcFormat
+                                + " to " + Format.RGB24);
+                    }
 
-                Image argb32Image = toargb32.convert(request.getImage(), null);
+                    rgb24Image = torgb24.convert(request.getImage(), null);
+                }
 
-                Scaler scaler = Scaling.getScaler(Format.ARGB32);
+                Image image;
+                if (rgb24Image.getWidth() == IMAGE_WIDTH
+                        && rgb24Image.getHeight() == IMAGE_HEIGHT) {
+                    // no need to scale
+                    image = rgb24Image;
+                } else {
+                    Scaler scaler = Scaling.getScaler(Format.RGB24);
 
-                Image scaledArgb32Image = scaler.scale(argb32Image,
-                        IMAGE_WIDTH, IMAGE_HEIGHT);
+                    if (scaler == null) {
+                        throw new Exception("cannot scale " + rgb24Image.getFormat());
+                    }
 
-                Convertor torgb24 = Conversion.getConvertor(Format.ARGB32,
-                        Format.RGB24);
-
-                // create image from existing (empty) pixel byte array
-                Image rgb24Image = new Image(Format.RGB24, IMAGE_WIDTH,
-                        IMAGE_HEIGHT, pixels);
-
-                // fill pixel array
-                torgb24.convert(scaledArgb32Image, rgb24Image);
-
-            } catch (Exception e) {
-                logger.error("Could not convert image", e);
-                return;
+                    image = scaler.scale(rgb24Image, IMAGE_WIDTH, IMAGE_HEIGHT);
+                }
+                pixels = image.getData().array();
+            } else {
+                //allocate space for image
+                pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
+                        IMAGE_HEIGHT)];
             }
 
             opStart = System.currentTimeMillis();
+
+            FeatureVector result = new FeatureVector(CxWeibull.getNrInvars(),
+                    CxWeibull.getNrRfields());
+            CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels,
+                    result.vector);
+
+            opEnd = System.currentTimeMillis();
+
+            reply = new ServerReply(communication.getIdentifier(), request
+                    .getSequenceNumber(), result);
+        } catch (Exception exception) {
+            logger.error("error while processing request", exception);
+            reply = new ServerReply(communication.getIdentifier(), request
+                    .getSequenceNumber(), new Exception(
+                    "could not process request", exception));
         }
 
-        FeatureVector result = new FeatureVector(CxWeibull.getNrInvars(),
-                CxWeibull.getNrRfields());
-        CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels, result.vector);
-
-        opEnd = System.currentTimeMillis();
-
         if (master) {
-            ServerReply reply = new ServerReply(communication.getIdentifier(),
-                    request.getSequenceNumber(), result);
-
             logger.info("Sending reply....");
             try {
                 communication.send(request.getReplyAddress(), reply);
@@ -286,7 +305,7 @@ public class Server implements Upcall {
             server = new Server(poolName, poolSize);
             // Install a shutdown hook that terminates Ibis.
             Runtime.getRuntime().addShutdownHook(new ShutDown(server));
-            
+
             server.run();
         } catch (Throwable e) {
             System.err.println("Server died unexpectedly!");

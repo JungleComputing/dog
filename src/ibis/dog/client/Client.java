@@ -55,7 +55,7 @@ public class Client implements Upcall, VideoConsumer {
         this.messageListener = listener;
         logger.debug("Initializing client");
 
-        communication = new Communication("Client", this);
+        communication = new Communication(Communication.CLIENT_ROLE, this);
 
         servers = new HashMap<IbisIdentifier, ServerHandler>();
 
@@ -65,9 +65,20 @@ public class Client implements Upcall, VideoConsumer {
         processedFrameCount = 0;
     }
 
+    public synchronized double getAndResetFPS() {
+        long now = System.currentTimeMillis();
+        double result = processedFrameCount / (now - processedFrameStart);
+
+        processedFrameCount = 0;
+        processedFrameStart = now;
+
+        return result;
+    }
+
     @Override
     public synchronized void gotImage(Image image) {
-        this.image = new Image(image.getFormat(), image.getWidth(), image.getHeight());
+        this.image = new Image(image.getFormat(), image.getWidth(), image
+                .getHeight());
         try {
             Image.copy(image, this.image);
         } catch (Exception e) {
@@ -75,7 +86,7 @@ public class Client implements Upcall, VideoConsumer {
             this.image = null;
         }
     }
-    
+
     public synchronized Image getLastImage() {
         return this.image;
     }
@@ -131,8 +142,10 @@ public class Client implements Upcall, VideoConsumer {
             handler = servers.get(reply.getServer());
 
             // set vector as current vector
-            this.vector = reply.getResult();
-            processedFrameCount++;
+            if (reply.getResult() != null) {
+                this.vector = reply.getResult();
+                processedFrameCount++;
+            }
         }
 
         // tell handler it can send a new request now
@@ -140,6 +153,11 @@ public class Client implements Upcall, VideoConsumer {
             handler.replyReceived();
         }
 
+        if (reply.getException() != null) {
+            logger.error("Error received from server", reply.getException());
+            return;
+        }
+        
         // send vector to database for lookup
         DatabaseRequest request = new DatabaseRequest(
                 DatabaseRequest.Function.RECOGNIZE, 1, null, 0, reply
@@ -156,6 +174,7 @@ public class Client implements Upcall, VideoConsumer {
                 logger.error("could not send request to database: " + e);
             }
         }
+
     }
 
     private synchronized void processDatabaseReply(DatabaseReply reply) {
@@ -174,7 +193,7 @@ public class Client implements Upcall, VideoConsumer {
                     + " says this is a " + currentResult);
         }
     }
-    
+
     @Override
     public void gotMessage(Object object) {
         if (object instanceof ServerReply) {
@@ -188,27 +207,36 @@ public class Client implements Upcall, VideoConsumer {
 
     @Override
     public synchronized void newServer(IbisIdentifier identifier) {
-        ServerHandler handler = new ServerHandler(identifier, this, communication);
+        logger.debug("new server: " + identifier);
+
+        ServerHandler handler = new ServerHandler(identifier, this,
+                communication);
 
         servers.put(identifier, handler);
     }
 
     @Override
     public synchronized void serverGone(IbisIdentifier identifier) {
+        logger.debug("server gone: " + identifier);
+
         ServerHandler handler = servers.remove(identifier);
-        
+
         if (handler != null) {
             handler.end();
         }
     }
 
     public synchronized void end() {
-        for(ServerHandler handler: servers.values()) {
+        for (ServerHandler handler : servers.values()) {
             handler.end();
         }
         servers.clear();
-        
+
         communication.end();
+    }
+
+    public synchronized ServerHandler[] getServers() {
+        return servers.values().toArray(new ServerHandler[0]);
     }
 
 }

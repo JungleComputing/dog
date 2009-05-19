@@ -1,6 +1,7 @@
 package ibis.dog.cli;
 
 import ibis.dog.client.Client;
+import ibis.dog.client.ServerHandler;
 import ibis.dog.server.Server;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
@@ -43,7 +44,7 @@ public class Main {
             }
 
             //FIXME: actually load a picture here!
-            Image image = new Image(Format.RGB24, Server.IMAGE_WIDTH, Server.IMAGE_HEIGHT);
+            Image image = new Image(Format.ARGB32, Server.IMAGE_WIDTH, Server.IMAGE_HEIGHT);
 
             Client client = new Client(null);
             
@@ -56,6 +57,11 @@ public class Main {
             //do nothing
             while(true) {
                 Thread.sleep(1000);
+                System.err.println("Frames/Sec = " + client.getAndResetFPS());
+                
+                for(ServerHandler handler: client.getServers()) {
+                    handler.setEnabled(true);
+                }
             }
             
         } catch (Exception e) {

@@ -220,11 +220,12 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
 
     @Override
     public synchronized void joined(IbisIdentifier joinedIbis) {
-        logger.info("New Ibis: " + joinedIbis);
-
         String role = joinedIbis.tagAsString();
+        
+        logger.info("New Ibis: " + joinedIbis + " role = \"" + role + "\"");
 
-        if (role != null && role.equals("server")) {
+
+        if (role != null && role.equals(SERVER_ROLE)) {
             upcall.newServer(joinedIbis);
         }
     }
@@ -247,8 +248,11 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
         }
 
         String role = identifier.tagAsString();
+        
+        logger.info("Ibis Gone: " + identifier + " role = \"" + role + "\"");
 
-        if (role != null && role.equals("server")) {
+
+        if (role != null && role.equals(SERVER_ROLE)) {
             upcall.serverGone(identifier);
         }
     }

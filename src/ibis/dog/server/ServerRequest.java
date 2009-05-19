@@ -32,5 +32,9 @@ public class ServerRequest implements Serializable {
         return replyAddress;
     }
     
+    public String toString() {
+        return "ServerRequest " + sequenceNumber + " from " + replyAddress + ", format = " + image.getFormat() + ", dimensions = " + image.getWidth() + "x" + image.getHeight();
+    }
+    
     
 }

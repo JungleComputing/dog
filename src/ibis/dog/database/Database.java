@@ -87,11 +87,11 @@ public class Database implements Upcall {
         }
         return (score < revscore) ? (1.0 - score) : (1.0 - revscore);
     }
-    
+
     private final Communication communication;
 
     private ArrayList<Item> items;
-    
+
     private boolean ended = false;
 
     @SuppressWarnings("unchecked")
@@ -100,35 +100,48 @@ public class Database implements Upcall {
         // Create an Communication object
         communication = new Communication(Communication.DATABASE_ROLE, this);
 
-        // load database file
-        try {
-            FileInputStream in = new FileInputStream(FILE);
-            ObjectInputStream objectIn = new ObjectInputStream(in);
-            items = (ArrayList<Item>) objectIn.readObject();
-            objectIn.close();
-            return;
-        } catch (Exception e) {
-            logger.warn("failed to load objects from file: " + FILE
-                    + " trying old file...", e);
+        if (!FILE.exists()) {
+            logger.warn("Database file \"" + FILE + "\" does not exist");
+        } else {
+            // load database file
+            try {
+                FileInputStream in = new FileInputStream(FILE);
+                ObjectInputStream objectIn = new ObjectInputStream(in);
+                items = (ArrayList<Item>) objectIn.readObject();
+                objectIn.close();
+                logger.info("loaded database from \"" + FILE + "\"");
+                return;
+            } catch (Exception e) {
+                logger.warn("failed to load objects from file: \"" + FILE
+                        + "\"", e);
+            }
         }
 
         // try backup file
         if (items == null) {
-            try {
-                FileInputStream in = new FileInputStream(OLD_FILE);
-                ObjectInputStream objectIn = new ObjectInputStream(in);
-                items = (ArrayList<Item>) objectIn.readObject();
-                objectIn.close();
-                return;
-            } catch (Exception e) {
-                logger.warn("failed to load objects from file: " + OLD_FILE
-                        + " creating new database", e);
+            if (!OLD_FILE.exists()) {
+                logger.warn("Database file \"" + OLD_FILE
+                                + "\" does not exist");
+            } else {
+                try {
+                    FileInputStream in = new FileInputStream(OLD_FILE);
+                    ObjectInputStream objectIn = new ObjectInputStream(in);
+                    items = (ArrayList<Item>) objectIn.readObject();
+                    objectIn.close();
+                    logger.info("loaded database from \"" + OLD_FILE + "\"");
+                    return;
+                } catch (Exception e) {
+                    logger.warn("failed to load objects from old file: \""
+                            + FILE + "\"", e);
+                }
             }
         }
 
         // just create a new database
         if (items == null) {
             items = new ArrayList<Item>();
+            logger.info("created new (empty) database, will save in \"" + FILE
+                    + "\"");
         }
 
     }
@@ -184,7 +197,7 @@ public class Database implements Upcall {
     }
 
     private void end() {
-        synchronized(this) {
+        synchronized (this) {
             ended = true;
         }
         logger.info("ending database");
