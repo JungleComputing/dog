@@ -65,9 +65,17 @@ public class Client implements Upcall, VideoConsumer {
         processedFrameCount = 0;
     }
 
+    public void log(String message) {
+        if (messageListener != null) {
+            messageListener.message(message);
+        }
+        logger.info(message);
+    }
+
     public synchronized double getAndResetFPS() {
         long now = System.currentTimeMillis();
-        double result = processedFrameCount / (now - processedFrameStart);
+        double result = (double) processedFrameCount
+                / (double) (now - processedFrameStart);
 
         processedFrameCount = 0;
         processedFrameStart = now;
@@ -157,7 +165,7 @@ public class Client implements Upcall, VideoConsumer {
             logger.error("Error received from server", reply.getException());
             return;
         }
-        
+
         // send vector to database for lookup
         DatabaseRequest request = new DatabaseRequest(
                 DatabaseRequest.Function.RECOGNIZE, 1, null, 0, reply
@@ -179,19 +187,16 @@ public class Client implements Upcall, VideoConsumer {
 
     private synchronized void processDatabaseReply(DatabaseReply reply) {
         if (reply.getResults().isEmpty()) {
-            if (messageListener != null) {
-                messageListener.message(reply.getServer().location().toString()
-                        + " does not recognize this object");
-            }
+            log(reply.getServer().location().toString()
+                    + " does not recognize this object");
             return;
         }
         Double key = reply.getResults().firstKey();
         this.currentResult = reply.getResults().get(key);
 
-        if (messageListener != null) {
-            messageListener.message(reply.getServer().location().toString()
-                    + " says this is a " + currentResult);
-        }
+        log(reply.getServer().location().toString() + " says this is a "
+                + currentResult);
+
     }
 
     @Override

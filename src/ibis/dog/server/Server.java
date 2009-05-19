@@ -42,7 +42,8 @@ public class Server implements Upcall {
     private Server(String poolName, String poolSize) throws Exception {
         requests = new LinkedList<ServerRequest>();
 
-        logger.info("Initializing PxSystem at " + IMAGE_WIDTH + "x" +IMAGE_HEIGHT);
+        logger.info("Initializing PxSystem at " + IMAGE_WIDTH + "x"
+                + IMAGE_HEIGHT);
         try {
             px = PxSystem.init(poolName, poolSize);
         } catch (Exception e) {
@@ -54,20 +55,22 @@ public class Server implements Upcall {
         logger.debug("myCPU = " + px.myCPU());
 
         master = (px.myCPU() == 0);
-        
 
         // Node 0 needs to provide an Ibis to contact the outside world.
         if (master) {
-            logger.info("Local PxSystem initalized. Initializing Global Communication");
+            logger
+                    .info("Local PxSystem initalized. Initializing Global Communication");
             communication = new Communication(Communication.SERVER_ROLE, this);
-            logger.info("Initializing Weibull at " + IMAGE_WIDTH + "x" +IMAGE_HEIGHT);
+            logger.info("Initializing Weibull at " + IMAGE_WIDTH + "x"
+                    + IMAGE_HEIGHT);
         } else {
             communication = null;
         }
 
         // do initialization now instead of after the first request is received.
         CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
-        logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs() + " Initialization done");
+        logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs()
+                + " Initialization done");
     }
 
     private synchronized void setEnded() {
@@ -197,14 +200,15 @@ public class Server implements Upcall {
                     Scaler scaler = Scaling.getScaler(Format.RGB24);
 
                     if (scaler == null) {
-                        throw new Exception("cannot scale " + rgb24Image.getFormat());
+                        throw new Exception("cannot scale "
+                                + rgb24Image.getFormat());
                     }
 
                     image = scaler.scale(rgb24Image, IMAGE_WIDTH, IMAGE_HEIGHT);
                 }
                 pixels = image.getData().array();
             } else {
-                //allocate space for image
+                // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
                         IMAGE_HEIGHT)];
             }
@@ -218,13 +222,17 @@ public class Server implements Upcall {
 
             opEnd = System.currentTimeMillis();
 
-            reply = new ServerReply(communication.getIdentifier(), request
-                    .getSequenceNumber(), result);
+            if (master) {
+                reply = new ServerReply(communication.getIdentifier(), request
+                        .getSequenceNumber(), result);
+            }
         } catch (Exception exception) {
             logger.error("error while processing request", exception);
-            reply = new ServerReply(communication.getIdentifier(), request
-                    .getSequenceNumber(), new Exception(
-                    "could not process request", exception));
+            if (master) {
+                reply = new ServerReply(communication.getIdentifier(), request
+                        .getSequenceNumber(), new Exception(
+                        "could not process request", exception));
+            }
         }
 
         if (master) {

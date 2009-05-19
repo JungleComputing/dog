@@ -44,7 +44,7 @@ public class Main {
             }
 
             //FIXME: actually load a picture here!
-            Image image = new Image(Format.ARGB32, Server.IMAGE_WIDTH, Server.IMAGE_HEIGHT);
+            Image image = new Image(Format.RGB24, Server.IMAGE_WIDTH, Server.IMAGE_HEIGHT);
 
             Client client = new Client(null);
             
