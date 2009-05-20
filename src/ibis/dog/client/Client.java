@@ -39,7 +39,7 @@ public class Client implements Upcall, VideoConsumer {
     private Item currentResult = null;
 
     private FeatureVector vector = null;
-    
+
     private boolean done = false;
 
     // statistics for frame rate
@@ -70,7 +70,7 @@ public class Client implements Upcall, VideoConsumer {
         inputFPS();
         displayedFPS();
         processedFPS();
-        
+
         lastDisplayedFrame = -1;
         lastProcessedFrame = -1;
     }
@@ -81,7 +81,7 @@ public class Client implements Upcall, VideoConsumer {
         }
         logger.info(message);
     }
-    
+
     public synchronized double inputFPS() {
         long now = System.currentTimeMillis();
 
@@ -135,42 +135,49 @@ public class Client implements Upcall, VideoConsumer {
 
     @Override
     public synchronized void gotImage(Image image) {
-        if(logger.isDebugEnabled()) {
-            logger.debug("got Image, format = " + image.getFormat() + " width = " + image.getWidth() + ", height = " + image.getHeight() + ", size = " + image.getSize());
+        if (logger.isDebugEnabled()) {
+            logger.debug("got Image, format = " + image.getFormat()
+                    + " width = " + image.getWidth() + ", height = "
+                    + image.getHeight() + ", size = " + image.getSize());
         }
 
-        //copy image
-        this.input = new Image(image);
-        
+        // copy image
+        try {
+            this.input = Image.copy(image, null);
+        } catch (Exception e) {
+            logger.error("could not copy image", e);
+            return;
+        }
+
         inputFrameCount++;
         inputSeqNr++;
         notifyAll();
     }
 
     public synchronized Image getDisplayImage() {
-        while(lastDisplayedFrame == inputSeqNr) {
+        while (lastDisplayedFrame == inputSeqNr) {
             if (done) {
                 return null;
             }
             try {
                 wait();
             } catch (InterruptedException e) {
-                //IGNORE
+                // IGNORE
             }
         }
         lastDisplayedFrame = inputSeqNr;
         return input;
     }
-    
+
     public synchronized Image getProcessImage() {
-        while(lastProcessedFrame == inputSeqNr) {
+        while (lastProcessedFrame == inputSeqNr) {
             if (done) {
                 return null;
             }
             try {
                 wait();
             } catch (InterruptedException e) {
-                //IGNORE
+                // IGNORE
             }
         }
         lastProcessedFrame = inputSeqNr;

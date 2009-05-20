@@ -5,12 +5,14 @@ import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.Upcall;
 import ibis.imaging4j.Conversion;
 import ibis.imaging4j.Format;
+import ibis.imaging4j.IO;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.Scaling;
 import ibis.imaging4j.conversion.Convertor;
 import ibis.imaging4j.effects.Scaler;
 import ibis.ipl.IbisIdentifier;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -22,8 +24,12 @@ import jorus.weibull.CxWeibull;
 
 public class Server implements Upcall {
 
+    // public static final int IMAGE_WIDTH = 352;
+    // public static final int IMAGE_HEIGHT = 768;
     public static final int IMAGE_WIDTH = 1024;
     public static final int IMAGE_HEIGHT = 768;
+
+    public static final Format IMAGE_FORMAT = Format.RGB24;
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
@@ -150,10 +156,11 @@ public class Server implements Upcall {
     private void processRequest(boolean master) {
         ServerRequest request = null;
 
-        long start = System.currentTimeMillis();
-        long opReceived = 0;
-        long opStart = 0;
-        long opEnd = 0;
+        long receiving = System.currentTimeMillis();
+        long converting = 0;
+        long scaling = 0;
+        long computing = 0;
+        long sending = 0;
         long end = 0;
 
         byte[] pixels;
@@ -165,9 +172,7 @@ public class Server implements Upcall {
                 // processing
 
                 request = getRequest(DEFAULT_TIMEOUT);
-                Format srcFormat = request.getImage().getFormat();
-
-                opReceived = System.currentTimeMillis();
+                converting = System.currentTimeMillis();
 
                 logger.debug(px.myCPU() + " Got request " + request);
 
@@ -175,65 +180,70 @@ public class Server implements Upcall {
                     return;
                 }
 
-                //FIXME: we convert twice here, due to lack of RGB24 convertors and scalers in imaging4J
-                
-                Image argb32Image;
-                if (srcFormat == Format.ARGB32) {
-                    // no need to convert
-                    argb32Image = request.getImage();
-                } else {
-                    Convertor toargb32 = Conversion.getConvertor(srcFormat,
-                            Format.ARGB32);
+                Image srcImage = request.getImage();
 
-                    if (toargb32 == null) {
-                        throw new Exception("cannot convert from " + srcFormat
-                                + " to " + Format.ARGB32);
+                //DEBUG
+                Convertor sc2 = Conversion.getConvertor(srcImage.getFormat(), Format.JPG);
+                IO.save(sc2.convert(srcImage, null), new File("source.jpg"));
+
+                Image convertedImage;
+                if (srcImage.getFormat() == IMAGE_FORMAT) {
+                    // no need to convert
+                    convertedImage = request.getImage();
+                } else {
+                    Convertor convertor1 = Conversion.getConvertor(srcImage.getFormat(),
+                            IMAGE_FORMAT);
+
+                    if (convertor1 == null) {
+                        throw new Exception("cannot convert from "
+                                + srcImage.getFormat() + " to " + IMAGE_FORMAT);
                     }
 
-                    argb32Image = toargb32.convert(request.getImage(), null);
+                    convertedImage = convertor1.convert(srcImage, null);
                 }
+                
+                //DEBUG
+                Convertor sc1 = Conversion.getConvertor(convertedImage.getFormat(), Format.JPG);
+                IO.save(sc1.convert(convertedImage, null), new File("converted.jpg"));
+
+                scaling = System.currentTimeMillis();
 
                 Image scaledImage;
-                if (argb32Image.getWidth() == IMAGE_WIDTH
-                        && argb32Image.getHeight() == IMAGE_HEIGHT) {
+                if (convertedImage.getWidth() == IMAGE_WIDTH
+                        && convertedImage.getHeight() == IMAGE_HEIGHT) {
                     // no need to scale
-                    scaledImage = argb32Image;
+                    scaledImage = convertedImage;
                 } else {
-                    Scaler scaler = Scaling.getScaler(Format.ARGB32);
+                    Scaler scaler = Scaling.getScaler(IMAGE_FORMAT);
 
                     if (scaler == null) {
-                        throw new Exception("cannot scale "
-                                + argb32Image.getFormat());
+                        throw new Exception("cannot scale " + IMAGE_FORMAT);
                     }
 
-                    scaledImage = scaler.scale(argb32Image, IMAGE_WIDTH, IMAGE_HEIGHT);
-                }
-                
-                Convertor torgb24 = Conversion.getConvertor(Format.ARGB32,
-                        Format.RGB24);
-
-                if (torgb24 == null) {
-                    throw new Exception("cannot convert from " + Format.ARGB32
-                            + " to " + Format.RGB24);
+                    scaledImage = scaler.scale(convertedImage, IMAGE_WIDTH,
+                            IMAGE_HEIGHT);
                 }
 
-                Image rgb24Image = torgb24.convert(scaledImage, null);
+                pixels = scaledImage.getData().array();
                 
-                pixels = rgb24Image.getData().array();
+                //DEBUG
+                Convertor sc3 = Conversion.getConvertor(scaledImage.getFormat(), Format.JPG);
+                IO.save(sc3.convert(scaledImage, null), new File("scaled.jpg"));
+
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
                         IMAGE_HEIGHT)];
             }
 
-            opStart = System.currentTimeMillis();
+            computing = System.currentTimeMillis();
 
             FeatureVector result = new FeatureVector(CxWeibull.getNrInvars(),
                     CxWeibull.getNrRfields());
             CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels,
                     result.vector);
 
-            opEnd = System.currentTimeMillis();
+            sending = System.currentTimeMillis();
 
             if (master) {
                 reply = new ServerReply(communication.getIdentifier(), request
@@ -260,25 +270,21 @@ public class Server implements Upcall {
         }
 
         end = System.currentTimeMillis();
-        /*
-         * System.out.println("Total time   " + (end - start) + " ms.");
-         * System.out.println("  request    " + (request - start) + " ms.");
-         * System.out.println("  decompress " + (decompress - request) +
-         * " ms."); System.out.println("  bcast      " + (commdone - decompress)
-         * + " ms."); System.out.println("  op         " + (endop - commdone) +
-         * " ms."); System.out.println("  reply      " + (end - endop) +
-         * " ms.");
-         */
 
         if (master) {
+            logger.info("Processing took: " + (end - receiving) + " (receive: "
+                    + (converting - receiving) + " convert: "
+                    + (scaling - converting) + " scale: "
+                    + (computing - scaling) + " parallel computation: "
+                    + (sending - computing) + " send reply: " + (end - sending)
+                    + ")");
             px.printStatistics();
-
-            System.out.println("Time = " + (end - start) + " (receive: "
-                    + (opReceived - start) + " (convert: "
-                    + (opStart - opReceived)
-
-                    + " operation: " + (opEnd - opStart) + " post: "
-                    + (end - opEnd) + " )");
+        }
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 

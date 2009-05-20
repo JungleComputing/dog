@@ -1,22 +1,18 @@
 package ibis.dog.client.gui;
 
-import ibis.dog.client.Client;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Main {
+    
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         try {
 
-//            // Create GUI and Application
-//            Client c = new Client();
-//            ClientPanel.createGUI(c);
-//            
-//            // Activate the application
-//            c.start();
-            
         } catch (Exception e) {
-            System.out.println("FATAL MyApp ERROR");
-            e.printStackTrace();
+            logger.error("Client error", e);
         }
-    } 
+    }
 }
