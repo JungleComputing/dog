@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import ibis.dog.client.Client;
 import ibis.dog.client.ServerHandler;
 import ibis.dog.client.WebCam;
-import ibis.imaging4j.IO;
 import ibis.imaging4j.Image;
+import ibis.imaging4j.io.IO;
 
 public class Main {
 

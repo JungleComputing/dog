@@ -3,13 +3,14 @@ package ibis.dog.server;
 import ibis.dog.shared.Communication;
 import ibis.dog.shared.FeatureVector;
 import ibis.dog.shared.Upcall;
-import ibis.imaging4j.Conversion;
 import ibis.imaging4j.Format;
-import ibis.imaging4j.IO;
 import ibis.imaging4j.Image;
-import ibis.imaging4j.Scaling;
+import ibis.imaging4j.Imaging4j;
+import ibis.imaging4j.conversion.Conversion;
 import ibis.imaging4j.conversion.Convertor;
-import ibis.imaging4j.effects.Scaler;
+import ibis.imaging4j.io.IO;
+import ibis.imaging4j.scaling.Scaler;
+import ibis.imaging4j.scaling.Scaling;
 import ibis.ipl.IbisIdentifier;
 
 import java.io.File;
@@ -183,28 +184,18 @@ public class Server implements Upcall {
                 Image srcImage = request.getImage();
 
                 //DEBUG
-                Convertor sc2 = Conversion.getConvertor(srcImage.getFormat(), Format.JPG);
-                IO.save(sc2.convert(srcImage, null), new File("source.jpg"));
+                IO.save(Imaging4j.convert(srcImage, Format.JPG), new File("original.jpg"));
 
                 Image convertedImage;
                 if (srcImage.getFormat() == IMAGE_FORMAT) {
                     // no need to convert
                     convertedImage = request.getImage();
                 } else {
-                    Convertor convertor1 = Conversion.getConvertor(srcImage.getFormat(),
-                            IMAGE_FORMAT);
-
-                    if (convertor1 == null) {
-                        throw new Exception("cannot convert from "
-                                + srcImage.getFormat() + " to " + IMAGE_FORMAT);
-                    }
-
-                    convertedImage = convertor1.convert(srcImage, null);
+                    convertedImage = Imaging4j.convert(srcImage, IMAGE_FORMAT);
                 }
                 
                 //DEBUG
-                Convertor sc1 = Conversion.getConvertor(convertedImage.getFormat(), Format.JPG);
-                IO.save(sc1.convert(convertedImage, null), new File("converted.jpg"));
+                IO.save(Imaging4j.convert(convertedImage, Format.JPG), new File("converted.jpg"));
 
                 scaling = System.currentTimeMillis();
 
@@ -214,22 +205,14 @@ public class Server implements Upcall {
                     // no need to scale
                     scaledImage = convertedImage;
                 } else {
-                    Scaler scaler = Scaling.getScaler(IMAGE_FORMAT);
-
-                    if (scaler == null) {
-                        throw new Exception("cannot scale " + IMAGE_FORMAT);
-                    }
-
-                    scaledImage = scaler.scale(convertedImage, IMAGE_WIDTH,
+                    scaledImage = Imaging4j.scale(convertedImage, IMAGE_WIDTH,
                             IMAGE_HEIGHT);
                 }
+                
+                IO.save(Imaging4j.convert(srcImage, Format.JPG), new File("scaled.jpg"));
 
                 pixels = scaledImage.getData().array();
                 
-                //DEBUG
-                Convertor sc3 = Conversion.getConvertor(scaledImage.getFormat(), Format.JPG);
-                IO.save(sc3.convert(scaledImage, null), new File("scaled.jpg"));
-
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
