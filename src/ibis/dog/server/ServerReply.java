@@ -1,6 +1,6 @@
 package ibis.dog.server;
 
-import ibis.dog.shared.FeatureVector;
+import ibis.dog.FeatureVector;
 import ibis.ipl.IbisIdentifier;
 
 import java.io.Serializable;

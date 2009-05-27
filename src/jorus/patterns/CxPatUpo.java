@@ -10,7 +10,6 @@
 package jorus.patterns;
 
 import jorus.array.CxArray2d;
-import jorus.operations.CxSvo;
 import jorus.operations.CxUpo;
 import jorus.parallel.PxSystem;
 

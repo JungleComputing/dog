@@ -1,104 +1,149 @@
+/**
+ * 
+ */
 package ibis.dog.client.gui;
 
+import ibis.dog.client.Client;
+import ibis.imaging4j.Format;
+import ibis.imaging4j.Image;
+import ibis.imaging4j.Imaging4j;
+import ibis.util.ThreadPool;
+
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
+import java.awt.image.MemoryImageSource;
+import java.nio.ByteBuffer;
 
-import ibis.video4j.VideoConsumer;
-import ibis.video4j.VideoDeviceDescription;
-import ibis.video4j.VideoDeviceFactory;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
-public class VideoPanel extends JPanel implements ActionListener {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+class VideoPanel extends JPanel implements Runnable {
+
+    private static Logger logger = LoggerFactory.getLogger(VideoPanel.class);
 
     // Generated
     private static final long serialVersionUID = 1L;
 
-    private static final String NONE = "Off";
-    private static final String SCAN = "Scan for devices";
-        
-    private JComboBox deviceList;
-    
-    private VideoStream videoStream;
-    
-    public VideoPanel(FramerateConsumer f, VideoConsumer v) {
-        
-        videoStream = new VideoStream(352, 288, f);
-        
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        add(videoStream);
-        add(Box.createRigidArea(new Dimension(0,5)));
-      
-        // Create the combo box, select the item at index 0 (Item "none").
-        deviceList = new JComboBox();
-        updateVideoDevices();
-        deviceList.setSelectedIndex(0);
-        deviceList.addActionListener(this);
-        
-        deviceList.setMinimumSize(new Dimension(352, 25));
-        deviceList.setMaximumSize(new Dimension(352, 25));
-        
-        add(deviceList);
-    
-        setBorder(BorderFactory.createTitledBorder("Camera"));
+    public static final int WIDTH = 352;
+    public static final int HEIGHT = 288;
+
+    private final Client client;
+
+    private boolean imageValid;
+
+    private int[] pixels;
+    private MemoryImageSource source;
+    private java.awt.Image offscreen;
+
+    public VideoPanel(Client client) {
+        this.client = client;
+
+        imageValid = false;
+
+        pixels = new int[WIDTH * HEIGHT];
+
+        source = new MemoryImageSource(WIDTH, HEIGHT, pixels, 0, WIDTH);
+        source.setAnimated(true);
+        source.setFullBufferUpdates(true);
+
+        offscreen = createImage(source);
+
+        setBackground(Color.white);
+
+        setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setMaximumSize(new Dimension(WIDTH, HEIGHT));
+
+        ThreadPool.createNew(this, "video stream");
     }
 
-    private void updateVideoDevices() { 
-        
-        // Find all video devices
-        VideoDeviceDescription [] devices = null;
-        
-        try { 
-            devices = VideoDeviceFactory.availableDevices(); 
-        } catch (Exception e) {
-            devices = new VideoDeviceDescription[0];
-        }
-        
-        deviceList.removeAllItems();
-        deviceList.addItem(NONE);
-        
-        for (int i=0;i<devices.length;i++) { 
-            deviceList.addItem(devices[i]);
-        }
-            
-        deviceList.addItem(SCAN);
-    }
-    
-    public void actionPerformed(ActionEvent e) {
-        
-        JComboBox cb = (JComboBox) e.getSource();
+    public void paint(Graphics g) {
 
-        Object tmp = cb.getSelectedItem();
-        
-        if (tmp instanceof VideoDeviceDescription) {
-            VideoDeviceDescription d = (VideoDeviceDescription) tmp;
-            System.out.println("Selected device: " + d.getSimpleDescription());
-            
-            try { 
-                videoStream.selectDevice(d.deviceNumber);
-            } catch (Exception ex) {
-                videoStream.setMessage("Failed to select device " + d.deviceNumber);
-            
-                ex.printStackTrace();
-            }
-        } else { 
-            String s = (String) tmp;
-            System.out.println("Selected special option: " + s);
-            
+        Graphics2D g2 = (Graphics2D) g;
+
+        if (imageValid) {
+            g2.drawImage(offscreen, 0, 0, this);
+        } else {
+            Dimension d = getSize();
+
+            FontRenderContext frc = g2.getFontRenderContext();
+
+            int x = d.width / 2;
+            int y = d.height / 2;
+
+            Color edge = Color.GRAY;
+            Color fill = Color.WHITE;
+
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, d.width, d.height);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            Font f = getFont().deriveFont(Font.BOLD);
+            TextLayout tl = new TextLayout("No Image Available", f, frc);
+
+            float sw = (float) tl.getBounds().getWidth();
+            float sh = (float) tl.getBounds().getHeight();
+
+            Shape sha = tl.getOutline(AffineTransform.getTranslateInstance(x
+                    - sw / 2, y + sh / 2));
+            g2.setColor(edge);
+            g2.draw(sha);
+            g2.setColor(fill);
+            g2.fill(sha);
+        }
+    }
+
+    @Override
+    public void run() {
+
+        while (true) {
             try {
-                videoStream.selectDevice(-1);
-            } catch (Exception e1) {
-                // ignored
+
+                Image image = client.getDisplayImage();
+
+                if (image == null) {
+                    logger.debug("videostream exiting");
+                    return;
+                } else {
+                    Image argb32;
+
+                    if (image.getFormat() == Format.ARGB32) {
+                        argb32 = image;
+                    } else {
+                        argb32 = Imaging4j.convert(image, Format.ARGB32);
+                    }
+
+                    Image scaled;
+                    if (image.getWidth() == WIDTH
+                            && image.getHeight() == HEIGHT) {
+                        scaled = argb32;
+                    } else {
+                        scaled = Imaging4j.scale(argb32, WIDTH, HEIGHT);
+                    }
+
+                    ByteBuffer buffer = scaled.getData();
+                    buffer.clear();
+                    buffer.asIntBuffer().get(pixels);
+                }
+
+                // notify we have new pixels available
+                source.newPixels(0, 0, WIDTH, HEIGHT);
+                repaint();
+
+            } catch (Exception e) {
+                logger.error("Error wwhile displaying stream", e);
             }
-            
-            if (s.equals(SCAN)) { 
-                updateVideoDevices();
-            }
-        }   
+        }
     }
 }

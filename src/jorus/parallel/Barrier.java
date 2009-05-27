@@ -1,7 +1,5 @@
 package jorus.parallel;
 
-import jorus.parallel.collectives.FlatBarrier;
-
 public abstract class Barrier extends Collective {
 
     protected Barrier(PxSystem system, Class c) throws Exception {

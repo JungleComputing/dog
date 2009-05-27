@@ -1,6 +1,6 @@
 package ibis.dog.database;
 
-import ibis.dog.shared.FeatureVector;
+import ibis.dog.FeatureVector;
 import ibis.imaging4j.Image;
 
 import java.io.Serializable;

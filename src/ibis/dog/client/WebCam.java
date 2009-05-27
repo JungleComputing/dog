@@ -38,7 +38,7 @@ public class WebCam {
         return VideoDeviceFactory.availableDevices();
     }
 
-    public void selectDevice(VideoDeviceDescription description) throws Exception {
+    public VideoSource selectDevice(VideoDeviceDescription description) throws Exception {
         // first select format
         Format format = selectFormat(description);
 
@@ -49,6 +49,9 @@ public class WebCam {
                 description.deviceNumber, TARGET_WIDTH, TARGET_HEIGHT, 0,
                 format, 85);
         device.start();
+        
+        return device;
+        
     }
 
 }

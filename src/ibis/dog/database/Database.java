@@ -1,8 +1,8 @@
 package ibis.dog.database;
 
-import ibis.dog.shared.Communication;
-import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.Upcall;
+import ibis.dog.Communication;
+import ibis.dog.FeatureVector;
+import ibis.dog.Upcall;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
 

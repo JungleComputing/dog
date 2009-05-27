@@ -11,23 +11,9 @@ import ibis.dog.client.WebCam;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.io.IO;
 
-public class Main {
+public class CLI {
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-    // public static RGB32Image load(File file) throws IOException {
-    //        
-    // BufferedImage image = ImageIO.read(file);
-    //        
-    // final int width = image.getWidth();
-    // final int height = image.getHeight();
-    //        
-    // int [] argbs = new int[width*height];
-    //        
-    // image.getRGB(0, 0, width, height, argbs, 0, width);
-    //        
-    // return new RGB32Image(width,height,argbs);
-    // }
+    private static final Logger logger = LoggerFactory.getLogger(CLI.class);
 
     private static final class ShutDown extends Thread {
         private final Client client;
@@ -54,10 +40,10 @@ public class Main {
                 image = IO.load(new File(args[0]));
             }
 
-            Client client = new Client(null);
+            Client client = new Client(null, null);
 
             // Install a shutdown hook that terminates ibis.
-            Runtime.getRuntime().addShutdownHook(new Main.ShutDown(client));
+            Runtime.getRuntime().addShutdownHook(new CLI.ShutDown(client));
 
             if (image == null) {
                 // use first webcam as input

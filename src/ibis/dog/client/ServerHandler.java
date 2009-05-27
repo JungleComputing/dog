@@ -3,8 +3,8 @@ package ibis.dog.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ibis.dog.Communication;
 import ibis.dog.server.ServerRequest;
-import ibis.dog.shared.Communication;
 import ibis.imaging4j.Image;
 import ibis.ipl.IbisIdentifier;
 import ibis.util.ThreadPool;

@@ -30,50 +30,46 @@ public class ControlPanel extends JPanel implements ItemListener,
 
     private final JCheckBox speechCheckBox;
 
-    private final OutputPanel output;
-
     private final Client client;
 
     Speech speech;
     boolean speak = true;
 
-    public ControlPanel(OutputPanel output, Client client) {
+    public ControlPanel(Client client) {
 
-        this.output = output;
         this.client = client;
 
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setBorder(BorderFactory.createTitledBorder("Control"));
 
         inputField = new JTextField("");
         inputField.setMinimumSize(new Dimension(0, 25));
         inputField.setMaximumSize(new Dimension(Short.MAX_VALUE, 25));
+        inputField.setPreferredSize(new Dimension(300, 25));
 
         add(inputField);
         add(Box.createRigidArea(new Dimension(5, 5)));
 
-        // Create the buttons
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-
         learnButton = new JButton("Learn");
         learnButton.addActionListener(this);
+        add(learnButton);
+        
+        add(Box.createRigidArea(new Dimension(5, 5)));
 
         recognizeButton = new JButton("Recognize");
         recognizeButton.addActionListener(this);
+        add(recognizeButton);
+        
+        add(Box.createRigidArea(new Dimension(5, 5)));
 
         speechCheckBox = new JCheckBox("Speech");
         speechCheckBox.setSelected(true);
         speechCheckBox.addItemListener(this);
+        add(speechCheckBox);
 
         speech = new Speech(true);
         speech.speak("Voice initialized");
 
-        buttonPanel.add(learnButton);
-        buttonPanel.add(recognizeButton);
-        buttonPanel.add(speechCheckBox);
-
-        add(buttonPanel);
     }
 
     // Listens to checkbox
@@ -82,9 +78,7 @@ public class ControlPanel extends JPanel implements ItemListener,
         Object source = e.getItemSelectable();
 
         if (source == speechCheckBox) {
-            if (output != null) {
-                speak = e.getStateChange() == ItemEvent.SELECTED;
-            }
+            speak = e.getStateChange() == ItemEvent.SELECTED;
         }
     }
 
@@ -118,7 +112,8 @@ public class ControlPanel extends JPanel implements ItemListener,
                 JOptionPane.showMessageDialog(getRootPane(), text);
                 inputField.setText("");
             } else {
-                String text = "I failed to learn object called: \"" + name + "\"";
+                String text = "I failed to learn object called: \"" + name
+                        + "\"";
                 speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Error",
                         JOptionPane.ERROR_MESSAGE);

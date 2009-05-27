@@ -1,12 +1,12 @@
 package ibis.dog.client;
 
+import ibis.dog.Communication;
+import ibis.dog.FeatureVector;
+import ibis.dog.Upcall;
 import ibis.dog.database.DatabaseReply;
 import ibis.dog.database.DatabaseRequest;
 import ibis.dog.database.Item;
 import ibis.dog.server.ServerReply;
-import ibis.dog.shared.Communication;
-import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.Upcall;
 import ibis.imaging4j.Image;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
@@ -29,6 +29,8 @@ public class Client implements Upcall, VideoConsumer {
     private final Communication communication;
 
     private final MessageListener messageListener;
+
+    private final ServerListener serverListener;
 
     private final Map<IbisIdentifier, ServerHandler> servers;
 
@@ -55,9 +57,10 @@ public class Client implements Upcall, VideoConsumer {
     private long processedFrameCount;
     private long lastProcessedFrame;
 
-    public Client(MessageListener listener) throws IbisCreationFailedException,
-            IOException {
-        this.messageListener = listener;
+    public Client(MessageListener messageListener, ServerListener serverListener)
+            throws IbisCreationFailedException, IOException {
+        this.messageListener = messageListener;
+        this.serverListener = serverListener;
         logger.debug("Initializing client");
         servers = new HashMap<IbisIdentifier, ServerHandler>();
 
@@ -298,23 +301,32 @@ public class Client implements Upcall, VideoConsumer {
     }
 
     @Override
-    public synchronized void newServer(IbisIdentifier identifier) {
-        logger.debug("new server: " + identifier);
+    public void newServer(IbisIdentifier identifier) {
+        ServerHandler handler;
+        synchronized (this) {
+            logger.debug("new server: " + identifier);
 
-        ServerHandler handler = new ServerHandler(identifier, this,
-                communication);
+            handler = new ServerHandler(identifier, this, communication);
 
-        servers.put(identifier, handler);
+            servers.put(identifier, handler);
+        }
+        serverListener.newServer(handler);
     }
 
     @Override
-    public synchronized void serverGone(IbisIdentifier identifier) {
-        logger.debug("server gone: " + identifier);
+    public void serverGone(IbisIdentifier identifier) {
+        ServerHandler handler;
+        synchronized (this) {
+            logger.debug("server gone: " + identifier);
 
-        ServerHandler handler = servers.remove(identifier);
+            handler = servers.remove(identifier);
 
+            if (handler != null) {
+                handler.end();
+            }
+        }
         if (handler != null) {
-            handler.end();
+            serverListener.serverGone(handler);
         }
     }
 

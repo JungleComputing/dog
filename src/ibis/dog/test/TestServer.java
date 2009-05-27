@@ -1,7 +1,7 @@
 package ibis.dog.test;
 
+import ibis.dog.FeatureVector;
 import ibis.dog.server.Server;
-import ibis.dog.shared.FeatureVector;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.conversion.Conversion;
@@ -10,7 +10,6 @@ import ibis.imaging4j.scaling.Scaler;
 import ibis.imaging4j.scaling.Scaling;
 import ibis.ipl.IbisCreationFailedException;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.slf4j.Logger;

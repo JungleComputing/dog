@@ -1,6 +1,6 @@
 package ibis.dog.test;
 
-import ibis.dog.shared.FeatureVector;
+import ibis.dog.FeatureVector;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

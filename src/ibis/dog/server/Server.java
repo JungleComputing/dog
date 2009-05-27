@@ -1,8 +1,8 @@
 package ibis.dog.server;
 
-import ibis.dog.shared.Communication;
-import ibis.dog.shared.FeatureVector;
-import ibis.dog.shared.Upcall;
+import ibis.dog.Communication;
+import ibis.dog.FeatureVector;
+import ibis.dog.Upcall;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.Imaging4j;

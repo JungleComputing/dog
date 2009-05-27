@@ -1,4 +1,4 @@
-package ibis.dog.shared;
+package ibis.dog;
 
 import ibis.ipl.IbisIdentifier;
 
