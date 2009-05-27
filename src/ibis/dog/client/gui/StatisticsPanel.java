@@ -48,7 +48,7 @@ public class StatisticsPanel extends JPanel {
 
             while (true) {
                 try {
-                    sleep(1000);
+                    sleep(10000);
                 } catch (Exception e) {
                     // TODO: handle exception
                 }
