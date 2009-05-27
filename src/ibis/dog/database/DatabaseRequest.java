@@ -21,16 +21,19 @@ public class DatabaseRequest implements Serializable {
     private final Item item;
     
     private final long sequenceNumber;
+    
+    private final IbisIdentifier server;
 
     private final FeatureVector vector;
 
     private final IbisIdentifier replyAddress;
     
-    public DatabaseRequest(Function function, int nrOfResults, Item item, long sequenceNumber, FeatureVector vector, IbisIdentifier replyAddress) {
+    public DatabaseRequest(Function function, int nrOfResults, Item item, long sequenceNumber, IbisIdentifier server, FeatureVector vector, IbisIdentifier replyAddress) {
         this.function = function;
         this.nrOfResults = nrOfResults;
         this.item = item;
         this.sequenceNumber = sequenceNumber;
+        this.server = server;
         this.vector = vector;
         this.replyAddress = replyAddress;
     }
@@ -50,6 +53,11 @@ public class DatabaseRequest implements Serializable {
     public long getSequenceNumber() {
         return sequenceNumber;
     }
+    
+    public IbisIdentifier getServer() {
+        return server;
+    }
+
 
     public FeatureVector getVector() {
         return vector;

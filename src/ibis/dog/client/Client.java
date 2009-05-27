@@ -59,12 +59,9 @@ public class Client implements Upcall, VideoConsumer {
             IOException {
         this.messageListener = listener;
         logger.debug("Initializing client");
-
-        communication = new Communication(Communication.CLIENT_ROLE, this);
-
         servers = new HashMap<IbisIdentifier, ServerHandler>();
 
-        logger.debug("Done initializing client");
+        communication = new Communication(Communication.CLIENT_ROLE, this);
 
         // initialize fps
         inputFPS();
@@ -73,6 +70,10 @@ public class Client implements Upcall, VideoConsumer {
 
         lastDisplayedFrame = -1;
         lastProcessedFrame = -1;
+
+        communication.start();
+
+        logger.info("Done initializing client");
     }
 
     public void log(String message) {
@@ -135,8 +136,8 @@ public class Client implements Upcall, VideoConsumer {
 
     @Override
     public synchronized void gotImage(Image image) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("got Image, format = " + image.getFormat()
+        if (logger.isTraceEnabled()) {
+            logger.trace("got Image, format = " + image.getFormat()
                     + " width = " + image.getWidth() + ", height = "
                     + image.getHeight() + ", size = " + image.getSize());
         }
@@ -254,7 +255,8 @@ public class Client implements Upcall, VideoConsumer {
         // send vector to database for lookup
         DatabaseRequest request = new DatabaseRequest(
                 DatabaseRequest.Function.RECOGNIZE, 1, null, 0, reply
-                        .getResult(), communication.getIdentifier());
+                        .getServer(), reply.getResult(), communication
+                        .getIdentifier());
 
         IbisIdentifier database = communication.getDatabase();
 

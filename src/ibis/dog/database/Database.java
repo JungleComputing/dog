@@ -143,7 +143,9 @@ public class Database implements Upcall {
             logger.info("created new (empty) database, will save in \"" + FILE
                     + "\"");
         }
-
+        
+        communication.start();
+        logger.info("Database initialized");
     }
 
     private synchronized int getSize() {
@@ -253,8 +255,7 @@ public class Database implements Upcall {
             SortedMap<Double, Item> results = recognize(request.getVector(),
                     request.getNrOfResults());
 
-            DatabaseReply reply = new DatabaseReply(communication
-                    .getIdentifier(), request.getSequenceNumber(), results);
+            DatabaseReply reply = new DatabaseReply(request.getServer(), request.getSequenceNumber(), results);
 
             try {
                 communication.send(request.getReplyAddress(), reply);

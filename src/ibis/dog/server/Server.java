@@ -74,8 +74,11 @@ public class Server implements Upcall {
             communication = null;
         }
 
-        // do initialization now instead of after the first request is received.
+        // do initialisation now instead of after the first request is received.
         CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
+        if (communication != null) {
+            communication.start();
+        }
         logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs()
                 + " Initialization done");
     }
@@ -183,9 +186,6 @@ public class Server implements Upcall {
 
                 Image srcImage = request.getImage();
 
-                //DEBUG
-                IO.save(Imaging4j.convert(srcImage, Format.JPG), new File("original.jpg"));
-
                 Image convertedImage;
                 if (srcImage.getFormat() == IMAGE_FORMAT) {
                     // no need to convert
@@ -193,9 +193,6 @@ public class Server implements Upcall {
                 } else {
                     convertedImage = Imaging4j.convert(srcImage, IMAGE_FORMAT);
                 }
-                
-                //DEBUG
-                IO.save(Imaging4j.convert(convertedImage, Format.JPG), new File("converted.jpg"));
 
                 scaling = System.currentTimeMillis();
 
@@ -208,11 +205,11 @@ public class Server implements Upcall {
                     scaledImage = Imaging4j.scale(convertedImage, IMAGE_WIDTH,
                             IMAGE_HEIGHT);
                 }
-                
-                IO.save(Imaging4j.convert(srcImage, Format.JPG), new File("scaled.jpg"));
+
+                //IO.save(scaledImage, new File("image.rgb"));
 
                 pixels = scaledImage.getData().array();
-                
+
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,

@@ -63,7 +63,7 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
         this.upcall = upcall;
         this.role = role;
 
-        logger.info("Starting communication");
+        logger.info("Initializing communication");
 
         // Create an Ibis
         ibis = IbisFactory.createIbis(ibisCapabilities, null, true, this, null,
@@ -72,16 +72,19 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
         // Create the receive port and switch it on.
         receivePort = ibis.createReceivePort(portType, PORT_NAME, this);
         receivePort.enableConnections();
-        receivePort.enableMessageUpcalls();
-
-        ibis.registry().enableEvents();
 
         // try to become the "main" database
         if (role.equals(DATABASE_ROLE)) {
             ibis.registry().elect(DATABASE_ROLE);
         }
 
-        logger.info("Done starting communication");
+        logger.info("Communication initialized");
+    }
+    
+    public void start() {
+        receivePort.enableMessageUpcalls();
+
+        ibis.registry().enableEvents();
     }
     
     public IbisIdentifier getIdentifier() {
@@ -139,7 +142,9 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
         try {
             WriteMessage wm = connection.newMessage();
             wm.writeObject(object);
-            wm.finish();
+            long size = wm.finish();
+            
+            logger.debug("send message of size " + size);
         } catch (IOException e) {
             removeConnection(connection);
             throw e;
@@ -241,12 +246,6 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
     }
 
     private void gone(IbisIdentifier identifier) {
-        synchronized (this) {
-            if (identifier.equals(database)) {
-                database = null;
-            }
-        }
-
         String role = identifier.tagAsString();
         
         logger.info("Ibis Gone: " + identifier + " role = \"" + role + "\"");

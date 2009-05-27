@@ -34,7 +34,7 @@ public class ServerHandler implements Runnable {
         
         logger.debug("new Server handler: " + this);
 
-        ThreadPool.createNew(this, "Server Handler" + this);
+        ThreadPool.createNew(this, "Server Handler for " + this);
     }
 
     public synchronized void setEnabled(boolean value) {
@@ -70,7 +70,6 @@ public class ServerHandler implements Runnable {
     }
 
     private boolean sendRequest(Image image) {
-        logger.debug("sending request to " + this);
         ServerRequest request = new ServerRequest(0, image, communication
                 .getIdentifier());
 
@@ -108,15 +107,19 @@ public class ServerHandler implements Runnable {
     public void run() {
         while (!isDone()) {
             if (isEnabled()) {
+                logger.debug("Getting image to send to " + address);
                 Image frame = client.getProcessImage();
+                logger.debug("Got image to send to " + address);
                 boolean success = true;
                 
                 if (frame == null) {
                     success = false;
                 } else {
+                    logger.debug("Sending request to " + address);
                     success = sendRequest(frame);
                 }
                 if (success) {
+                    logger.debug("Wating for reply from " + address);
                     waitForReply();
                 } else {
                     try {
@@ -124,7 +127,9 @@ public class ServerHandler implements Runnable {
                     } catch (InterruptedException e) {
                         // IGNORE
                     }
+                    
                 }
+                logger.debug("Request/Reply cycle to " + address + " done");
             } else {
                 waitUntilEnabled();
             }

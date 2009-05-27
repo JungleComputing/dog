@@ -16,6 +16,7 @@ public class WebCam {
             throw new Exception("No formats found for device " + description);
         }
 
+        //prefer a compressed image format
         for (Format format : description.getFormats()) {
             if (format.isCompressed()) {
                 return format;
