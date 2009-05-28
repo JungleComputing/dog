@@ -57,7 +57,7 @@ public class ServerHandler implements Runnable {
     }
 
     public String getName() {
-        return address.location().toString();
+        return address.location().getLevel(address.location().numberOfLevels() - 1);
     }
 
     private synchronized boolean isDone() {
@@ -137,6 +137,6 @@ public class ServerHandler implements Runnable {
     }
 
     public String toString() {
-        return address.location().toString();
+        return getName();
     }
 }

@@ -20,6 +20,7 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.image.MemoryImageSource;
+import java.io.File;
 import java.nio.ByteBuffer;
 
 import javax.swing.JPanel;
@@ -106,16 +107,20 @@ class VideoPanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-
         while (true) {
             try {
-
                 Image image = client.getDisplayImage();
 
                 if (image == null) {
                     logger.debug("videostream exiting");
                     return;
                 } else {
+                    if (false) {
+                    Imaging4j.save(image, new File("image.jpg"));
+                    Imaging4j.save(image, new File("image.rgb"));
+                    return;
+                    }
+                    
                     Image argb32;
 
                     if (image.getFormat() == Format.ARGB32) {
@@ -135,6 +140,7 @@ class VideoPanel extends JPanel implements Runnable {
                     ByteBuffer buffer = scaled.getData();
                     buffer.clear();
                     buffer.asIntBuffer().get(pixels);
+                    imageValid = true;
                 }
 
                 // notify we have new pixels available

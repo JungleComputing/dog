@@ -22,7 +22,7 @@ public class MessagePanel extends JPanel implements MessageListener {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Messages"));
-        setPreferredSize(new Dimension(600, 200));
+        setPreferredSize(new Dimension(400, 200));
 
         textOutput = new JTextArea();
         textOutput.setLineWrap(true);
@@ -35,14 +35,15 @@ public class MessagePanel extends JPanel implements MessageListener {
         JScrollPane textScroll = new JScrollPane(textOutput,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
         add(textScroll);
 
     }
 
     @Override
     public void message(String message) {
-        textOutput.insert(message + "\n", 0);
+        String output = String.format("%tR %s\n", System.currentTimeMillis(), message);
+        
+        textOutput.insert(output, 0);
     }
 
 }

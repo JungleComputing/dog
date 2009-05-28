@@ -16,7 +16,7 @@ public class WebCam {
             throw new Exception("No formats found for device " + description);
         }
 
-        //prefer a compressed image format
+        // prefer a compressed image format
         for (Format format : description.getFormats()) {
             if (format.isCompressed()) {
                 return format;
@@ -38,7 +38,8 @@ public class WebCam {
         return VideoDeviceFactory.availableDevices();
     }
 
-    public VideoSource selectDevice(VideoDeviceDescription description) throws Exception {
+    public VideoSource selectDevice(VideoDeviceDescription description)
+            throws Exception {
         // first select format
         Format format = selectFormat(description);
 
@@ -49,9 +50,9 @@ public class WebCam {
                 description.deviceNumber, TARGET_WIDTH, TARGET_HEIGHT, 0,
                 format, 85);
         device.start();
-        
+
         return device;
-        
+
     }
 
 }

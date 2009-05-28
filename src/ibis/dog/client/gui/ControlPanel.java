@@ -2,7 +2,10 @@ package ibis.dog.client.gui;
 
 import ibis.dog.client.Client;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -17,7 +20,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class ControlPanel extends JPanel implements ItemListener,
+public class ControlPanel extends JPanel implements 
         ActionListener {
 
     // Generated
@@ -28,66 +31,47 @@ public class ControlPanel extends JPanel implements ItemListener,
     private final JButton learnButton;
     private final JButton recognizeButton;
 
-    private final JCheckBox speechCheckBox;
-
     private final Client client;
 
     Speech speech;
-    boolean speak = true;
 
     public ControlPanel(Client client) {
 
         this.client = client;
-
+        
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setBorder(BorderFactory.createTitledBorder("Control"));
+        //setBorder(BorderFactory.createTitledBorder("Control"));
+        setPreferredSize(new Dimension(250, 60));
 
-        inputField = new JTextField("");
-        inputField.setMinimumSize(new Dimension(0, 25));
-        inputField.setMaximumSize(new Dimension(Short.MAX_VALUE, 25));
-        inputField.setPreferredSize(new Dimension(300, 25));
 
-        add(inputField);
-        add(Box.createRigidArea(new Dimension(5, 5)));
+        JPanel buttons = new JPanel();
+        buttons.setLayout(new GridLayout(2,1));
 
         learnButton = new JButton("Learn");
         learnButton.addActionListener(this);
-        add(learnButton);
+        buttons.add(learnButton);
         
-        add(Box.createRigidArea(new Dimension(5, 5)));
-
         recognizeButton = new JButton("Recognize");
         recognizeButton.addActionListener(this);
-        add(recognizeButton);
+        buttons.add(recognizeButton);
         
+        buttons.setAlignmentY(TOP_ALIGNMENT);
+        
+        add(buttons);
+
         add(Box.createRigidArea(new Dimension(5, 5)));
+        
+        inputField = new JTextField("");
+        inputField.setAlignmentY(Component.TOP_ALIGNMENT);
+        inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
-        speechCheckBox = new JCheckBox("Speech");
-        speechCheckBox.setSelected(true);
-        speechCheckBox.addItemListener(this);
-        add(speechCheckBox);
-
+        add(inputField);
+        
         speech = new Speech(true);
         speech.speak("Voice initialized");
 
     }
-
-    // Listens to checkbox
-    public synchronized void itemStateChanged(ItemEvent e) {
-
-        Object source = e.getItemSelectable();
-
-        if (source == speechCheckBox) {
-            speak = e.getStateChange() == ItemEvent.SELECTED;
-        }
-    }
-
-    private synchronized void speak(String text) {
-        if (speak) {
-            speech.speak(text);
-        }
-    }
-
+   
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == learnButton) {
@@ -108,13 +92,13 @@ public class ControlPanel extends JPanel implements ItemListener,
             if (success) {
                 String text = "I have just learned a new object called: \""
                         + name + "\"";
-                speak(text);
+                speech.speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text);
                 inputField.setText("");
             } else {
                 String text = "I failed to learn object called: \"" + name
                         + "\"";
-                speak(text);
+                speech.speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -125,11 +109,11 @@ public class ControlPanel extends JPanel implements ItemListener,
 
             if (object != null) {
                 String text = "This object is a \"" + object + "\"";
-                speak(text);
+                speech.speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text);
             } else {
                 String text = "I do not recognize this object";
-                speak(text);
+                speech.speak(text);
                 JOptionPane.showMessageDialog(getRootPane(), text, "Warning",
                         JOptionPane.WARNING_MESSAGE);
             }

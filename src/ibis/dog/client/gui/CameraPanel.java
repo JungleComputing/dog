@@ -39,16 +39,10 @@ public class CameraPanel extends JPanel implements ActionListener {
 
     public CameraPanel(Client client) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createTitledBorder("Camera"));
+        //setBorder(BorderFactory.createTitledBorder("Camera"));
         //setPreferredSize(new Dimension(300, 400));
         
         webCam = new WebCam(client);
-
-        // actually display video
-        videoPanel = new VideoPanel(client);
-        add(videoPanel);
-
-        add(Box.createRigidArea(new Dimension(0, 5)));
 
         // Create the combo box, select the item at index 0 (Item "none").
         deviceList = new JComboBox();
@@ -60,6 +54,13 @@ public class CameraPanel extends JPanel implements ActionListener {
         deviceList.setMaximumSize(new Dimension(352, 25));
 
         add(deviceList);
+
+        add(Box.createRigidArea(new Dimension(0, 5)));
+
+        // actually display video
+        videoPanel = new VideoPanel(client);
+        add(videoPanel);
+
 
 
     }

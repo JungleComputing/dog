@@ -48,7 +48,7 @@ public class StatisticsPanel extends JPanel {
 
             while (true) {
                 try {
-                    sleep(10000);
+                    sleep(5000);
                 } catch (Exception e) {
                     // TODO: handle exception
                 }
@@ -56,6 +56,10 @@ public class StatisticsPanel extends JPanel {
                 dataset.getSeries(0).add(new Millisecond(), client.inputFPS());
                 dataset.getSeries(1).add(new Millisecond(),
                         client.processedFPS());
+
+                dataset.getSeries(2).add(new Millisecond(),
+                        client.displayedFPS());
+
             }
         }
 
@@ -65,10 +69,10 @@ public class StatisticsPanel extends JPanel {
         this.client = client;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        //setMaximumSize(new Dimension(Short.MAX_VALUE, 100));
-        //setMinimumSize(new Dimension(100, 100));
+        // setMaximumSize(new Dimension(Short.MAX_VALUE, 100));
+        // setMinimumSize(new Dimension(100, 100));
         setBorder(BorderFactory.createTitledBorder("Statistics"));
-        setPreferredSize(new Dimension(600, 200));
+        setPreferredSize(new Dimension(600, 250));
 
         dataset = new TimeSeriesCollection();
 
@@ -78,16 +82,19 @@ public class StatisticsPanel extends JPanel {
         series = new TimeSeries("processed", Millisecond.class);
         dataset.addSeries(series);
 
+        series = new TimeSeries("displayed", Millisecond.class);
+        dataset.addSeries(series);
+
         NumberAxis yAxis = new NumberAxis("Frames/sec.");
-        yAxis.setAutoRangeIncludesZero(false);
+        yAxis.setAutoRangeIncludesZero(true);
+        yAxis.setAutoRangeMinimumSize(10.0);
         yAxis.setAutoRange(true);
-        
+
         ValueAxis xAxis = new DateAxis();
         xAxis.setAutoRange(true);
         xAxis.setFixedAutoRange(60000.0); // 60 seconds
 
-        plot = new XYPlot(dataset, xAxis, yAxis,
-                new StandardXYItemRenderer());
+        plot = new XYPlot(dataset, xAxis, yAxis, new StandardXYItemRenderer());
 
         plot.setForegroundAlpha(0.75f);
         plot.setBackgroundPaint(Color.white);
@@ -99,11 +106,13 @@ public class StatisticsPanel extends JPanel {
         // chart.removeLegend();
         chart.setAntiAlias(true);
 
-
         ChartPanel panel = new ChartPanel(chart);
 
-        // panel.setMaximumDrawHeight(290);
+        dataset.getSeries(0).add(new Millisecond(), 0);
+        dataset.getSeries(1).add(new Millisecond(), 0);
+        dataset.getSeries(2).add(new Millisecond(), 0);
 
+        // panel.setMaximumDrawHeight(290);
 
         add(panel);
 

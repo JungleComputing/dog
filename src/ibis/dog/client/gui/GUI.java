@@ -3,9 +3,12 @@ package ibis.dog.client.gui;
 import ibis.dog.client.Client;
 
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -38,61 +41,73 @@ public class GUI extends JPanel implements WindowListener {
         ControlPanel controlPanel = new ControlPanel(client);
         cameraPanel = new CameraPanel(client);
         StatisticsPanel statisticsPanel = new StatisticsPanel(client);
-
+        
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        
+        add(Box.createRigidArea(new Dimension(5, 5)));
 
         JPanel top = new JPanel();
+        
         top.setLayout(new BoxLayout(top, BoxLayout.X_AXIS));
 
-        JPanel controlServer = new JPanel();
-        controlServer.setLayout(new BoxLayout(controlServer, BoxLayout.Y_AXIS));
-        controlServer.add(controlPanel);
-        controlServer.add(serverPanel);
+        JPanel cameraAndControl = new JPanel();
+        cameraAndControl.setBorder(BorderFactory.createTitledBorder("Control"));
+        cameraAndControl.setMaximumSize(new Dimension(360, 410));
+        cameraAndControl.setPreferredSize(new Dimension(360, 410));
+        cameraAndControl.setMinimumSize(new Dimension(360, 410));
+        cameraAndControl.setLayout(new BoxLayout(cameraAndControl, BoxLayout.Y_AXIS));
+        cameraAndControl.add(cameraPanel);
+        cameraAndControl.add(controlPanel);
+        
+        top.add(cameraAndControl);
+        top.add(Box.createRigidArea(new Dimension(5, 5)));
+        top.add(serverPanel);
+        
+        JPanel logosAndMessages = new JPanel();
+        logosAndMessages.setLayout(new BoxLayout(logosAndMessages, BoxLayout.Y_AXIS));
+        
+        JPanel logos = new JPanel();
+        logos.setLayout(new BoxLayout(logos, BoxLayout.X_AXIS));
+        logos.add(Box.createRigidArea(new Dimension(25, 25)));
+        logos.add(new JLabel(new ImageIcon("images/vu.png")));
+        logos.add(Box.createRigidArea(new Dimension(25, 25)));
+        logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
+        logos.add(Box.createRigidArea(new Dimension(25, 25)));
+        logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
+        logos.add(Box.createRigidArea(new Dimension(25, 25)));
+        logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
+        logos.add(Box.createRigidArea(new Dimension(25, 25)));
 
-        top.add(controlServer);
-        top.add(cameraPanel);
+        
+        logosAndMessages.add(messagePanel);
+        logosAndMessages.add(Box.createRigidArea(new Dimension(12, 12)));
 
+        logosAndMessages.add(logos);
+        logosAndMessages.add(Box.createRigidArea(new Dimension(12, 12)));
+
+        
+        top.add(logosAndMessages);
+
+        top.add(Box.createRigidArea(new Dimension(5, 5)));
+        
         add(top);
 
-        JPanel middle = new JPanel();
-        middle.setPreferredSize(new Dimension(200, 200));
-        middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
-        middle.add(new JLabel(new ImageIcon("images/vl-e.png")));
-        middle.add(statisticsPanel);
-        middle.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
-        add(middle);
-
-        JPanel bottom = new JPanel();
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
-        bottom.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
-        bottom.add(messagePanel);
-        bottom.add(new JLabel(new ImageIcon("images/vu.png")));
-        add(bottom);
-
-
-        // JPanel bottom = new JPanel();
-        // bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
-        //
-        // JPanel leftLogos = new JPanel();
-        // leftLogos.setLayout(new BoxLayout(leftLogos, BoxLayout.Y_AXIS));
-        // leftLogos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
-        // leftLogos.add(new JLabel(new ImageIcon("images/JavaGAT.png")));
-        // bottom.add(leftLogos);
-        //
-        // JPanel bottomCenter = new JPanel();
-        // bottomCenter.setLayout(new BoxLayout(bottomCenter,
-        // BoxLayout.Y_AXIS));
-        // bottomCenter.add(statisticsPanel);
-        // bottomCenter.add(messagePanel);
-        // bottom.add(bottomCenter);
-        //
-        // JPanel rightLogos = new JPanel();
-        // rightLogos.setLayout(new BoxLayout(rightLogos, BoxLayout.Y_AXIS));
-        // rightLogos.add(new JLabel(new ImageIcon("images/vu.png")));
-        // rightLogos.add(new JLabel(new ImageIcon("images/MultimediaN.gif")));
-        // bottom.add(rightLogos);
-        //        
-        // add(bottom);
+        add(statisticsPanel);
+        
+        
+//        JPanel middle = new JPanel();
+//        middle.setPreferredSize(new Dimension(200, 200));
+//        middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
+//        middle.add(Box.createRigidArea(new Dimension(5, 5)));
+//        middle.add(statisticsPanel);
+//        middle.add(Box.createRigidArea(new Dimension(5, 5)));
+//        add(middle);
+//
+//        JPanel bottom = new JPanel();
+//        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+//        bottom.add(messagePanel);
+//        bottom.add(Box.createRigidArea(new Dimension(5, 5)));
+//        add(bottom);
 
         // create GUI in main Swing thread
         javax.swing.SwingUtilities.invokeLater(new Runnable() {

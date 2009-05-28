@@ -36,7 +36,7 @@ public class Client implements Upcall, VideoConsumer {
 
     // current image
     private Image input = null;
-    private long inputSeqNr = 0;
+    private long inputSeqNr = -1;
 
     private Item currentResult = null;
 
@@ -159,7 +159,7 @@ public class Client implements Upcall, VideoConsumer {
     }
 
     public synchronized Image getDisplayImage() {
-        while (lastDisplayedFrame == inputSeqNr) {
+        while (lastDisplayedFrame == inputSeqNr || input == null) {
             if (done) {
                 return null;
             }
@@ -170,11 +170,12 @@ public class Client implements Upcall, VideoConsumer {
             }
         }
         lastDisplayedFrame = inputSeqNr;
+        displayedFrameCount++;
         return input;
     }
 
     public synchronized Image getProcessImage() {
-        while (lastProcessedFrame == inputSeqNr) {
+        while (lastProcessedFrame == inputSeqNr || input == null) {
             if (done) {
                 return null;
             }
@@ -185,6 +186,7 @@ public class Client implements Upcall, VideoConsumer {
             }
         }
         lastProcessedFrame = inputSeqNr;
+        processedFrameCount++;
         return input;
     }
 
