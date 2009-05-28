@@ -6,14 +6,8 @@ import ibis.dog.Upcall;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.Imaging4j;
-import ibis.imaging4j.conversion.Conversion;
-import ibis.imaging4j.conversion.Convertor;
-import ibis.imaging4j.io.IO;
-import ibis.imaging4j.scaling.Scaler;
-import ibis.imaging4j.scaling.Scaling;
 import ibis.ipl.IbisIdentifier;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 

@@ -1,6 +1,5 @@
 package ibis.dog.client.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 
 import ibis.dog.client.MessageListener;
@@ -41,7 +40,7 @@ public class MessagePanel extends JPanel implements MessageListener {
 
     @Override
     public void message(String message) {
-        String output = String.format("%tR %s\n", System.currentTimeMillis(), message);
+        String output = String.format("%tT %s\n", System.currentTimeMillis(), message);
         
         textOutput.insert(output, 0);
     }

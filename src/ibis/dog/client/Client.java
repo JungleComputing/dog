@@ -278,15 +278,18 @@ public class Client implements Upcall, VideoConsumer {
     }
 
     private synchronized void processDatabaseReply(DatabaseReply reply) {
+        IbisIdentifier server = reply.getServer();
+        String serverName = server.location().getLevel(server.location().numberOfLevels() - 1);
+        
         if (reply.getResults().isEmpty()) {
-            log(reply.getServer().location().toString()
+            log(serverName
                     + " does not recognize this object");
             return;
         }
         Double key = reply.getResults().firstKey();
         this.currentResult = reply.getResults().get(key);
 
-        log(reply.getServer().location().toString() + " says this is a "
+        log(serverName + " says this is a "
                 + currentResult);
 
     }

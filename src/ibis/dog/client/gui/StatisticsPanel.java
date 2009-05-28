@@ -14,7 +14,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.data.time.Millisecond;
@@ -72,7 +71,7 @@ public class StatisticsPanel extends JPanel {
         // setMaximumSize(new Dimension(Short.MAX_VALUE, 100));
         // setMinimumSize(new Dimension(100, 100));
         setBorder(BorderFactory.createTitledBorder("Statistics"));
-        setPreferredSize(new Dimension(600, 250));
+        setPreferredSize(new Dimension(600, 400));
 
         dataset = new TimeSeriesCollection();
 

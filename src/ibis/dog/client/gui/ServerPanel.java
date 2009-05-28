@@ -39,6 +39,7 @@ public class ServerPanel extends JPanel implements
         setBorder(BorderFactory.createTitledBorder("Servers"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+
         setPreferredSize(new Dimension(200, 410));
         setMaximumSize(new Dimension(200, 410));
 
@@ -59,9 +60,14 @@ public class ServerPanel extends JPanel implements
     public synchronized void newServer(ServerHandler handler) {
         ServerListItem item = new ServerListItem(handler);
 
-        serverList.add(item, 1);
+        serverList.add(item, 0);
 
         servers.put(handler, item);
+        
+        serverList.validate();
+        validate();
+        serverList.repaint();
+        repaint();
     }
 
     @Override
@@ -69,9 +75,15 @@ public class ServerPanel extends JPanel implements
         JPanel panel = servers.remove(handler);
 
         if (panel != null) {
+            logger.debug("removing " + handler + " from list");
 
             serverList.remove(panel);
         }
+        
+        serverList.validate();
+        validate();
+        serverList.repaint();
+        repaint();
     }
 
 }

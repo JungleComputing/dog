@@ -9,13 +9,13 @@ import java.awt.event.ActionListener;
 import ibis.dog.client.ServerHandler;
 
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 public class ServerListItem extends JPanel implements ActionListener {
@@ -25,6 +25,14 @@ public class ServerListItem extends JPanel implements ActionListener {
     private final ServerHandler handler;
     private final JButton button;
     private final JLabel label;
+    
+    private static final ImageIcon playIcon;
+    private static final ImageIcon stopIcon;
+    
+    static {
+        playIcon = createImageIcon("/images/media-playback-start.png", "");
+        stopIcon = createImageIcon("/images/media-playback-stop.png", "");
+    }
     
     /** Returns an ImageIcon, or null if the path was invalid. */
     public static ImageIcon createImageIcon(String path, String description) {
@@ -48,15 +56,13 @@ public class ServerListItem extends JPanel implements ActionListener {
      * 
      * @param buttonText
      */
-    public static JButton createImageButton(String path, String description,
+    public static JButton createImageButton(ImageIcon icon,
             String buttonText) {
-        JButton result = new JButton(buttonText, createImageIcon(path,
-                description));
+        JButton result = new JButton(buttonText, icon);
         result.setHorizontalAlignment(SwingConstants.LEFT);
         result.setMargin(new Insets(2, 2, 2, 2));
         result.setVerticalTextPosition(AbstractButton.CENTER);
         result.setHorizontalTextPosition(AbstractButton.TRAILING);
-        result.setToolTipText(description);
         return result;
     }
 
@@ -64,32 +70,45 @@ public class ServerListItem extends JPanel implements ActionListener {
         this.handler = handler;
         setPreferredSize(new Dimension(200, 30));
         setMinimumSize(new Dimension(200, 30));
+        setMaximumSize(new Dimension(200, 30));
         
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        
+        JPanel item = new JPanel();
+        item.setOpaque(true);
+        item.setBackground(Color.WHITE);
+
+        item.setLayout(new BoxLayout(item, BoxLayout.X_AXIS));
+        
         button = createImageButton(
-                "/images/media-playback-start.png", null, null);
+                playIcon, null);
         button.addActionListener(this);
-        add(button);
-        add(Box.createRigidArea(new Dimension(5, 28)));
+        item.add(button);
+        item.add(Box.createRigidArea(new Dimension(5, 28)));
         label = new JLabel(handler.getName());
         label.setForeground(Color.RED);
-        add(label);
-        setAlignmentX(LEFT_ALIGNMENT);
-        // panel.setOpaque(true);
-        // panel.setBackground(Color.WHITE);
+        item.add(label);
+        item.setAlignmentX(LEFT_ALIGNMENT);
+        
+        add(item);
+        
+        add(new JSeparator(SwingConstants.HORIZONTAL));
 
+        setAlignmentX(LEFT_ALIGNMENT);
+        
+        setOpaque(true);
+        setBackground(Color.WHITE);
     }
 
     public void actionPerformed(ActionEvent e) {
 
         if (!handler.isEnabled()) {
             handler.setEnabled(true);
-            button.setText("D");
+            button.setIcon(stopIcon);
             label.setForeground(Color.decode("#16B400")); //GREENISH
         } else {
             handler.setEnabled(false);
-            button.setText("C");
+            button.setIcon(playIcon);
             label.setForeground(Color.RED);
         }
     }

@@ -1,5 +1,6 @@
 package ibis.dog.client.gui;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,7 +10,6 @@ import ibis.dog.client.WebCam;
 import ibis.video4j.VideoDeviceDescription;
 import ibis.video4j.devices.VideoSource;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
@@ -26,7 +26,7 @@ public class CameraPanel extends JPanel implements ActionListener {
     // Generated
     private static final long serialVersionUID = 1L;
 
-    private static final String NONE = "Off";
+    private static final String NONE = "Camera Off";
     private static final String SCAN = "Scan for devices";
 
     private JComboBox deviceList;
@@ -41,9 +41,10 @@ public class CameraPanel extends JPanel implements ActionListener {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         //setBorder(BorderFactory.createTitledBorder("Camera"));
         //setPreferredSize(new Dimension(300, 400));
+        setAlignmentY(Component.TOP_ALIGNMENT);
         
         webCam = new WebCam(client);
-
+        
         // Create the combo box, select the item at index 0 (Item "none").
         deviceList = new JComboBox();
         updateVideoDevices();
