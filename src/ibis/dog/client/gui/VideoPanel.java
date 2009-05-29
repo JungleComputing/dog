@@ -121,6 +121,7 @@ class VideoPanel extends JPanel implements Runnable {
                     return;
                     }
                     
+                    
                     Image argb32;
 
                     if (image.getFormat() == Format.ARGB32) {

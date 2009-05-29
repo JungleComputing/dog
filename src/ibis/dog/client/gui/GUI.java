@@ -3,6 +3,7 @@ package ibis.dog.client.gui;
 import ibis.dog.client.Client;
 
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -34,16 +35,17 @@ public class GUI extends JPanel implements WindowListener {
     public GUI() throws Exception {
         MessagePanel messagePanel = new MessagePanel();
         ServerPanel serverPanel = new ServerPanel();
+        GraphPanel graphPanel = new GraphPanel();
+        StatisticsPanel statisticsPanel = new StatisticsPanel();
 
-        client = new Client(messagePanel, serverPanel);
+        client = new Client(messagePanel, serverPanel, graphPanel, statisticsPanel);
 
         ControlPanel controlPanel = new ControlPanel(client);
         cameraPanel = new CameraPanel(client);
-        StatisticsPanel statisticsPanel = new StatisticsPanel(client);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        add(Box.createRigidArea(new Dimension(5, 5)));
+        //add(Box.createRigidArea(new Dimension(5, 5)));
 
         JPanel top = new JPanel();
 
@@ -69,30 +71,25 @@ public class GUI extends JPanel implements WindowListener {
                 BoxLayout.Y_AXIS));
 
         JPanel logos = new JPanel();
-        logos.setLayout(new BoxLayout(logos, BoxLayout.X_AXIS));
-        logos.add(Box.createRigidArea(new Dimension(25, 25)));
+        logos.setLayout(new GridLayout(1,4));
         logos.add(new JLabel(new ImageIcon("images/vu.png")));
-        logos.add(Box.createRigidArea(new Dimension(25, 25)));
         logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
-        logos.add(Box.createRigidArea(new Dimension(25, 25)));
         logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
-        logos.add(Box.createRigidArea(new Dimension(25, 25)));
         logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
-        logos.add(Box.createRigidArea(new Dimension(25, 25)));
 
+        logosAndMessages.add(statisticsPanel);
+        logosAndMessages.add(Box.createRigidArea(new Dimension(5, 5)));
         logosAndMessages.add(messagePanel);
-        logosAndMessages.add(Box.createRigidArea(new Dimension(12, 12)));
-
+        logosAndMessages.add(Box.createVerticalGlue());
         logosAndMessages.add(logos);
-        logosAndMessages.add(Box.createRigidArea(new Dimension(12, 12)));
-
-        top.add(logosAndMessages);
 
         top.add(Box.createRigidArea(new Dimension(5, 5)));
 
+        top.add(logosAndMessages);
+
         add(top);
 
-        add(statisticsPanel);
+        add(graphPanel);
 
         // JPanel middle = new JPanel();
         // middle.setPreferredSize(new Dimension(200, 200));
@@ -119,6 +116,9 @@ public class GUI extends JPanel implements WindowListener {
     private void createAndShowGUI() {
         JFrame frame = new JFrame("Ibis Object Recognition Demo Client");
         frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        frame.setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        frame.setMaximumSize(new Dimension(WIDTH, HEIGHT));
+
         frame.addWindowListener(this);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

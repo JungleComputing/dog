@@ -74,7 +74,7 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
 
         // try to become the "main" database
         if (role.equals(DATABASE_ROLE)) {
-            ibis.registry().elect(DATABASE_ROLE);
+            database = ibis.registry().elect(DATABASE_ROLE);
         }
 
         logger.info("Communication initialized");
@@ -205,7 +205,7 @@ public class Communication implements MessageUpcall, RegistryEventHandler {
             return;
         }
         
-        if (electionName.equals("database")) {
+        if (electionName.equals(DATABASE_ROLE)) {
             logger.info("Database election updated to: " + winner);
             synchronized (this) {
                 this.database = winner;

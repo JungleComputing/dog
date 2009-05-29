@@ -8,6 +8,7 @@ import ibis.imaging4j.Image;
 import ibis.imaging4j.Imaging4j;
 import ibis.ipl.IbisIdentifier;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -200,7 +201,7 @@ public class Server implements Upcall {
                             IMAGE_HEIGHT);
                 }
 
-                //IO.save(scaledImage, new File("image.rgb"));
+                //Imaging4j.save(scaledImage, new File("image.rgb"));
 
                 pixels = scaledImage.getData().array();
 

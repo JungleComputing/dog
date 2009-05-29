@@ -50,6 +50,10 @@ public class CameraPanel extends JPanel implements ActionListener {
         updateVideoDevices();
         deviceList.setSelectedIndex(0);
         deviceList.addActionListener(this);
+        
+        if (deviceList.getItemCount() > 2) {
+            deviceList.setSelectedIndex(1);
+        }
 
         deviceList.setMinimumSize(new Dimension(352, 25));
         deviceList.setMaximumSize(new Dimension(352, 25));
@@ -61,8 +65,6 @@ public class CameraPanel extends JPanel implements ActionListener {
         // actually display video
         videoPanel = new VideoPanel(client);
         add(videoPanel);
-
-
 
     }
 

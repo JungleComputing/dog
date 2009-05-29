@@ -37,7 +37,7 @@ public class WebCam {
     public VideoDeviceDescription[] availableDevices() throws Exception {
         return VideoDeviceFactory.availableDevices();
     }
-
+    
     public VideoSource selectDevice(VideoDeviceDescription description)
             throws Exception {
         // first select format

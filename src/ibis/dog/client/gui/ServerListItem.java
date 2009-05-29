@@ -86,7 +86,7 @@ public class ServerListItem extends JPanel implements ActionListener {
         item.add(button);
         item.add(Box.createRigidArea(new Dimension(5, 28)));
         label = new JLabel(handler.getName());
-        label.setForeground(Color.RED);
+        label.setForeground(Color.BLACK);
         item.add(label);
         item.setAlignmentX(LEFT_ALIGNMENT);
         
@@ -109,7 +109,7 @@ public class ServerListItem extends JPanel implements ActionListener {
         } else {
             handler.setEnabled(false);
             button.setIcon(playIcon);
-            label.setForeground(Color.RED);
+            label.setForeground(Color.BLACK);
         }
     }
 

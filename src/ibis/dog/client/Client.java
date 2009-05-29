@@ -10,6 +10,7 @@ import ibis.dog.server.ServerReply;
 import ibis.imaging4j.Image;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
+import ibis.util.ThreadPool;
 import ibis.video4j.VideoConsumer;
 
 import java.io.IOException;
@@ -19,11 +20,14 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Client implements Upcall, VideoConsumer {
+public class Client implements Upcall, VideoConsumer, Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public static final int DEFAULT_TIMEOUT = 5000;
+
+    public static final int HISTORY_SIZE = 20; // 20 seconds
+    public static final int HISTORY_INTERVAL = 1000; // 1 second
 
     // Communication object.
     private final Communication communication;
@@ -32,11 +36,15 @@ public class Client implements Upcall, VideoConsumer {
 
     private final ServerListener serverListener;
 
+    private final StatisticsListener[] statisticsListeners;
+
     private final Map<IbisIdentifier, ServerHandler> servers;
 
     // current image
     private Image input = null;
-    private long inputSeqNr = -1;
+    private long inputSeqNr = 0;
+    private long lastDisplayedFrame = 0;
+    private long lastProcessedFrame = 0;
 
     private Item currentResult = null;
 
@@ -46,35 +54,33 @@ public class Client implements Upcall, VideoConsumer {
 
     // statistics for frame rate
 
-    private long inputFrameStart;
-    private long inputFrameCount;
+    private final int[] inputFrameCountHistory;
+    private final int[] displayedFrameCountHistory;
+    private final int[] processedFrameCountHistory;
+    private int validHistorySize;
+    private int currentHistoryIndex;
 
-    private long displayedFrameStart;
-    private long displayedFrameCount;
-    private long lastDisplayedFrame;
-
-    private long processedFrameStart;
-    private long processedFrameCount;
-    private long lastProcessedFrame;
-
-    public Client(MessageListener messageListener, ServerListener serverListener)
+    public Client(MessageListener messageListener,
+            ServerListener serverListener,
+            StatisticsListener... statisticListeners)
             throws IbisCreationFailedException, IOException {
         this.messageListener = messageListener;
         this.serverListener = serverListener;
+        this.statisticsListeners = statisticListeners;
         logger.debug("Initializing client");
         servers = new HashMap<IbisIdentifier, ServerHandler>();
 
         communication = new Communication(Communication.CLIENT_ROLE, this);
 
-        // initialize fps
-        inputFPS();
-        displayedFPS();
-        processedFPS();
-
-        lastDisplayedFrame = -1;
-        lastProcessedFrame = -1;
+        inputFrameCountHistory = new int[HISTORY_SIZE];
+        displayedFrameCountHistory = new int[HISTORY_SIZE];
+        processedFrameCountHistory = new int[HISTORY_SIZE];
+        validHistorySize = 0;
+        currentHistoryIndex = 0;
 
         communication.start();
+
+        ThreadPool.createNew(this, "statistics update");
 
         logger.info("Done initializing client");
     }
@@ -84,57 +90,6 @@ public class Client implements Upcall, VideoConsumer {
             messageListener.message(message);
         }
         logger.info(message);
-    }
-
-    public synchronized double inputFPS() {
-        long now = System.currentTimeMillis();
-
-        double result;
-        if (inputFrameCount == 0 || inputFrameStart >= now) {
-            result = 0;
-        } else {
-            result = (double) inputFrameCount * 1000.0
-                    / (double) (now - inputFrameStart);
-        }
-
-        inputFrameCount = 0;
-        inputFrameStart = now;
-
-        return result;
-    }
-
-    public synchronized double displayedFPS() {
-        long now = System.currentTimeMillis();
-
-        double result;
-        if (displayedFrameCount == 0 || displayedFrameStart >= now) {
-            result = 0;
-        } else {
-            result = (double) displayedFrameCount * 1000.0
-                    / (double) (now - displayedFrameStart);
-        }
-
-        displayedFrameCount = 0;
-        displayedFrameStart = now;
-
-        return result;
-    }
-
-    public synchronized double processedFPS() {
-        long now = System.currentTimeMillis();
-
-        double result;
-        if (processedFrameCount == 0 || processedFrameStart >= now) {
-            result = 0;
-        } else {
-            result = (double) processedFrameCount * 1000.0
-                    / (double) (now - processedFrameStart);
-        }
-
-        processedFrameCount = 0;
-        processedFrameStart = now;
-
-        return result;
     }
 
     @Override
@@ -153,7 +108,7 @@ public class Client implements Upcall, VideoConsumer {
             return;
         }
 
-        inputFrameCount++;
+        inputFrameCountHistory[currentHistoryIndex]++;
         inputSeqNr++;
         notifyAll();
     }
@@ -170,7 +125,8 @@ public class Client implements Upcall, VideoConsumer {
             }
         }
         lastDisplayedFrame = inputSeqNr;
-        displayedFrameCount++;
+        displayedFrameCountHistory[currentHistoryIndex]++;
+
         return input;
     }
 
@@ -186,7 +142,7 @@ public class Client implements Upcall, VideoConsumer {
             }
         }
         lastProcessedFrame = inputSeqNr;
-        processedFrameCount++;
+
         return input;
     }
 
@@ -243,7 +199,7 @@ public class Client implements Upcall, VideoConsumer {
             // set vector as current vector
             if (reply.getResult() != null) {
                 this.vector = reply.getResult();
-                processedFrameCount++;
+                processedFrameCountHistory[currentHistoryIndex]++;
             }
         }
 
@@ -266,7 +222,10 @@ public class Client implements Upcall, VideoConsumer {
         IbisIdentifier database = communication.getDatabase();
 
         if (database == null) {
-            logger.error("Could not locate database");
+            IbisIdentifier server = reply.getServer();
+            String serverName = server.location().getLevel(
+                    server.location().numberOfLevels() - 1);
+            log("Database not found while processing result from " + serverName);
         } else {
             try {
                 communication.send(database, request);
@@ -279,18 +238,17 @@ public class Client implements Upcall, VideoConsumer {
 
     private synchronized void processDatabaseReply(DatabaseReply reply) {
         IbisIdentifier server = reply.getServer();
-        String serverName = server.location().getLevel(server.location().numberOfLevels() - 1);
-        
+        String serverName = server.location().getLevel(
+                server.location().numberOfLevels() - 1);
+
         if (reply.getResults().isEmpty()) {
-            log(serverName
-                    + " does not recognize this object");
+            log(serverName + " does not recognize this object");
             return;
         }
         Double key = reply.getResults().firstKey();
         this.currentResult = reply.getResults().get(key);
 
-        log(serverName + " says this is a "
-                + currentResult);
+        log(serverName + " says this is a " + currentResult);
 
     }
 
@@ -345,8 +303,70 @@ public class Client implements Upcall, VideoConsumer {
         communication.end();
     }
 
+    private synchronized boolean isDone() {
+        return done;
+    }
+
     public synchronized ServerHandler[] getServers() {
         return servers.values().toArray(new ServerHandler[0]);
+    }
+
+    /**
+     * Updates statistics.
+     */
+    @Override
+    public void run() {
+        while (!isDone()) {
+            double inputFps;
+            double displayedFps;
+            double processedFps;
+
+            synchronized (this) {
+
+                double inputTotal = 0;
+                double displayedTotal = 0;
+                double processedTotal = 0;
+                double count = 0;
+
+                for (int i = 0; i < validHistorySize; i++) {
+                    inputTotal += inputFrameCountHistory[i];
+                    displayedTotal += displayedFrameCountHistory[i];
+                    processedTotal += processedFrameCountHistory[i];
+                    count++;
+                }
+
+                logger.debug("count = " + count + ", inputTotal = "
+                        + inputTotal);
+
+                if (count == 0) {
+                    inputFps = 0;
+                    displayedFps = 0;
+                    processedFps = 0;
+                } else {
+                    inputFps = (inputTotal / (count * HISTORY_INTERVAL)) * 1000;
+                    displayedFps = (displayedTotal / (count * HISTORY_INTERVAL)) * 1000;
+                    processedFps = (processedTotal / (count * HISTORY_INTERVAL)) * 1000;
+                }
+
+                if (validHistorySize < HISTORY_SIZE) {
+                    validHistorySize++;
+                }
+                currentHistoryIndex = (currentHistoryIndex + 1) % HISTORY_SIZE;
+                inputFrameCountHistory[currentHistoryIndex] = 0;
+                displayedFrameCountHistory[currentHistoryIndex] = 0;
+                processedFrameCountHistory[currentHistoryIndex] = 0;
+            }
+
+            for (StatisticsListener listener : statisticsListeners) {
+                listener.newStatistics(inputFps, displayedFps, processedFps);
+            }
+
+            try {
+                Thread.sleep(HISTORY_INTERVAL);
+            } catch (InterruptedException e) {
+                // IGNORE
+            }
+        }
     }
 
 }

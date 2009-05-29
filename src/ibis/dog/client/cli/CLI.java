@@ -6,12 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibis.dog.client.Client;
+import ibis.dog.client.MessageListener;
 import ibis.dog.client.ServerHandler;
+import ibis.dog.client.StatisticsListener;
 import ibis.dog.client.WebCam;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.io.IO;
 
-public class CLI {
+public class CLI implements MessageListener, StatisticsListener {
 
     private static final Logger logger = LoggerFactory.getLogger(CLI.class);
 
@@ -25,6 +27,19 @@ public class CLI {
         public void run() {
             client.end();
         }
+    }
+    
+    @Override
+    public void message(String message) {
+        logger.info(message);
+    }
+
+    @Override
+    public void newStatistics(double inputFps, double displayedFps,
+            double processedFps) {
+        logger.info(String.format(
+                "Input %.2f fps. Displayed %2f fps. Processed %2f fps",
+                inputFps, displayedFps, processedFps));
     }
 
     public static void main(String[] args) {
@@ -40,7 +55,9 @@ public class CLI {
                 image = IO.load(new File(args[0]));
             }
 
-            Client client = new Client(null, null);
+            CLI cli = new CLI();
+
+            Client client = new Client(cli, null, cli);
 
             // Install a shutdown hook that terminates ibis.
             Runtime.getRuntime().addShutdownHook(new CLI.ShutDown(client));
@@ -56,10 +73,7 @@ public class CLI {
 
             // do nothing
             while (true) {
-                Thread.sleep(10000);
-                logger.info("Input Frames/Sec = " + client.inputFPS());
-                logger.info("Displayed Frames/Sec = " + client.displayedFPS());
-                logger.info("Processed Frames/Sec = " + client.processedFPS());
+                Thread.sleep(1000);
 
                 for (ServerHandler handler : client.getServers()) {
                     handler.setEnabled(true);
@@ -70,4 +84,6 @@ public class CLI {
             logger.error("Could not start command line client", e);
         }
     }
+
+   
 }
