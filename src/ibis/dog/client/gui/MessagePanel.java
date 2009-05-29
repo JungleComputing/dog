@@ -21,7 +21,7 @@ public class MessagePanel extends JPanel implements MessageListener {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Messages"));
-        setPreferredSize(new Dimension(400, 200));
+        //setPreferredSize(new Dimension(400, 200));
 
         textOutput = new JTextArea();
         textOutput.setLineWrap(true);

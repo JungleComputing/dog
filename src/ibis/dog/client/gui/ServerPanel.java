@@ -39,9 +39,8 @@ public class ServerPanel extends JPanel implements
         setBorder(BorderFactory.createTitledBorder("Servers"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-
-        setPreferredSize(new Dimension(200, 410));
-        setMaximumSize(new Dimension(200, 410));
+        //setPreferredSize(new Dimension(200, 410));
+        //setMaximumSize(new Dimension(200, 410));
 
         serverList = new JPanel();
         serverList.setLayout(new BoxLayout(serverList, BoxLayout.Y_AXIS));

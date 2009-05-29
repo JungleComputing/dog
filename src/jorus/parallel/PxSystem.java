@@ -20,6 +20,7 @@ import ibis.ipl.SendPort;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
+import java.util.Formatter;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -167,10 +168,10 @@ public class PxSystem {
 
         nrCPUs = ibis.registry().getPoolSize();
 
-        //determine rank of this ibis
+        // determine rank of this ibis
         int myCPU = -1;
         for (int i = 0; i < nrCPUs; i++) {
-            if(world[i].equals(ibis.identifier())) {
+            if (world[i].equals(ibis.identifier())) {
                 myCPU = i;
                 break;
             }
@@ -274,6 +275,8 @@ public class PxSystem {
     }
 
     public void printStatistics() {
+        Formatter out = new Formatter();
+
         long totalTime = timeBarrier + timeReduceValueToRoot0FT
                 + timeReduceArrayToRoot + timeReduceArrayToAll + timeScatter
                 + timeGather + timeBroadcast + timeBroadcastValue
@@ -284,16 +287,16 @@ public class PxSystem {
                 + countGather + countBroadcast + countBroadcastValue
                 + countBorderExchange;
 
-        System.out.printf("Total communication time %.2f usec, count %d\n",
+        out.format("Total communication time %.2f usec, count %d\n",
                 (totalTime / 1000.0), totalCount);
-        System.out.printf("            barrier time %.2f usec, count %d\n",
+        out.format("            barrier time %.2f usec, count %d\n",
                 (timeBarrier / 1000.0), countBarrier);
-        System.out.printf("     broadcastValue time %.2f usec, count %d\n",
+        out.format("     broadcastValue time %.2f usec, count %d\n",
                 (timeBroadcastValue / 1000.0), countBroadcastValue);
-        System.out.printf("          reduceV2R time %.2f usec, count %d\n",
+        out.format("          reduceV2R time %.2f usec, count %d\n",
                 (timeReduceValueToRoot0FT / 1000.0), countReduceValueToRoot0FT);
-        System.out
-                .printf(
+        out
+                .format(
                         "          reduceA2R time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeReduceArrayToRoot / 1000.0),
                         countReduceArrayToRoot, dataInReduceArrayToRoot,
@@ -302,8 +305,8 @@ public class PxSystem {
                                         + dataOutReduceArrayToRoot,
                                 timeReduceArrayToRoot));
 
-        System.out
-                .printf(
+        out
+                .format(
                         "          reduceA2A time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeReduceArrayToAll / 1000.0),
                         countReduceArrayToAll,
@@ -312,30 +315,30 @@ public class PxSystem {
                         getThroughput(dataInReduceArrayToAll
                                 + dataOutReduceArrayToAll, timeReduceArrayToAll));
 
-        System.out
-                .printf(
+        out
+                .format(
                         "            scatter time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeScatter / 1000.0), countScatter, dataInScatter,
                         dataOutScatter, getThroughput(dataInScatter
                                 + dataOutScatter, timeScatter));
 
-        System.out
-                .printf(
+        out
+                .format(
                         "             gather time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeGather / 1000.0), countGather, dataInGather,
                         dataOutGather, getThroughput(dataInGather
                                 + dataOutGather, timeGather));
 
-        System.out
-                .printf(
+        out
+                .format(
                         "       broadcastSBT time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeBroadcast / 1000.0), countBroadcast,
                         dataInBroadcast, dataOutBroadcast, getThroughput(
                                 dataInBroadcast + dataOutBroadcast,
                                 timeBroadcast));
 
-        System.out
-                .printf(
+        out
+                .format(
                         "     borderExchange time %.2f usec, count %d, dataIn %d bytes, dataOut %d bytes, TP %.2f Mbit/s\n",
                         (timeBorderExchange / 1000.0), countBorderExchange,
                         dataInBorderExchange, dataOutBorderExchange,
@@ -379,6 +382,9 @@ public class PxSystem {
 
         dataInBorderExchange = 0;
         dataOutBorderExchange = 0;
+
+        out.flush();
+        logger.info(out.toString());
     }
 
     public void exitParallelSystem() throws Exception {
@@ -398,11 +404,11 @@ public class PxSystem {
     public int nrCPUs() {
         return nrCPUs;
     }
-    
+
     public int logCPUs() {
         return logCPUs;
     }
-    
+
     public int maxCPUs() {
         return maxCPUs;
     }
@@ -776,8 +782,8 @@ public class PxSystem {
      * 
      * final int size = a.length / nrCPUs; final int left = a.length % nrCPUs;
      * 
-     * // logger.debug("Data size: " + a.length + " div: " + size +
-     * " mod: " + left);
+     * // logger.debug("Data size: " + a.length + " div: " + size + " mod: " +
+     * left);
      * 
      * for (int i=0;i<nrCPUs;i++) {
      * 
@@ -785,8 +791,7 @@ public class PxSystem {
      * + i; } else { sizes[i] = size; index[i] = size * i + left; } } else {
      * sizes[i] = size; index[i] = size * i; }
      * 
-     * // logger.debug(i + " index: " + index[i] + " size: " + sizes[i]);
-     * }
+     * // logger.debug(i + " index: " + index[i] + " size: " + sizes[i]); }
      * 
      * // Create a temporary array for receiving data final double [] tmp = new
      * double[sizes[0]];
@@ -1199,8 +1204,8 @@ public class PxSystem {
      * CxArray2d.VALID, CxArray2d.PARTIAL); return; }
      * 
      * if (a instanceof CxArray2dDoubles) { doScatterOFT((CxArray2dDoubles) a);
-     * } else { logger.debug("ERROR: SCATTER OFT NOT IMPLEMENTED YET!!!");
-     * } a.setLocalState(CxArray2d.VALID); a.setDistType(CxArray2d.PARTIAL);
+     * } else { logger.debug("ERROR: SCATTER OFT NOT IMPLEMENTED YET!!!"); }
+     * a.setLocalState(CxArray2d.VALID); a.setDistType(CxArray2d.PARTIAL);
      * 
      * // Added -- J timeScatter0FT += System.nanoTime() - start;
      * countScatter0FT++; }
@@ -1223,9 +1228,8 @@ public class PxSystem {
      * if (nrCPUs == 1) { return; }
      * 
      * if (a instanceof CxArray2dDoubles) { doBroadcastSBT((CxArray2dDoubles)
-     * a); } else {
-     * logger.debug("ERROR: BROADCAST SBT NOT IMPLEMENTED YET!!!"); }
-     * a.setLocalState(CxArray2d.VALID); a.setDistType(CxArray2d.FULL);
+     * a); } else { logger.debug("ERROR: BROADCAST SBT NOT IMPLEMENTED YET!!!");
+     * } a.setLocalState(CxArray2d.VALID); a.setDistType(CxArray2d.FULL);
      * 
      * // Added -- J timeBroadcastSBT += System.nanoTime() - start;
      * countBroadcastSBT++; }

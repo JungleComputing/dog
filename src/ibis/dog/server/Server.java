@@ -170,10 +170,11 @@ public class Server implements Upcall {
                 // The master should dequeue a request, and prepare it for
                 // processing
 
+                logger.debug("Getting request");
                 request = getRequest(DEFAULT_TIMEOUT);
                 converting = System.currentTimeMillis();
 
-                logger.debug(px.myCPU() + " Got request " + request);
+                logger.debug("Got request: " + request);
 
                 if (request == null) {
                     return;
@@ -204,7 +205,8 @@ public class Server implements Upcall {
                 //Imaging4j.save(scaledImage, new File("image.rgb"));
 
                 pixels = scaledImage.getData().array();
-
+                
+                logger.debug("Starting computation");
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
@@ -221,6 +223,7 @@ public class Server implements Upcall {
             sending = System.currentTimeMillis();
 
             if (master) {
+                logger.debug("Computation done");
                 reply = new ServerReply(communication.getIdentifier(), request
                         .getSequenceNumber(), result);
             }
@@ -234,14 +237,14 @@ public class Server implements Upcall {
         }
 
         if (master) {
-            logger.info("Sending reply....");
+            logger.debug("Sending reply....");
             try {
                 communication.send(request.getReplyAddress(), reply);
             } catch (Exception e) {
                 logger.error("Failed to return reply to "
                         + request.getReplyAddress(), e);
             }
-            logger.info("Reply send....");
+            logger.debug("Reply send....");
         }
 
         end = System.currentTimeMillis();
@@ -254,12 +257,6 @@ public class Server implements Upcall {
                     + (sending - computing) + " send reply: " + (end - sending)
                     + ")");
             px.printStatistics();
-        }
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 

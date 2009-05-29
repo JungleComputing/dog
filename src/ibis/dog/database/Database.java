@@ -239,6 +239,7 @@ public class Database implements Upcall {
         if (!(object instanceof DatabaseRequest)) {
             logger.error("Database received an unknown object in message: "
                     + object);
+            return;
         }
 
         DatabaseRequest request = (DatabaseRequest) object;

@@ -70,7 +70,7 @@ public class ServerListItem extends JPanel implements ActionListener {
         this.handler = handler;
         setPreferredSize(new Dimension(200, 30));
         setMinimumSize(new Dimension(200, 30));
-        setMaximumSize(new Dimension(200, 30));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         

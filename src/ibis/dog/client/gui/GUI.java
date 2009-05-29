@@ -30,66 +30,51 @@ public class GUI extends JPanel implements WindowListener {
 
     private final Client client;
 
-    private final CameraPanel cameraPanel;
+    private final ControlPanel controlPanel;
 
     public GUI() throws Exception {
         MessagePanel messagePanel = new MessagePanel();
         ServerPanel serverPanel = new ServerPanel();
-        GraphPanel graphPanel = new GraphPanel();
+        StatisticsPanel graphPanel = new StatisticsPanel();
         StatisticsPanel statisticsPanel = new StatisticsPanel();
 
-        client = new Client(messagePanel, serverPanel, graphPanel, statisticsPanel);
+        client = new Client(messagePanel, serverPanel, graphPanel,
+                statisticsPanel);
 
-        ControlPanel controlPanel = new ControlPanel(client);
-        cameraPanel = new CameraPanel(client);
+        controlPanel = new ControlPanel(client);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        //add(Box.createRigidArea(new Dimension(5, 5)));
 
         JPanel top = new JPanel();
 
         top.setLayout(new BoxLayout(top, BoxLayout.X_AXIS));
-        
-        JPanel cameraAndControl = new JPanel();
-        cameraAndControl.setBorder(BorderFactory.createTitledBorder("Control"));
-        cameraAndControl.setMaximumSize(new Dimension(360, 410));
-        cameraAndControl.setPreferredSize(new Dimension(360, 410));
-        cameraAndControl.setMinimumSize(new Dimension(360, 410));
-        cameraAndControl.setLayout(new BoxLayout(cameraAndControl,
-                BoxLayout.Y_AXIS));
-
-        cameraAndControl.add(cameraPanel);
-        cameraAndControl.add(controlPanel);
-
-        top.add(cameraAndControl);
+        top.add(controlPanel);
         top.add(Box.createRigidArea(new Dimension(5, 5)));
         top.add(serverPanel);
-
-        JPanel logosAndMessages = new JPanel();
-        logosAndMessages.setLayout(new BoxLayout(logosAndMessages,
-                BoxLayout.Y_AXIS));
-
-        JPanel logos = new JPanel();
-        logos.setLayout(new GridLayout(1,4));
-        logos.add(new JLabel(new ImageIcon("images/vu.png")));
-        logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
-        logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
-        logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
-
-        logosAndMessages.add(statisticsPanel);
-        logosAndMessages.add(Box.createRigidArea(new Dimension(5, 5)));
-        logosAndMessages.add(messagePanel);
-        logosAndMessages.add(Box.createVerticalGlue());
-        logosAndMessages.add(logos);
-
         top.add(Box.createRigidArea(new Dimension(5, 5)));
 
-        top.add(logosAndMessages);
+        JPanel logos = new JPanel();
+        logos.setLayout(new GridLayout(4, 1));
+        // logos.setMaximumSize(new Dimension(150, 300));
+        logos.setMaximumSize(new Dimension(110, 400));
+        logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
+        logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
+        logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
+        logos.add(new JLabel(new ImageIcon("images/vu.png")));
+
+        top.add(logos);
+
+        top.add(Box.createRigidArea(new Dimension(5, 5)));
 
         add(top);
 
-        add(graphPanel);
+        JPanel bottom = new JPanel();
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+        bottom.add(graphPanel);
+        bottom.add(Box.createRigidArea(new Dimension(5, 5)));
+        bottom.add(messagePanel);
+
+        add(bottom);
 
         // JPanel middle = new JPanel();
         // middle.setPreferredSize(new Dimension(200, 200));
@@ -124,7 +109,6 @@ public class GUI extends JPanel implements WindowListener {
 
         // Create and set up the content pane.
         this.setOpaque(true); // content panes must be opaque
-        this.setMinimumSize(new Dimension(WIDTH, HEIGHT));
         frame.setContentPane(this);
 
         // Display the window.
@@ -133,7 +117,7 @@ public class GUI extends JPanel implements WindowListener {
     }
 
     private void exit() {
-        cameraPanel.close();
+        controlPanel.close();
         client.end();
     }
 

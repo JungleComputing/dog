@@ -89,28 +89,32 @@ public class Client implements Upcall, VideoConsumer, Runnable {
         if (messageListener != null) {
             messageListener.message(message);
         }
-        logger.info(message);
+        logger.debug(message);
     }
 
     @Override
-    public synchronized void gotImage(Image image) {
+    public void gotImage(Image image) {
         if (logger.isTraceEnabled()) {
             logger.trace("got Image, format = " + image.getFormat()
                     + " width = " + image.getWidth() + ", height = "
                     + image.getHeight() + ", size = " + image.getSize());
         }
 
+        Image copy;
         // copy image
         try {
-            this.input = Image.copy(image, null);
+            copy = Image.copy(image, null);
         } catch (Exception e) {
             logger.error("could not copy image", e);
             return;
         }
 
-        inputFrameCountHistory[currentHistoryIndex]++;
-        inputSeqNr++;
-        notifyAll();
+        synchronized (this) {
+            this.input = copy;
+            inputFrameCountHistory[currentHistoryIndex]++;
+            inputSeqNr++;
+            notifyAll();
+        }
     }
 
     public synchronized Image getDisplayImage() {
@@ -157,6 +161,10 @@ public class Client implements Upcall, VideoConsumer, Runnable {
         Item item = new Item(vector, name, System.getProperty("user.name"),
                 null);
 
+        DatabaseRequest request = new DatabaseRequest(
+                DatabaseRequest.Function.LEARN, 0, item, 0, null, vector,
+                communication.getIdentifier());
+
         // send item to broker
 
         IbisIdentifier database = communication.getDatabase();
@@ -167,7 +175,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
         }
 
         try {
-            communication.send(database, item);
+            communication.send(database, request);
         } catch (Exception e) {
             logger.error("Could not send item to database", e);
             return false;
@@ -236,7 +244,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 
     }
 
-    private synchronized void processDatabaseReply(DatabaseReply reply) {
+    private void processDatabaseReply(DatabaseReply reply) {
         IbisIdentifier server = reply.getServer();
         String serverName = server.location().getLevel(
                 server.location().numberOfLevels() - 1);
@@ -246,10 +254,11 @@ public class Client implements Upcall, VideoConsumer, Runnable {
             return;
         }
         Double key = reply.getResults().firstKey();
-        this.currentResult = reply.getResults().get(key);
+        synchronized (this) {
+            this.currentResult = reply.getResults().get(key);
+        }
 
-        log(serverName + " says this is a " + currentResult);
-
+        log(serverName + " says this is a " + currentResult.getName());
     }
 
     @Override
@@ -335,8 +344,8 @@ public class Client implements Upcall, VideoConsumer, Runnable {
                     count++;
                 }
 
-                logger.debug("count = " + count + ", inputTotal = "
-                        + inputTotal);
+                // logger.debug("count = " + count + ", inputTotal = "
+                // + inputTotal);
 
                 if (count == 0) {
                     inputFps = 0;

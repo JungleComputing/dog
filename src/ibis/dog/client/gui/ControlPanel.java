@@ -1,21 +1,33 @@
 package ibis.dog.client.gui;
 
 import ibis.dog.client.Client;
+import ibis.dog.client.WebCam;
+import ibis.video4j.VideoDeviceDescription;
+import ibis.video4j.devices.VideoSource;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class ControlPanel extends JPanel implements 
-        ActionListener {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ControlPanel extends JPanel implements ActionListener {
+
+    private static final Logger logger = LoggerFactory
+            .getLogger(ControlPanel.class);
 
     // Generated
     private static final long serialVersionUID = 1L;
@@ -27,45 +39,84 @@ public class ControlPanel extends JPanel implements
 
     private final Client client;
 
+    private static final String NONE = "Camera Off";
+    private static final String SCAN = "Scan for devices";
+
+    private JComboBox deviceList;
+
+    private WebCam webCam;
+
+    private VideoSource currentCam;
+
+    private final VideoPanel videoPanel;
+
     Speech speech;
 
     public ControlPanel(Client client) {
-
         this.client = client;
-        
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        //setBorder(BorderFactory.createTitledBorder("Control"));
-        setPreferredSize(new Dimension(250, 60));
 
+        setBorder(BorderFactory.createTitledBorder("Control"));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setMinimumSize(new Dimension(650, 350));
+        setPreferredSize(new Dimension(650, 350));
+        setMaximumSize(new Dimension(650, Integer.MAX_VALUE));
+
+        webCam = new WebCam(client);
+
+        // actually display video
+        videoPanel = new VideoPanel(client);
+        add(videoPanel);
+
+        add(Box.createRigidArea(new Dimension(3, 3)));
 
         JPanel buttons = new JPanel();
-        buttons.setLayout(new GridLayout(2,1));
+        buttons.setLayout(new GridLayout(8, 1));
+        buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, VideoPanel.HEIGHT));
+        
+        // Create the combo box, select the item at index 0 (Item "none").
+        deviceList = new JComboBox();
+        deviceList.addActionListener(this);
+        
+        // deviceList.setMinimumSize(new Dimension(352, 25));
+        // deviceList.setMaximumSize(new Dimension(352, 25));
+        buttons.add(deviceList);
+        
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
-        learnButton = new JButton("Learn");
+        inputField = new JTextField("");
+        // inputField.setAlignmentY(Component.TOP_ALIGNMENT);
+        // inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        buttons.add(inputField);
+
+        learnButton = new JButton("Teach");
         learnButton.addActionListener(this);
         buttons.add(learnButton);
         
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+
         recognizeButton = new JButton("Recognize");
         recognizeButton.addActionListener(this);
         buttons.add(recognizeButton);
-        
-        buttons.setAlignmentY(TOP_ALIGNMENT);
-        
+
+        // buttons.add(Box.createRigidArea(new Dimension(5, 5)));
+
         add(buttons);
 
-        add(Box.createRigidArea(new Dimension(5, 5)));
-        
-        inputField = new JTextField("");
-        inputField.setAlignmentY(Component.TOP_ALIGNMENT);
-        inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        add(inputField);
-        
         speech = new Speech(true);
         speech.speak("Voice initialized");
 
+        //turn on webcam
+        updateVideoDevices();
+        if (deviceList.getItemCount() > 2) {
+            deviceList.setSelectedIndex(1);
+        } else {
+            deviceList.setSelectedIndex(0);
+        }
     }
-   
+
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == learnButton) {
@@ -111,11 +162,65 @@ public class ControlPanel extends JPanel implements
                 JOptionPane.showMessageDialog(getRootPane(), text, "Warning",
                         JOptionPane.WARNING_MESSAGE);
             }
+        } else if (e.getSource() == deviceList) {
+
+            Object tmp = deviceList.getSelectedItem();
+
+            if (currentCam != null) {
+                currentCam.close();
+                currentCam = null;
+            }
+
+            if (tmp instanceof VideoDeviceDescription) {
+                VideoDeviceDescription d = (VideoDeviceDescription) tmp;
+                System.out.println("Selected device: "
+                        + d.getSimpleDescription());
+
+                try {
+                    currentCam = webCam.selectDevice(d);
+                } catch (Exception ex) {
+                    logger.error("Failed to select device " + d);
+
+                    ex.printStackTrace();
+                }
+            } else {
+                String s = (String) tmp;
+                System.out.println("Selected special option: " + s);
+
+                if (s.equals(SCAN)) {
+                    updateVideoDevices();
+                } else {
+                    // set to "none"
+                }
+            }
         }
     }
 
-    public void exit() {
+    public void close() {
         speech.done();
+        currentCam.close();
+    }
+
+    private void updateVideoDevices() {
+
+        // Find all video devices
+        VideoDeviceDescription[] devices = null;
+
+        try {
+            devices = webCam.availableDevices();
+        } catch (Exception e) {
+            logger.error("Could not get device list", e);
+            devices = new VideoDeviceDescription[0];
+        }
+
+        deviceList.removeAllItems();
+        deviceList.addItem(NONE);
+
+        for (int i = 0; i < devices.length; i++) {
+            deviceList.addItem(devices[i]);
+        }
+
+        deviceList.addItem(SCAN);
     }
 
 }
