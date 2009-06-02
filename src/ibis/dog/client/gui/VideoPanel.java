@@ -35,12 +35,12 @@ class VideoPanel extends JPanel implements Runnable {
     // Generated
     private static final long serialVersionUID = 1L;
 
-//    public static final int WIDTH = 352;
-//    public static final int HEIGHT = 288;
-    
-//    public static final int WIDTH = 400;
-//    public static final int HEIGHT = 300;
-    
+    // public static final int WIDTH = 352;
+    // public static final int HEIGHT = 288;
+
+    // public static final int WIDTH = 400;
+    // public static final int HEIGHT = 300;
+
     public static final int WIDTH = 450;
     public static final int HEIGHT = 337;
 
@@ -111,6 +111,14 @@ class VideoPanel extends JPanel implements Runnable {
         }
     }
 
+    public synchronized boolean isValid() {
+        return imageValid;
+    }
+
+    public synchronized void setInvalid() {
+        imageValid = false;
+    }
+
     @Override
     public void run() {
         while (true) {
@@ -122,12 +130,11 @@ class VideoPanel extends JPanel implements Runnable {
                     return;
                 } else {
                     if (false) {
-                    Imaging4j.save(image, new File("image.jpg"));
-                    Imaging4j.save(image, new File("image.rgb"));
-                    return;
+                        Imaging4j.save(image, new File("image.jpg"));
+                        Imaging4j.save(image, new File("image.rgb"));
+                        return;
                     }
-                    
-                    
+
                     Image argb32;
 
                     if (image.getFormat() == Format.ARGB32) {
@@ -146,8 +153,10 @@ class VideoPanel extends JPanel implements Runnable {
 
                     ByteBuffer buffer = scaled.getData();
                     buffer.clear();
-                    buffer.asIntBuffer().get(pixels);
-                    imageValid = true;
+                    synchronized (this) {
+                        buffer.asIntBuffer().get(pixels);
+                        imageValid = true;
+                    }
                 }
 
                 // notify we have new pixels available

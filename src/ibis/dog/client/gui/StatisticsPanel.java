@@ -47,9 +47,9 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         // dataset.getSeries(2).add(new Millisecond(),
         // displayedFps);
 
-        this.inputFps.setText(String.format("%.2f fps", inputFps));
-        //this.displayedFps.setText(String.format("%.2f fps", displayedFps));
-        this.processedFps.setText(String.format("%.2f fps", processedFps));
+        this.inputFps.setText(String.format("%.1f fps", inputFps));
+        //this.displayedFps.setText(String.format("%.1f fps", displayedFps));
+        this.processedFps.setText(String.format("%.1f fps", processedFps));
     }
 
     public StatisticsPanel() {

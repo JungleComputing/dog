@@ -79,7 +79,9 @@ public class ControlPanel extends JPanel implements ActionListener {
 
         JPanel buttons = new JPanel();
         buttons.setLayout(new GridLayout(8, 1));
-        buttons.setMaximumSize(new Dimension(200, VideoPanel.HEIGHT));
+        buttons.setMaximumSize(new Dimension(190, VideoPanel.HEIGHT));
+        buttons.setMinimumSize(new Dimension(190, VideoPanel.HEIGHT));
+        buttons.setPreferredSize(new Dimension(190, VideoPanel.HEIGHT));
         
         // Create the combo box, select the item at index 0 (Item "none").
         deviceList = new JComboBox();
@@ -138,8 +140,6 @@ public class ControlPanel extends JPanel implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         
-        
-
         if (e.getSource() == learnButton) {
 
             String name = inputField.getText();
@@ -190,6 +190,7 @@ public class ControlPanel extends JPanel implements ActionListener {
             if (currentCam != null) {
                 currentCam.close();
                 currentCam = null;
+                videoPanel.setInvalid();
             }
 
             if (tmp instanceof VideoDeviceDescription) {

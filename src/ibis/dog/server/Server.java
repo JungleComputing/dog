@@ -202,10 +202,10 @@ public class Server implements Upcall {
                             IMAGE_HEIGHT);
                 }
 
-                //Imaging4j.save(scaledImage, new File("image.rgb"));
+                // Imaging4j.save(scaledImage, new File("image.rgb"));
 
                 pixels = scaledImage.getData().array();
-                
+
                 logger.debug("Starting computation");
             } else {
                 // allocate space for image
@@ -283,8 +283,6 @@ public class Server implements Upcall {
         String poolName = null;
         String poolSize = null;
 
-        System.out.println("Server: " + Arrays.toString(args));
-
         if (args.length == 0) {
             poolName = System.getProperty("ibis.deploy.job.id", null);
             poolSize = System.getProperty("ibis.deploy.job.size", null);
@@ -292,6 +290,9 @@ public class Server implements Upcall {
             poolName = args[0];
             poolSize = args[1];
         }
+
+        logger.info("Image processing server starting in pool \"" + poolName
+                + "\" of size " + poolSize);
 
         if (poolName == null || poolSize == null) {
             System.err

@@ -59,7 +59,7 @@ public class ServerPanel extends JPanel implements
     public synchronized void newServer(ServerHandler handler) {
         ServerListItem item = new ServerListItem(handler);
 
-        serverList.add(item, 0);
+        serverList.add(item, serverList.getComponentCount() - 1);
 
         servers.put(handler, item);
         
