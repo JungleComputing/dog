@@ -63,12 +63,14 @@ public class ControlPanel extends JPanel implements ActionListener {
         
         setBorder(BorderFactory.createTitledBorder("Control"));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setMinimumSize(new Dimension(660, VideoPanel.HEIGHT + 20));
-        setPreferredSize(new Dimension(660, VideoPanel.HEIGHT + 20));
-        setMaximumSize(new Dimension(660, VideoPanel.HEIGHT + 20));
+        setMinimumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
+        setPreferredSize(new Dimension(665, VideoPanel.HEIGHT + 20));
+        setMaximumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
 
         webCam = new WebCam(client);
 
+        add(Box.createRigidArea(new Dimension(7, 7)));
+        
         // actually display video
         videoPanel = new VideoPanel(client);
         add(videoPanel);
