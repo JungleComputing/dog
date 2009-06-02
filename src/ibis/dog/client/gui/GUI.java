@@ -7,7 +7,6 @@ import java.awt.GridLayout;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -35,11 +34,9 @@ public class GUI extends JPanel implements WindowListener {
     public GUI() throws Exception {
         MessagePanel messagePanel = new MessagePanel();
         ServerPanel serverPanel = new ServerPanel();
-        StatisticsPanel graphPanel = new StatisticsPanel();
         StatisticsPanel statisticsPanel = new StatisticsPanel();
 
-        client = new Client(messagePanel, serverPanel, graphPanel,
-                statisticsPanel);
+        client = new Client(messagePanel, serverPanel, statisticsPanel);
 
         controlPanel = new ControlPanel(client);
 
@@ -51,28 +48,33 @@ public class GUI extends JPanel implements WindowListener {
         top.add(controlPanel);
         top.add(Box.createRigidArea(new Dimension(5, 5)));
         top.add(serverPanel);
-        top.add(Box.createRigidArea(new Dimension(5, 5)));
 
         JPanel logos = new JPanel();
-        logos.setLayout(new GridLayout(4, 1));
+        logos.setLayout(new GridLayout(1, 4, 5, 5));
         // logos.setMaximumSize(new Dimension(150, 300));
-        logos.setMaximumSize(new Dimension(110, 400));
+        logos.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
         logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
         logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
         logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
         logos.add(new JLabel(new ImageIcon("images/vu.png")));
 
-        top.add(logos);
-
-        top.add(Box.createRigidArea(new Dimension(5, 5)));
+        // top.add(logos);
+        //top.add(Box.createRigidArea(new Dimension(5, 5)));
 
         add(top);
 
         JPanel bottom = new JPanel();
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
-        bottom.add(graphPanel);
-        bottom.add(Box.createRigidArea(new Dimension(5, 5)));
-        bottom.add(messagePanel);
+        bottom.setLayout(new GridLayout(1,2, 5, 5));
+        bottom.add(statisticsPanel);
+        
+        JPanel messageAndLogos = new JPanel();
+        messageAndLogos.setLayout(new BoxLayout(messageAndLogos, BoxLayout.Y_AXIS));
+        
+        messageAndLogos.add(messagePanel);
+        messageAndLogos.add(Box.createRigidArea(new Dimension(5, 5)));
+        messageAndLogos.add(logos);
+        messageAndLogos.add(Box.createRigidArea(new Dimension(5, 5)));
+        bottom.add(messageAndLogos);
 
         add(bottom);
 

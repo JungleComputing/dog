@@ -34,7 +34,7 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
     private XYPlot plot;
 
     private final JLabel inputFps;
-    private final JLabel displayedFps;
+   // private final JLabel displayedFps;
     private final JLabel processedFps;
 
     @Override
@@ -48,7 +48,7 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         // displayedFps);
 
         this.inputFps.setText(String.format("%.2f fps", inputFps));
-        this.displayedFps.setText(String.format("%.2f fps", displayedFps));
+        //this.displayedFps.setText(String.format("%.2f fps", displayedFps));
         this.processedFps.setText(String.format("%.2f fps", processedFps));
     }
 
@@ -57,32 +57,35 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         // setMaximumSize(new Dimension(Short.MAX_VALUE, 100));
         // setMinimumSize(new Dimension(100, 100));
         setBorder(BorderFactory.createTitledBorder("Statististics"));
-        setMinimumSize(new Dimension(650, 350));
-        setPreferredSize(new Dimension(650, 350));
-        setMaximumSize(new Dimension(650, Integer.MAX_VALUE));
+//        setMinimumSize(new Dimension(650, 350));
+//        setPreferredSize(new Dimension(650, 350));
+//        setMaximumSize(new Dimension(650, Integer.MAX_VALUE));
 
         JPanel numbers = new JPanel();
-        numbers.setLayout(new GridLayout(3, 4));
+        numbers.setLayout(new GridLayout(3, 2));
 
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
         numbers.add(new JLabel("Webcam"));
         inputFps = new JLabel("0");
         numbers.add(inputFps);
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
 
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
-        numbers.add(new JLabel("Displayed"));
-        displayedFps = new JLabel("0");
-        numbers.add(displayedFps);
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
+//        numbers.add(new JLabel("Displayed"));
+//        displayedFps = new JLabel("0");
+//        numbers.add(displayedFps);
 
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
         numbers.add(new JLabel("Processed"));
         processedFps = new JLabel("0");
         numbers.add(processedFps);
-        numbers.add(Box.createRigidArea(new Dimension(1, 1)));
 
-        add(numbers);
+        //extra panel to place numbers table a bit to the right so it
+        //is aligned with the graph
+        JPanel numbersOffset = new JPanel();
+        numbersOffset.setAlignmentX(LEFT_ALIGNMENT);
+        numbersOffset.setMaximumSize(new Dimension(200, 20));
+        numbersOffset.setLayout(new BoxLayout(numbersOffset, BoxLayout.X_AXIS));
+        numbersOffset.add(Box.createRigidArea(new Dimension(37, 37)));
+        numbersOffset.add(numbers);
+        
+        add(numbersOffset);
 
         add(Box.createRigidArea(new Dimension(5, 5)));
 

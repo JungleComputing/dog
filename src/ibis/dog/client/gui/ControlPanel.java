@@ -7,7 +7,9 @@ import ibis.video4j.devices.VideoSource;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -20,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,11 +58,14 @@ public class ControlPanel extends JPanel implements ActionListener {
     public ControlPanel(Client client) {
         this.client = client;
 
+        //set font for dialogs to slightly bigger font
+        UIManager.put("Label.font", new Font("Dialog", Font.BOLD, 16));
+        
         setBorder(BorderFactory.createTitledBorder("Control"));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setMinimumSize(new Dimension(650, 350));
-        setPreferredSize(new Dimension(650, 350));
-        setMaximumSize(new Dimension(650, Integer.MAX_VALUE));
+        setMinimumSize(new Dimension(660, VideoPanel.HEIGHT + 20));
+        setPreferredSize(new Dimension(660, VideoPanel.HEIGHT + 20));
+        setMaximumSize(new Dimension(660, VideoPanel.HEIGHT + 20));
 
         webCam = new WebCam(client);
 
@@ -67,11 +73,11 @@ public class ControlPanel extends JPanel implements ActionListener {
         videoPanel = new VideoPanel(client);
         add(videoPanel);
 
-        add(Box.createRigidArea(new Dimension(3, 3)));
+        add(Box.createRigidArea(new Dimension(7, 7)));
 
         JPanel buttons = new JPanel();
         buttons.setLayout(new GridLayout(8, 1));
-        buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, VideoPanel.HEIGHT));
+        buttons.setMaximumSize(new Dimension(200, VideoPanel.HEIGHT));
         
         // Create the combo box, select the item at index 0 (Item "none").
         deviceList = new JComboBox();
@@ -84,12 +90,19 @@ public class ControlPanel extends JPanel implements ActionListener {
         buttons.add(Box.createRigidArea(new Dimension(0, 5)));
         buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
+        Font inputFont = new Font(null, Font.PLAIN, 16);
+        
         inputField = new JTextField("");
+        inputField.setFont(inputFont);
         // inputField.setAlignmentY(Component.TOP_ALIGNMENT);
         // inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         buttons.add(inputField);
 
+        Font buttonFont = new Font(null, Font.BOLD, 16);
+
         learnButton = new JButton("Teach");
+        
+        learnButton.setFont(buttonFont);
         learnButton.addActionListener(this);
         buttons.add(learnButton);
         
@@ -98,12 +111,16 @@ public class ControlPanel extends JPanel implements ActionListener {
         buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
         recognizeButton = new JButton("Recognize");
+        recognizeButton.setFont(buttonFont);
         recognizeButton.addActionListener(this);
         buttons.add(recognizeButton);
 
         // buttons.add(Box.createRigidArea(new Dimension(5, 5)));
 
         add(buttons);
+        
+        add(Box.createRigidArea(new Dimension(7, 7)));
+
 
         speech = new Speech(true);
         speech.speak("Voice initialized");
@@ -118,6 +135,8 @@ public class ControlPanel extends JPanel implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
+        
+        
 
         if (e.getSource() == learnButton) {
 
