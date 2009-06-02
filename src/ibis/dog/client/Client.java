@@ -26,7 +26,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
-    public static final int HISTORY_SIZE = 20; // 20 seconds
+    public static final int HISTORY_SIZE = 10; // 10 seconds
     public static final int HISTORY_INTERVAL = 1000; // 1 second
 
     // Communication object.

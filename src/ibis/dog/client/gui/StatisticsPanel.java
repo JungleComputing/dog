@@ -82,7 +82,7 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         numbersOffset.setAlignmentX(LEFT_ALIGNMENT);
         numbersOffset.setMaximumSize(new Dimension(200, 20));
         numbersOffset.setLayout(new BoxLayout(numbersOffset, BoxLayout.X_AXIS));
-        numbersOffset.add(Box.createRigidArea(new Dimension(37, 37)));
+        numbersOffset.add(Box.createRigidArea(new Dimension(40, 40)));
         numbersOffset.add(numbers);
         
         add(numbersOffset);
