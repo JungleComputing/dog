@@ -37,6 +37,8 @@ public class PxSystem {
     private static final Logger logger = LoggerFactory
             .getLogger(PxSystem.class);
 
+    private static final int TIMEOUT = 120000 ; // two minutes
+
     private static final int CLOSE_TIMEOUT = 100;
 
     /** * Ibis Capabilities & PortTypes ******************************* */
@@ -240,7 +242,7 @@ public class PxSystem {
                 logger.debug("Really connecting to " + i);
 
                 sps[i] = ibis.createSendPort(portType);
-                sps[i].connect(world[i], COMM_ID + myCPU);
+                sps[i].connect(world[i], COMM_ID + myCPU,TIMEOUT, true);
             }
         }
 
