@@ -77,6 +77,17 @@ Leiden.cores = 64
 Leiden.latitude = 52.16
 Leiden.longitude = 4.49
 
+#Delft.server.uri = any://fs3.das3.tudelft.nl
+#Delft.job.adaptor = globus
+#Delft.job.uri = any://fs3.das3.tudelft.nl/jobmanager-sge
+#Delft.file.adaptors = local,globus,sshtrilead
+#Delft.cache.dir = dog-demo-cache
+#Delft.nodes = 68
+#Delft.cores = 136
+#Delft.latitude = 52.015
+#Delft.longitude = 4.356667
+
+
 # Details of cluster "MultimediaN"
 MultimediaN.server.uri = any://fs4.das3.science.uva.nl
 MultimediaN.job.adaptor = globus
@@ -130,9 +141,9 @@ DesktopGrid.longitude = 4.8722220000001
 DesktopGrid.cache.dir = dog-demo-cache
 
 # Details of cluster "EC2"
-EC2.server.uri = any://67.202.31.132
+EC2.server.uri = any://174.129.5.131
 EC2.job.adaptor = zorilla
-EC2.job.uri = zorilla:67.202.31.132-5444
+EC2.job.uri = zorilla:174.129.5.131-5444
 EC2.java.path = /home/ndrost/jdk1.6.0_10/bin/java
 EC2.server.system.properties = smartsockets.external.stun=true,
 EC2.nodes = 20

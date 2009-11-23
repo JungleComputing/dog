@@ -18,6 +18,10 @@ NL-VU.cluster.name = VU
 NL-VU.process.count = 16
 NL-VU.resource.count = 16
 
+#NL-Delft.cluster.name = Delft
+#NL-Delft.process.count = 16
+#NL-Delft.resource.count = 16
+
 NL-UvA.cluster.name = UvA
 NL-UvA.resource.count = 16
 NL-UvA.process.count = 16
