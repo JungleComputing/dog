@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #defaults to current directory, edit if necessary
-DEPLOY_HOME=.
 
-exec java -classpath .:external/deploy/*:external/javagat/*:external/ipl/*:$DEPLOY_HOME/lib/javagat/castor-1.1.1-xml.jar -Dgat.adaptor.path=external/javagat/adaptors -Dibis.deploy.home=$DEPLOY_HOME ibis.deploy.gui.GUI demo $@
+exec java -classpath .:deploy/lib:deploy/lib/*:deploy/lib/javagat/castor-1.1.1-xml.jar -Dgat.adaptor.path=deploy/lib/adaptors -Dibis.deploy.home=deploy ibis.deploy.gui.GUI demo $@
+i
 
 
 

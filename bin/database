@@ -1,0 +1,23 @@
+#!/bin/sh
+
+NORMAL=
+SPECIAL=
+
+while [ $# -gt 0 ]
+do
+
+        HEADER=`echo $1 | head --bytes=2`
+
+        case "$HEADER" in
+        -D)
+                SPECIAL="$SPECIAL $1"
+                ;;
+        *)
+                NORMAL="$NORMAL $1"
+                ;;
+        esac
+        shift
+done
+
+#java -XX:+PrintCompilation -XX:+CITime -cp $CP $SPECIAL ibis.mbf.broker.Broker $NORMAL
+java -cp lib-server:lib-server/*:. $SPECIAL ibis.dog.database.Database $NORMAL

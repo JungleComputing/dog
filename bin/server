@@ -1,9 +1,6 @@
 #!/bin/sh
 
-for i in external/ipl/*.jar
-do
-    CP=$CP:$i
-done
+CP=lib-server:lib-server/*
 
 for i in jars/*.jar
 do

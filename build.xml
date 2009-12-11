@@ -1,115 +1,79 @@
-<project name="Dog Demo" default="all" basedir=".">
+<project name="Dog Demo" default="build" basedir=".">
 
-    <property name="version" value="dog-0.8" />
-    <property name="jar" value="${version}.jar" />
+    <property name="version" value="-0.8" />
+    <property name="jar" value="dog${version}.jar" />
 
-    <property name="srcdir" value="./src" />
-    <property name="builddir" value="./build" />
-    <property name="distdir" value="./jars" />
+    <!-- root of deploy, not libs -->
+    <property name="deploy-home" location="external/deploy"/>
+
+    <property name="ipl" location="external/ipl"/>
+    <property name="freetts" location="external/freetts"/>
+    <property name="jfreechart" location="external/jfreechart"/>
+    <property name="video4J" location="external/video4J"/>
+
+    <target name="build" depends="clean,copy-external,compile">
+    </target>
 
     <path id="default.classpath">
-        <fileset dir="external/freetts">
+	<fileset dir="lib-client">
+            <include name="*.jar" />
+	</fileset>
+	<fileset dir="lib-server">
             <include name="*.jar" />
         </fileset>
-        <fileset dir="external/ipl">
-            <include name="*.jar" />
-        </fileset>
-        <fileset dir="external/jfreechart">
-            <include name="*.jar" />
-        </fileset>
-        <fileset dir="external/video4J">
-            <include name="*.jar" />
-        </fileset>
+
         <pathelement path="tmp" />
     </path>
 
+    <!-- copy external dependancies -->
+    <target name="copy-external">
+	<mkdir dir="lib-client" />
+	<mkdir dir="lib-server" />
+	<mkdir dir="deploy" />
 
-    <!-- Internal target - Preparations for building. -->
-    <target name="prepare">
-        <mkdir dir="${distdir}" />
-        <mkdir dir="${builddir}" />
-        <mkdir dir="${builddir}/headers" />
-        <mkdir dir="prestage-client" />
-        <mkdir dir="prestage-server" />
-        <mkdir dir="lib-server" />
-        <mkdir dir="lib-zorilla" />
-    </target>
+	<copy todir="lib-client">
+	    <fileset dir="external" includes="*.jar" />
+	    <fileset dir="${ipl}"/>
+	    <fileset dir="${freetts}" />
+	    <fileset dir="${jfreechart}" />
+	    <fileset dir="${video4J}" />
+	</copy>
 
-    <target name="compile" depends="prepare">
+	<copy todir="lib-server">
+	    <fileset dir="external" includes="*.jar" />
+	    <fileset dir="${ipl}"/>
+	    <fileset dir="${video4J}" />
+	</copy>
 
-        <javac classpathref="default.classpath" destdir="${builddir}" srcdir="${srcdir}" debug="true" target="1.5" includes="**/*.java" />
-    </target>
-
-    <!-- Internal target - Builds the JAR file -->
-    <target name="jar" depends="compile">
-
-        <delete failonerror="false" file="${distdir}/${jar}" />
-
-        <jar jarfile="${distdir}/${jar}" basedir="${builddir}" includes="**">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}" />
-            </manifest>
-        </jar>
-
+	<copy todir="deploy">
+	    <fileset dir="${deploy-home}" includes="lib/**,lib-server/**,lib-zorilla/**,log4j.properties"/>
+	</copy>
     </target>
 
 
-    <!-- Internal target - Perpares the stageing directories -->
-    <target name="stage" depends="jar">
-        <copy todir="prestage-server">
-            <fileset dir="jars" />
-        </copy>
+    <target name="compile" depends="copy-external">
+	<mkdir dir="tmp" />
 
-        <copy todir="prestage-server">
-            <fileset dir="external/ipl" />
-        </copy>
+	<copy todir="tmp/images">
+	    <fileset dir="images" includes="*" />
+	</copy>
 
-        <copy todir="prestage-server">
-            <fileset dir="external/video4J" />
-        </copy>
+        <javac classpathref="default.classpath" destdir="tmp" srcdir="src" debug="true" target="1.5" includes="**/*.java" />
 
-        <copy todir="prestage-client">
-            <fileset dir="external/ipl" />
-        </copy>
-        <copy todir="prestage-client">
-            <fileset dir="jars" />
-        </copy>
-        <copy todir="prestage-client">
-            <fileset dir="external/freetts" />
-        </copy>
-        <copy todir="prestage-client">
-            <fileset dir="external/video4J" />
-        </copy>
-        <copy todir="prestage-client">
-            <fileset dir="external/native_libraries" />
-        </copy>
-        <copy todir="prestage-client">
-            <fileset dir="external/jfreechart" />
-        </copy>
+	<jar jarfile="lib-client/${jar}" basedir="tmp" includes="**"/>
+	<copy todir="lib-server">
+	    <fileset dir="lib-client" includes="${jar}"/>
+	</copy>
 
-
-        <copy todir="lib-server">
-            <fileset dir="external/ipl" />
-        </copy>
-
-        <copy todir="lib-zorilla">
-            <fileset dir="external/zorilla" />
-            <fileset dir="external/javagat" includes="*.jar,adaptors/LocalAdaptor/*,adaptors/SshTrileadAdaptor/*" />
-        </copy>
-
-    </target>
-
-    <target name="all" depends="clean,prepare,compile,jar,stage">
+	<delete dir="tmp" />
     </target>
 
     <!-- remove all generated code -->
     <target name="clean" description="Removes the ${distdir} directory">
-        <delete failonerror="false" dir="${builddir}" />
-        <delete failonerror="false" dir="${distdir}" />
-        <delete failonerror="false" dir="prestage-client" />
-        <delete failonerror="false" dir="prestage-server" />
+        <delete failonerror="false" dir="tmp" />
+        <delete failonerror="false" dir="lib-client" />
         <delete failonerror="false" dir="lib-server" />
-        <delete failonerror="false" dir="lib-zorilla" />
+        <delete failonerror="false" dir="deploy" />
     </target>
 
     <target name="distclean" depends="clean">

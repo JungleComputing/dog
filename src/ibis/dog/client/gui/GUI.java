@@ -53,10 +53,10 @@ public class GUI extends JPanel implements WindowListener {
         logos.setLayout(new GridLayout(1, 4, 5, 5));
         // logos.setMaximumSize(new Dimension(150, 300));
         logos.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
-        logos.add(new JLabel(new ImageIcon("images/ibis-logo.png")));
-        logos.add(new JLabel(new ImageIcon("images/MultimediaN.png")));
-        logos.add(new JLabel(new ImageIcon("images/vl-e.png")));
-        logos.add(new JLabel(new ImageIcon("images/vu.png")));
+        logos.add(Utils.createImageLabel("images/ibis-logo.png", "Ibis"));
+        logos.add(Utils.createImageLabel("images/MultimediaN.png", "MultimediaN"));
+        logos.add(Utils.createImageLabel("images/vl-e.png", "VL-e"));
+        logos.add(Utils.createImageLabel("images/vu.png", "VU"));
 
         // top.add(logos);
         //top.add(Box.createRigidArea(new Dimension(5, 5)));

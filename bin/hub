@@ -1,9 +1,6 @@
 #!/bin/sh
 
-for i in external/ibis/*.jar
-do
-    CP=$CP:$i
-done
+CP=lib-server:lib-server/*
 
 NORMAL=
 SPECIAL=
@@ -24,4 +21,4 @@ do
         shift
 done
 
-java -cp $CP -Dlog4j.configuration=file:`pwd`/log4j.properties $SPECIAL ibis.server.Server $NORMAL
+java -cp $CP -Dlog4j.configuration=file:`pwd`/log4j.properties $SPECIAL ibis.ipl.server.Server $NORMAL

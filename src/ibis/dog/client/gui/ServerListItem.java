@@ -30,8 +30,8 @@ public class ServerListItem extends JPanel implements ActionListener {
     private static final ImageIcon stopIcon;
     
     static {
-        playIcon = createImageIcon("/images/media-playback-start.png", "");
-        stopIcon = createImageIcon("/images/media-playback-stop.png", "");
+        playIcon = createImageIcon("images/media-playback-start.png", "");
+        stopIcon = createImageIcon("images/media-playback-stop.png", "");
     }
     
     /** Returns an ImageIcon, or null if the path was invalid. */

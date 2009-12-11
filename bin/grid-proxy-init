@@ -1,9 +1,4 @@
 #!/bin/bash
 
-#defaults to current directory, edit if necessary
-DEPLOY_HOME=.
-
-exec java -classpath external/javagat/adaptors/GlobusAdaptor/cog-jglobus.jar -DUID=${UID} org.globus.tools.ProxyInit $@
-
-
+exec java -classpath deploy/lib/*:deploy/lib/adaptors/GlobusAdaptor/cog-jglobus.jar -DUID=${UID} org.globus.tools.ProxyInit $@
 
