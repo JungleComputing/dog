@@ -180,9 +180,9 @@ Hiroshi.server.system.properties=smartsockets.external.manual=129.78.10.77
 
 # Standalone machine
 Sedna.server.adaptor = SshTrilead
-Sedna.server.uri = ssh://130.37.193.42
+Sedna.server.uri = ssh://sedna.cs.vu.nl
 Sedna.job.adaptor = SshTrilead
-Sedna.job.uri = ssh://130.37.193.42
+Sedna.job.uri = ssh://sedna.cs.vu.nl
 Sedna.file.adaptors = SshTrilead,Local
 Sedna.java.path = /usr/bin/java
 #Laptop.job.wrapper.script = demo/multicore.script
