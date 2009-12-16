@@ -1,0 +1,13 @@
+default.log4j.file = log4j.properties
+
+Client.main.class = ibis.dog.client.gui.GUI
+#Client.arguments = images/testbeeld.jpg
+Client.libs = lib-client
+Client.system.properties = java.library.path=lib-client
+
+Server.main.class = ibis.dog.server.Server
+Server.memory.size = 1500
+Server.libs = lib-server
+
+Database.main.class = ibis.dog.database.Database
+Database.libs = lib-server

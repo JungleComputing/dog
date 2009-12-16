@@ -3,7 +3,3 @@
 #defaults to current directory, edit if necessary
 
 exec java -classpath .:deploy/lib:deploy/lib/*:deploy/lib/javagat/castor-1.1.1-xml.jar -Dgat.adaptor.path=deploy/lib/adaptors -Dibis.deploy.home=deploy ibis.deploy.gui.GUI demo $@
-i
-
-
-

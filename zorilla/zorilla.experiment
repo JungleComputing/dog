@@ -1,0 +1,66 @@
+default.process.count = 16
+default.application.name = Server
+default.runtime=60
+
+Database.application.name = Database
+Database.process.count = 1
+Database.cluster.name = local
+Database.resource.count = 1
+
+Client.application.name = Client
+Client.process.count = 1
+Client.cluster.name = local
+Client.resource.count = 1
+
+#globus
+
+NL-VU.cluster.name = VU
+NL-VU.process.count = 16
+NL-VU.resource.count = 16
+
+#NL-Delft.cluster.name = Delft
+#NL-Delft.process.count = 16
+#NL-Delft.resource.count = 16
+
+NL-UvA.cluster.name = UvA
+NL-UvA.resource.count = 16
+NL-UvA.process.count = 16
+
+NL-Leiden.cluster.name = Leiden
+NL-Leiden.resource.count = 16
+NL-Leiden.process.count = 16
+
+NL-MultimediaN.cluster.name = MultimediaN
+NL-MultimediaN.resource.count = 16
+NL-MultimediaN.process.count = 16
+
+#auto-zorilla
+
+JP-Chiba.cluster.name = Chiba
+JP-Chiba.resource.count = 0
+
+JP-Tsukuba.cluster.name = Tsukuba
+JP-Tsukuba.resource.count = 0
+
+#zorilla
+
+NL-DesktopGrid.cluster.name = DesktopGrid
+NL-DesktopGrid.process.count = 8
+NL-DesktopGrid.resource.count = 0
+NL-DesktopGrid.application.memory.size = 800
+
+USA-EC2.cluster.name = EC2
+
+#ssh/script
+
+USA-Yorda.cluster.name = Yorda
+
+AU-Hiroshi.cluster.name = Hiroshi
+AU-Hiroshi.resource.count = 4
+AU-Hiroshi.process.count = 4
+
+#ssh
+
+NL-Sedna.cluster.name = Sedna
+NL-Sedna.resource.count = 1
+NL-Sedna.process.count = 1
