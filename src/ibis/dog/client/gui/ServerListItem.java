@@ -36,7 +36,9 @@ public class ServerListItem extends JPanel implements ActionListener {
     
     /** Returns an ImageIcon, or null if the path was invalid. */
     public static ImageIcon createImageIcon(String path, String description) {
-        java.net.URL imgURL = ServerListItem.class.getResource(path);
+        java.net.URL imgURL = ClassLoader.getSystemResource(path);
+
+//        java.net.URL imgURL = ServerListItem.class.getResource(path);
         // URL imgURL = null;
         // try {
         // imgURL = new URL("file:" + path);

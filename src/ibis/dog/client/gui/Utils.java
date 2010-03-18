@@ -72,7 +72,7 @@ public class Utils {
 
     /** Returns an ImageIcon, or null if the path was invalid. */
     public static ImageIcon createImageIcon(String path, String description) {
-        java.net.URL imgURL = Utils.class.getResource(path);
+        java.net.URL imgURL = ClassLoader.getSystemResource(path);
         // URL imgURL = null;
         // try {
         // imgURL = new URL("file:" + path);

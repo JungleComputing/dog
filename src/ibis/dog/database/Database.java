@@ -183,7 +183,7 @@ public class Database implements Upcall {
             while (results.get(score) != null) {
                 // add a small offset to the score to make it unique
                 // just in case two scores are identical.
-                score = score + Double.MIN_VALUE;
+                score = score + 0.0001;
             }
 
             results.put(score, item);
