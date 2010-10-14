@@ -46,7 +46,7 @@ default.java.path = /usr/local/package/jdk1.6.0-linux-amd64/bin/java
 
 # Details of cluster "VU"
 VU.server.uri = any://fs0.das3.cs.vu.nl
-VU.job.adaptor = globus
+VU.job.adaptor = sshtrilead
 VU.job.uri = any://fs0.das3.cs.vu.nl/jobmanager-sge
 VU.file.adaptors = local,globus,sshtrilead
 VU.cache.dir = dog-demo-cache
@@ -54,10 +54,11 @@ VU.nodes = 85
 VU.cores = 340
 VU.latitude = 52.336062
 VU.longitude = 4.872222
+VU.job.wrapper.script = demo/das3.script
 
 # Details of cluster "UvA"
 UvA.server.uri = any://fs2.das3.science.uva.nl
-UvA.job.adaptor = globus
+UvA.job.adaptor = sshtrilead
 UvA.job.uri = any://fs2.das3.science.uva.nl/jobmanager-sge
 UvA.file.adaptors = local,globus,sshtrilead
 UvA.cache.dir = dog-demo-cache
@@ -65,10 +66,11 @@ UvA.nodes = 41
 UvA.cores = 164
 UvA.latitude = 52.36637614192115
 UvA.longitude = 4.925994873046875
+UvA.job.wrapper.script = demo/das3.script
 
 # Details of cluster "Leiden"
 Leiden.server.uri = any://fs1.das3.liacs.nl
-Leiden.job.adaptor = globus
+Leiden.job.adaptor = sshtrilead
 Leiden.job.uri = any://fs1.das3.liacs.nl/jobmanager-sge
 Leiden.file.adaptors = local,globus,sshtrilead
 Leiden.cache.dir = dog-demo-cache
@@ -76,6 +78,7 @@ Leiden.nodes = 32
 Leiden.cores = 64
 Leiden.latitude = 52.16
 Leiden.longitude = 4.49
+Leiden.job.wrapper.script = demo/das3.script
 
 #Delft.server.uri = any://fs3.das3.tudelft.nl
 #Delft.job.adaptor = globus
@@ -90,7 +93,7 @@ Leiden.longitude = 4.49
 
 # Details of cluster "MultimediaN"
 MultimediaN.server.uri = any://fs4.das3.science.uva.nl
-MultimediaN.job.adaptor = globus
+MultimediaN.job.adaptor = sshtrilead
 MultimediaN.job.uri = any://fs4.das3.science.uva.nl/jobmanager-sge
 MultimediaN.file.adaptors = local,globus,sshtrilead
 MultimediaN.cache.dir = dog-demo-cache
@@ -98,6 +101,7 @@ MultimediaN.nodes = 46
 MultimediaN.cores = 92
 MultimediaN.latitude = 52.3605059352529
 MultimediaN.longitude = 4.942474365234375
+MultimediaN.job.wrapper.script = demo/das3.script
 
 ##INTRIGGER
 

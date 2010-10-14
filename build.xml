@@ -42,7 +42,7 @@
 	<copy todir="lib-server">
 	    <fileset dir="external" includes="*.jar" />
 	    <fileset dir="${ipl}"/>
-	    <fileset dir="${video4J}" />
+	    <fileset dir="${video4J}" includes="*.jar" />
 	</copy>
 
 	<copy todir="deploy">
