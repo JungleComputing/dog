@@ -18,9 +18,13 @@ NL-VU.cluster.name = VU
 NL-VU.process.count = 16
 NL-VU.resource.count = 16
 
-#NL-Delft.cluster.name = Delft
-#NL-Delft.process.count = 16
-#NL-Delft.resource.count = 16
+NL-Local.cluster.name = local
+NL-Local.process.count = 1
+NL-Local.resource.count = 1
+
+NL-Delft.cluster.name = Delft
+NL-Delft.process.count = 16
+NL-Delft.resource.count = 16
 
 NL-UvA.cluster.name = UvA
 NL-UvA.resource.count = 16
@@ -36,31 +40,31 @@ NL-MultimediaN.process.count = 16
 
 #auto-zorilla
 
-JP-Chiba.cluster.name = Chiba
-JP-Chiba.resource.count = 0
+#JP-Chiba.cluster.name = Chiba
+#JP-Chiba.resource.count = 0
 
-JP-Tsukuba.cluster.name = Tsukuba
-JP-Tsukuba.resource.count = 0
+#JP-Tsukuba.cluster.name = Tsukuba
+#JP-Tsukuba.resource.count = 0
 
 #zorilla
 
-NL-DesktopGrid.cluster.name = DesktopGrid
-NL-DesktopGrid.process.count = 8
-NL-DesktopGrid.resource.count = 0
-NL-DesktopGrid.application.memory.size = 800
+#NL-DesktopGrid.cluster.name = DesktopGrid
+#NL-DesktopGrid.process.count = 8
+#NL-DesktopGrid.resource.count = 0
+#NL-DesktopGrid.application.memory.size = 800
 
-USA-EC2.cluster.name = EC2
+#USA-EC2.cluster.name = EC2
 
 #ssh/script
 
-USA-Yorda.cluster.name = Yorda
+#USA-Yorda.cluster.name = Yorda
 
-AU-Hiroshi.cluster.name = Hiroshi
-AU-Hiroshi.resource.count = 4
-AU-Hiroshi.process.count = 4
+#AU-Hiroshi.cluster.name = Hiroshi
+#AU-Hiroshi.resource.count = 4
+#AU-Hiroshi.process.count = 4
 
 #ssh
 
-NL-Sedna.cluster.name = Sedna
-NL-Sedna.resource.count = 1
-NL-Sedna.process.count = 1
+#NL-Sedna.cluster.name = Sedna
+#NL-Sedna.resource.count = 1
+#NL-Sedna.process.count = 1

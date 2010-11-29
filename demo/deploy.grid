@@ -80,15 +80,16 @@ Leiden.latitude = 52.16
 Leiden.longitude = 4.49
 Leiden.job.wrapper.script = demo/das3.script
 
-#Delft.server.uri = any://fs3.das3.tudelft.nl
-#Delft.job.adaptor = globus
-#Delft.job.uri = any://fs3.das3.tudelft.nl/jobmanager-sge
-#Delft.file.adaptors = local,globus,sshtrilead
-#Delft.cache.dir = dog-demo-cache
-#Delft.nodes = 68
-#Delft.cores = 136
-#Delft.latitude = 52.015
-#Delft.longitude = 4.356667
+Delft.server.uri = any://fs3.das3.tudelft.nl
+Delft.job.adaptor = sshtrilead
+Delft.job.uri = any://fs3.das3.tudelft.nl/jobmanager-sge
+Delft.file.adaptors = local,globus,sshtrilead
+Delft.cache.dir = dog-demo-cache
+Delft.nodes = 68
+Delft.cores = 136
+Delft.latitude = 52.015
+Delft.longitude = 4.356667
+Delft.job.wrapper.script = demo/das3.script
 
 
 # Details of cluster "MultimediaN"
