@@ -1,9 +1,10 @@
 default.log4j.file = log4j.properties
+default.system.properties = ibis.managementclient=true,ibis.bytescount=true
 
 Client.main.class = ibis.dog.client.gui.GUI
 #Client.arguments = images/testbeeld.jpg
 Client.libs = lib-client
-Client.system.properties = java.library.path=lib-client
+Client.system.properties = java.library.path=lib-client,ibis.managementclient=true,ibis.bytescount=true
 
 Server.main.class = ibis.dog.server.Server
 Server.memory.size = 1500

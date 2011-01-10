@@ -4,7 +4,7 @@
     <property name="jar" value="dog${version}.jar" />
 
     <!-- root of deploy, not libs -->
-    <property name="deploy-home" location="external/deploy"/>
+    <property name="deploy.home" location="external/deploy"/>
 
     <property name="ipl" location="external/ipl"/>
     <property name="freetts" location="external/freetts"/>
@@ -45,8 +45,10 @@
 	    <fileset dir="${video4J}" includes="*.jar" />
 	</copy>
 
+	<echo message="using deploy from ${deploy.home}"/>
+
 	<copy todir="deploy">
-	    <fileset dir="${deploy-home}" includes="lib/**,lib-server/**,log4j.properties"/>
+	    <fileset dir="${deploy.home}" includes="lib/**,lib-server/**,log4j.properties"/>
 	</copy>
     </target>
 
