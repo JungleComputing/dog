@@ -1,5 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-#defaults to current directory, edit if necessary
+#defaults to current directory, set in environment to override if necessary
+if [ -z "$DEPLOY_HOME" ];  then
+	DEPLOY_HOME=.
+fi
 
-exec java -classpath .:deploy/lib:deploy/lib/*:deploy/lib/javagat/castor-1.1.1-xml.jar -Djava.library.path=deploy/lib/native_libraries -Dgat.adaptor.path=deploy/lib/adaptors -Dibis.deploy.home=deploy ibis.deploy.gui.GUI demo-workspace $@
+MAIN_CLASS=ibis.deploy.gui.GUI
+
+exec java -classpath $DEPLOY_HOME:$DEPLOY_HOME/lib/*:$DEPLOY_HOME/lib/castor-1.1.1-xml.jar -Djava.library.path=$DEPLOY_HOME/external/native_libraries -Dgat.adaptor.path=$DEPLOY_HOME/lib/adaptors -Dibis.deploy.home=$DEPLOY_HOME $MAIN_CLASS demo-workspace $*
