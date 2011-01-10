@@ -46,7 +46,7 @@
 	</copy>
 
 	<copy todir="deploy">
-	    <fileset dir="${deploy-home}" includes="lib/**,lib-server/**,lib-zorilla/**,log4j.properties"/>
+	    <fileset dir="${deploy-home}" includes="lib/**,lib-server/**,log4j.properties"/>
 	</copy>
     </target>
 
