@@ -4,7 +4,7 @@ if "%OS%"=="Windows_NT" @setlocal
 
 rem %~dp0 is expanded pathname of the current script under NT
 
-if "%DEPLOY_HOME%X"=="X" set DEPLOY_HOME=%~dp0..
+if "%DEPLOY_HOME%X"=="X" set DEPLOY_HOME=%~dp0..\deploy
 
 set DEPLOY_ARGS=
 
