@@ -3,6 +3,7 @@ package ibis.dog.client;
 import ibis.dog.Communication;
 import ibis.dog.FeatureVector;
 import ibis.dog.Upcall;
+import ibis.dog.database.Database;
 import ibis.dog.database.DatabaseReply;
 import ibis.dog.database.DatabaseRequest;
 import ibis.dog.database.Item;
@@ -59,9 +60,11 @@ public class Client implements Upcall, VideoConsumer, Runnable {
     private final int[] processedFrameCountHistory;
     private int validHistorySize;
     private int currentHistoryIndex;
+    
+    private Database database;
 
     public Client(MessageListener messageListener,
-            ServerListener serverListener,
+            ServerListener serverListener, boolean includeDatabase,
             StatisticsListener... statisticListeners)
             throws IbisCreationFailedException, IOException {
         this.messageListener = messageListener;
@@ -82,6 +85,11 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 
         ThreadPool.createNew(this, "statistics update");
 
+        if(includeDatabase) {
+        	database = new Database();
+        }
+        
+        
         logger.info("Done initializing client");
     }
 
@@ -310,6 +318,10 @@ public class Client implements Upcall, VideoConsumer, Runnable {
         servers.clear();
 
         communication.end();
+        
+        if (database != null) {
+        	database.end();
+        }
     }
 
     private synchronized boolean isDone() {

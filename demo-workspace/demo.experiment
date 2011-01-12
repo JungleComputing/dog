@@ -3,11 +3,6 @@ default.resource.count = 1
 default.application.name = Server
 default.runtime=60
 
-Database.application.name = Database
-Database.process.count = 1
-Database.cluster.name = local
-Database.resource.count = 1
-
 Client.application.name = Client
 Client.process.count = 1
 Client.cluster.name = local

@@ -95,7 +95,7 @@ public class Database implements Upcall {
     private boolean ended = false;
 
     @SuppressWarnings("unchecked")
-    private Database() throws IbisCreationFailedException, IOException {
+	public Database() throws IbisCreationFailedException, IOException {
 
         // Create an Communication object
         communication = new Communication(Communication.DATABASE_ROLE, this);
@@ -198,7 +198,7 @@ public class Database implements Upcall {
         return results;
     }
 
-    private void end() {
+    public void end() {
         synchronized (this) {
             ended = true;
         }

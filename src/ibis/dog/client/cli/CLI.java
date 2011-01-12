@@ -57,7 +57,7 @@ public class CLI implements MessageListener, StatisticsListener {
 
             CLI cli = new CLI();
 
-            Client client = new Client(cli, null, cli);
+            Client client = new Client(cli, null, false, cli);
 
             // Install a shutdown hook that terminates ibis.
             Runtime.getRuntime().addShutdownHook(new CLI.ShutDown(client));
