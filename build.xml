@@ -83,5 +83,17 @@
         <delete failonerror="false" file="${version}.zip" />
     </target>
 
+   <target name="dist" depends="build" description="create a binary distribution">
+
+        <delete dir="dist" />
+        <mkdir dir="dist" />
+
+        <zip destfile="dist/dog${version}.zip">
+            <zipfileset dir="." prefix="dog${version}" includes="README, lib/**, log4j.properties, LICENSE,images/**,demo-workspace/**,das3.script,deploy/**,lib-client/**,lib-server/**,speech.properties" />
+            <zipfileset dir="." prefix="dog${version}" filemode="755" includes="bin/**"/>
+        </zip>
+
+    </target>
+
 
 </project>
