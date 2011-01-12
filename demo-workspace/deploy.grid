@@ -123,14 +123,3 @@ Leiden.cores = 64
 #Leiden.memory = 
 Leiden.latitude = 52.1686
 Leiden.longitude = 4.4598
-
-# Settings overriding default "local" cluster
-local.server.adaptor = local
-local.server.uri = any://localhost
-local.job.adaptor = local
-local.job.uri = any://localhost
-local.file.adaptors = local
-local.java.path = /usr/lib/jvm/java-6-sun-1.6.0.22/jre/bin/java
-#local.user.name =
-local.nodes = 1
-local.cores = 4
