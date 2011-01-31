@@ -1,5 +1,5 @@
-default.process.count = 16
-default.resource.count = 16
+default.process.count = 4
+default.resource.count = 1
 default.application.name = Server
 default.runtime=60
 
