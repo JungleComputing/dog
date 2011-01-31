@@ -1,5 +1,7 @@
 package ibis.dog.client;
 
+import java.awt.Color;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +27,9 @@ public class ServerHandler implements Runnable {
     private boolean done = false;
 
     private boolean waitingForReply = false;
+    
+    //server is active if a message has ever been received from it
+    private boolean active = false;
 
     ServerHandler(IbisIdentifier address, Client client,
             Communication communication) {
@@ -59,7 +64,7 @@ public class ServerHandler implements Runnable {
     public String getName() {
         return address.location().getLevel(address.location().numberOfLevels() - 1);
     }
-
+    
     private synchronized boolean isDone() {
         return done;
     }
@@ -101,10 +106,19 @@ public class ServerHandler implements Runnable {
     synchronized void replyReceived() {
         logger.debug("reply received from " + this);
         waitingForReply = false;
+        active = true;
         notifyAll();
+    }
+    
+    public synchronized boolean isActive() {
+    	return active;
     }
 
     public void run() {
+    	if (!isDone()) {
+        	//send fake request, to trigger a reply
+    		sendRequest(null);
+    	}
         while (!isDone()) {
             if (isEnabled()) {
                 logger.debug("Getting image to send to " + address);

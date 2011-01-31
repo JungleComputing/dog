@@ -95,10 +95,14 @@ public class Database implements Upcall {
     private boolean ended = false;
 
     @SuppressWarnings("unchecked")
-	public Database() throws IbisCreationFailedException, IOException {
+	public Database(boolean distributed) throws IbisCreationFailedException, IOException {
 
+    	if (distributed) {
         // Create an Communication object
         communication = new Communication(Communication.DATABASE_ROLE, this);
+    	} else {
+    		communication = null;
+    	}
 
         if (!FILE.exists()) {
             logger.warn("Database file \"" + FILE + "\" does not exist");
@@ -144,8 +148,10 @@ public class Database implements Upcall {
                     + "\"");
         }
         
+        if (communication != null) {
         communication.start();
         logger.info("Database initialized");
+        }
     }
 
     private synchronized int getSize() {
@@ -168,7 +174,7 @@ public class Database implements Upcall {
         }
     }
 
-    private synchronized TreeMap<Double, Item> recognize(FeatureVector vector,
+    public synchronized TreeMap<Double, Item> recognize(FeatureVector vector,
             int nrOfResults) {
         if (nrOfResults == 0) {
             return new TreeMap<Double, Item>();
@@ -204,14 +210,16 @@ public class Database implements Upcall {
         }
         logger.info("ending database");
         save();
-        communication.end();
+        if (communication != null) {
+        	communication.end();
+        }
     }
 
     private synchronized boolean hasEnded() {
         return ended;
     }
 
-    private synchronized boolean learn(Item item) {
+    public synchronized boolean learn(Item item) {
 
         double[] weibulls = item.getVector().vector;
 
@@ -284,7 +292,7 @@ public class Database implements Upcall {
 
     public static void main(String[] args) {
         try {
-            Database database = new Database();
+            Database database = new Database(true);
 
             // Install a shutdown hook that terminates Ibis.
             Runtime.getRuntime().addShutdownHook(new ShutDown(database));

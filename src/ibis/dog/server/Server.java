@@ -22,8 +22,12 @@ public class Server implements Upcall {
 
     // public static final int IMAGE_WIDTH = 352;
     // public static final int IMAGE_HEIGHT = 768;
-    public static final int IMAGE_WIDTH = 1024;
-    public static final int IMAGE_HEIGHT = 768;
+	
+//    public static final int IMAGE_WIDTH = 1024;
+//    public static final int IMAGE_HEIGHT = 768;
+	
+    public static final int IMAGE_WIDTH = 640;
+    public static final int IMAGE_HEIGHT = 480;
 
     public static final Format IMAGE_FORMAT = Format.RGB24;
 
@@ -181,6 +185,25 @@ public class Server implements Upcall {
                 }
 
                 Image srcImage = request.getImage();
+                
+                if (srcImage == null) {
+                	logger.debug("fake request received, sending fake reply");
+
+                	 reply = new ServerReply(communication.getIdentifier(), request
+                        .getSequenceNumber(), (FeatureVector) null);
+                	 
+                	 logger.debug("Sending Fake reply....");
+                     try {
+                         communication.send(request.getReplyAddress(), reply);
+                     } catch (Exception e) {
+                         logger.error("Failed to return reply to "
+                                 + request.getReplyAddress(), e);
+                     }
+                     logger.debug("Reply send....");
+                     
+                     return;
+                }
+                	
 
                 Image convertedImage;
                 if (srcImage.getFormat() == IMAGE_FORMAT) {
