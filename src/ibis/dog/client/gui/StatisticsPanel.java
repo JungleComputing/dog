@@ -56,7 +56,7 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         // setMaximumSize(new Dimension(Short.MAX_VALUE, 100));
         // setMinimumSize(new Dimension(100, 100));
-        setBorder(BorderFactory.createTitledBorder("Statististics"));
+        setBorder(BorderFactory.createTitledBorder("Statistics"));
 //        setMinimumSize(new Dimension(650, 350));
 //        setPreferredSize(new Dimension(650, 350));
 //        setMaximumSize(new Dimension(650, Integer.MAX_VALUE));
