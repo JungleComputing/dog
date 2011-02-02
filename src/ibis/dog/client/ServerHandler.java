@@ -75,7 +75,7 @@ public class ServerHandler implements Runnable {
     }
 
     private boolean sendRequest(Image image) {
-        ServerRequest request = new ServerRequest(0, image, communication
+        ServerRequest request = new ServerRequest(System.currentTimeMillis(), image, communication
                 .getIdentifier());
 
         try {

@@ -48,7 +48,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 	private long lastDisplayedFrame = 0;
 	private long lastProcessedFrame = 0;
 
-	private Item currentResult = null;
+	private Voter voter;
 
 	private FeatureVector vector = null;
 
@@ -76,6 +76,8 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 
 		communication = new Communication(Communication.CLIENT_ROLE, this);
 
+		voter = new Voter();
+		
 		inputFrameCountHistory = new int[HISTORY_SIZE];
 		displayedFrameCountHistory = new int[HISTORY_SIZE];
 		processedFrameCountHistory = new int[HISTORY_SIZE];
@@ -199,12 +201,8 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 		return true;
 	}
 
-	public synchronized String recognize() {
-		if (currentResult == null) {
-			return null;
-		}
-
-		return currentResult.getName();
+	public Voter getVoter() {
+	    return voter;
 	}
 
 	private synchronized FeatureVector getFeatureVector() {
@@ -284,11 +282,12 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 				return;
 			}
 			Double key = results.firstKey();
-			synchronized (this) {
-				this.currentResult = results.get(key);
-			}
+			
+			Item item = results.get(key);
+			
+			voter.addResult(item, reply.getTimestamp());
 
-			log(serverName + " says this is a " + currentResult.getName());
+			log(serverName + " says this is a " + item.getName());
 		}
 	}
 
@@ -302,11 +301,11 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 			return;
 		}
 		Double key = reply.getResults().firstKey();
-		synchronized (this) {
-			this.currentResult = reply.getResults().get(key);
-		}
+		Item item = reply.getResults().get(key);
 
-		log(serverName + " says this is a " + currentResult.getName());
+                voter.addResult(item, reply.getSequenceNumber());
+		
+		log(serverName + " says this is a " + item.getName());
 	}
 
 	@Override

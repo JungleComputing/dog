@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class ServerRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final long sequenceNumber;
+	private final long timestamp;
 
 	private final Image image;
 
@@ -16,13 +16,13 @@ public class ServerRequest implements Serializable {
 
 	public ServerRequest(long sequenceNumber, Image image,
 			IbisIdentifier replyAddress) {
-		this.sequenceNumber = sequenceNumber;
+		this.timestamp = sequenceNumber;
 		this.image = image;
 		this.replyAddress = replyAddress;
 	}
 
-	public long getSequenceNumber() {
-		return sequenceNumber;
+	public long getTimestamp() {
+		return timestamp;
 	}
 
 	public Image getImage() {
@@ -35,10 +35,10 @@ public class ServerRequest implements Serializable {
 
 	public String toString() {
 		if (image == null) {
-			return "ServerRequest " + sequenceNumber + " from " + replyAddress
+			return "ServerRequest " + timestamp + " from " + replyAddress
 					+ " (no image)";
 		} else {
-			return "ServerRequest " + sequenceNumber + " from " + replyAddress
+			return "ServerRequest " + timestamp + " from " + replyAddress
 					+ ", format = " + image.getFormat() + ", dimensions = "
 					+ image.getWidth() + "x" + image.getHeight();
 		}

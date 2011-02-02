@@ -171,7 +171,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
         } else if (e.getSource() == recognizeButton) {
 
-            String object = client.recognize();
+            String object = client.getVoter().getLatestResult().getName();
 
             if (object != null) {
                 String text = "This object is a \"" + object + "\"";

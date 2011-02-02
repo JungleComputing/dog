@@ -190,7 +190,7 @@ public class Server implements Upcall {
                 	logger.debug("fake request received, sending fake reply");
 
                 	 reply = new ServerReply(communication.getIdentifier(), request
-                        .getSequenceNumber(), (FeatureVector) null);
+                        .getTimestamp(), (FeatureVector) null);
                 	 
                 	 logger.debug("Sending Fake reply....");
                      try {
@@ -248,13 +248,13 @@ public class Server implements Upcall {
             if (master) {
                 logger.debug("Computation done");
                 reply = new ServerReply(communication.getIdentifier(), request
-                        .getSequenceNumber(), result);
+                        .getTimestamp(), result);
             }
         } catch (Exception exception) {
             logger.error("error while processing request", exception);
             if (master) {
                 reply = new ServerReply(communication.getIdentifier(), request
-                        .getSequenceNumber(), new Exception(
+                        .getTimestamp(), new Exception(
                         "could not process request", exception));
             }
         }
