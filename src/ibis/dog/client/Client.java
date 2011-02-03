@@ -50,7 +50,10 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 
 	private Voter voter;
 
-	private FeatureVector vector = null;
+	// vector that was generated from "newest" frame
+	private FeatureVector newestVector = null;
+	// timestamp of frame used to generate newest vector
+	private long newestVectorTimestamp = 0;
 
 	private boolean done = false;
 
@@ -77,7 +80,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 		communication = new Communication(Communication.CLIENT_ROLE, this);
 
 		voter = new Voter();
-		
+
 		inputFrameCountHistory = new int[HISTORY_SIZE];
 		displayedFrameCountHistory = new int[HISTORY_SIZE];
 		processedFrameCountHistory = new int[HISTORY_SIZE];
@@ -160,11 +163,17 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 		return input;
 	}
 
-	public boolean learn(String name) {
-		FeatureVector vector = getFeatureVector();
+	public void learn(String name) throws Exception{
+		logger.info("learning new item " + name);
+		
+		if (processingServerCount() <= 0) {
+			throw new Exception("Cannot learn object: No servers processing images");
+		}
+		
+		FeatureVector vector = getFeatureVector(System.currentTimeMillis());
 
 		if (vector == null) {
-			return false;
+			throw new Exception("Error while waiting for result");
 		}
 
 		// create new database item
@@ -183,30 +192,43 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 			IbisIdentifier databaseAddress = communication.getDatabase();
 
 			if (databaseAddress == null) {
-				logger.error("database location unknown (not in pool)");
-				return false;
+				throw new Exception("database location unknown (not in pool)");
 			}
 
 			try {
 				communication.send(databaseAddress, request);
 			} catch (Exception e) {
-				logger.error("Could not send item to database", e);
-				return false;
+				throw new Exception("Could not send item to database", e);
 			}
 		} else {
 			// build-in database
 			database.learn(item);
 		}
+	}
 
-		return true;
+	private synchronized int processingServerCount() {
+		int result = 0;
+		for(ServerHandler handler: servers.values()) {
+			if (handler.isActive() && handler.isEnabled()) {
+				result++;
+			}
+		}
+		return result;
 	}
 
 	public Voter getVoter() {
-	    return voter;
+		return voter;
 	}
 
-	private synchronized FeatureVector getFeatureVector() {
-		return vector;
+	private synchronized FeatureVector getFeatureVector(long timestamp) {
+		while (!done && this.newestVectorTimestamp < timestamp) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				return null;
+			}
+		}
+		return newestVector;
 	}
 
 	private void processServerReply(ServerReply reply) {
@@ -215,36 +237,39 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 				server.location().numberOfLevels() - 1);
 
 		logger.debug("Got reply from " + serverName);
-		
+
 		ServerHandler handler = null;
 		synchronized (this) {
 			handler = servers.get(reply.getServer());
 
-			// set vector as current vector
+			// set vector as current vector, if newer frame than current
 			if (reply.getResult() != null) {
-				this.vector = reply.getResult();
+				if (reply.getTimestamp() > this.newestVectorTimestamp) {
+					this.newestVector = reply.getResult();
+					this.newestVectorTimestamp = reply.getTimestamp();
+				}
+
 				processedFrameCountHistory[currentHistoryIndex]++;
 			}
 		}
-		
 
 		// tell handler it can send a new request now
 		if (handler != null) {
 			boolean isActive = handler.isActive();
-			
+
 			handler.replyReceived();
-			
-			if(!isActive) {
-				//server just became active, tell serverListeners
+
+			if (!isActive) {
+				// server just became active, tell serverListeners
 				serverListener.serverActive(handler);
 			}
 		}
-		
+
 		if (reply.getException() != null) {
 			logger.error("Error received from server", reply.getException());
 			return;
 		}
-		
+
 		if (reply.getResult() == null) {
 			logger.debug("Received fake reply, ignoring");
 			log(serverName + " now ready to process images");
@@ -263,7 +288,7 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 			IbisIdentifier databaseAddress = communication.getDatabase();
 
 			if (databaseAddress == null) {
-				
+
 				log("Database not found while processing result from "
 						+ serverName);
 			} else {
@@ -275,17 +300,18 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 			}
 		} else {
 			// local database
-			SortedMap<Double, Item> results = database.recognize(reply.getResult(), 1);
+			SortedMap<Double, Item> results = database.recognize(reply
+					.getResult(), 1);
 
 			if (results.isEmpty()) {
 				log(serverName + " does not recognize this object");
 				return;
 			}
 			Double key = results.firstKey();
-			
+
 			Item item = results.get(key);
-			
-			voter.addResult(item, reply.getTimestamp());
+
+			voter.addResult(item.getName(), serverName, reply.getTimestamp());
 
 			log(serverName + " says this is a " + item.getName());
 		}
@@ -303,8 +329,8 @@ public class Client implements Upcall, VideoConsumer, Runnable {
 		Double key = reply.getResults().firstKey();
 		Item item = reply.getResults().get(key);
 
-                voter.addResult(item, reply.getSequenceNumber());
-		
+		voter.addResult(item.getName(), serverName, reply.getSequenceNumber());
+
 		log(serverName + " says this is a " + item.getName());
 	}
 
