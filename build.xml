@@ -1,6 +1,6 @@
 <project name="Dog Demo" default="build" basedir=".">
 
-    <property name="version" value="-0.92" />
+    <property name="version" value="-0.94" />
     <property name="jar" value="dog${version}.jar" />
 
     <!-- root of deploy, not libs -->
@@ -89,7 +89,7 @@
         <mkdir dir="dist" />
 
         <zip destfile="dist/dog${version}.zip">
-            <zipfileset dir="." prefix="dog${version}" includes="README, lib/**, log4j.properties, LICENSE,images/**,demo-workspace/**,das3.script,deploy/**,lib-client/**,lib-server/**,speech.properties" />
+            <zipfileset dir="." prefix="dog${version}" includes="README, lib/**, log4j.properties, LICENSE,images/**,demo-workspace/**,sciencelab-workspace/**,das3.script,deploy/**,lib-client/**,lib-server/**,speech.properties" />
             <zipfileset dir="." prefix="dog${version}" filemode="755" includes="bin/**"/>
         </zip>
 
