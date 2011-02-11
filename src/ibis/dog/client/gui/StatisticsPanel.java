@@ -36,10 +36,12 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
     private final JLabel inputFps;
    // private final JLabel displayedFps;
     private final JLabel processedFps;
+    
+    private final JLabel databaseSize;
 
     @Override
     public void newStatistics(double inputFps, double displayedFps,
-            double processedFps) {
+            double processedFps, int databaseSize) {
 
         // dataset.getSeries(0).add(new Millisecond(), inputFps);
         dataset.getSeries(0).add(new Millisecond(), processedFps);
@@ -50,6 +52,8 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         this.inputFps.setText(String.format("%.1f fps", inputFps));
         //this.displayedFps.setText(String.format("%.1f fps", displayedFps));
         this.processedFps.setText(String.format("%.1f fps", processedFps));
+        
+        this.databaseSize.setText(String.format("%d items", databaseSize));
     }
 
     public StatisticsPanel() {
@@ -68,19 +72,20 @@ public class StatisticsPanel extends JPanel implements StatisticsListener {
         inputFps = new JLabel("0");
         numbers.add(inputFps);
 
-//        numbers.add(new JLabel("Displayed"));
-//        displayedFps = new JLabel("0");
-//        numbers.add(displayedFps);
-
         numbers.add(new JLabel("Processed"));
         processedFps = new JLabel("0");
         numbers.add(processedFps);
+        
+        numbers.add(new JLabel("Database size"));
+        databaseSize = new JLabel("0");
+        numbers.add(databaseSize);
+
 
         //extra panel to place numbers table a bit to the right so it
         //is aligned with the graph
         JPanel numbersOffset = new JPanel();
         numbersOffset.setAlignmentX(LEFT_ALIGNMENT);
-        numbersOffset.setMaximumSize(new Dimension(200, 20));
+        numbersOffset.setMaximumSize(new Dimension(300, 20));
         numbersOffset.setLayout(new BoxLayout(numbersOffset, BoxLayout.X_AXIS));
         numbersOffset.add(Box.createRigidArea(new Dimension(40, 40)));
         numbersOffset.add(numbers);

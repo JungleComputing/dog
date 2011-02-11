@@ -97,7 +97,7 @@ public class ObjectRecognition {
 
     public synchronized String recognize(FeatureVector vector) {
         String result = null;
-        double[] weibulls = vector.vector;
+        double[] weibulls = vector.getVector();
 
         if (weibulls == null) {
             return null;
@@ -147,7 +147,7 @@ public class ObjectRecognition {
 
     public synchronized boolean learn(String name, FeatureVector vector) {
        
-        double[] weibulls = vector.vector;
+        double[] weibulls = vector.getVector();
 
         if (weibulls == null) {
             return false;

@@ -2,9 +2,10 @@ package ibis.dog.database;
 
 import ibis.dog.Communication;
 import ibis.dog.FeatureVector;
-import ibis.dog.Upcall;
+import ibis.ipl.Ibis;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.util.rpc.RPC;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,14 +13,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Database implements Upcall {
+public class Database implements DatabaseInterface {
 
     private static final Logger logger = LoggerFactory
             .getLogger(Database.class);
@@ -49,14 +50,17 @@ public class Database implements Upcall {
 
         double[] dist = new double[count1 * count2];
 
+        double[] oneVector = one.getVector();
+        double[] otherVector = other.getVector();
+
         for (int i = 0; i < count1; i++) {
             for (int j = 0; j < count2; j++) {
                 double score = 0;
                 for (int k = 0; k < NR_INVARS; k++) {
-                    score += weibullDiff(one.vector[i * 2 * NR_INVARS + k * 2],
-                            one.vector[i * 2 * NR_INVARS + k * 2 + 1],
-                            other.vector[j * 2 * NR_INVARS + k * 2],
-                            other.vector[j * 2 * NR_INVARS + k * 2 + 1]);
+                    score += weibullDiff(oneVector[i * 2 * NR_INVARS + k * 2],
+                            oneVector[i * 2 * NR_INVARS + k * 2 + 1],
+                            otherVector[j * 2 * NR_INVARS + k * 2],
+                            otherVector[j * 2 * NR_INVARS + k * 2 + 1]);
                 }
                 dist[i * count2 + j] = score / NR_INVARS;
             }
@@ -88,21 +92,33 @@ public class Database implements Upcall {
         return (score < revscore) ? (1.0 - score) : (1.0 - revscore);
     }
 
-    private final Communication communication;
+    private final Ibis ibis;
 
     private ArrayList<Item> items;
 
     private boolean ended = false;
 
     @SuppressWarnings("unchecked")
-	public Database(boolean distributed) throws IbisCreationFailedException, IOException {
+    public Database(boolean distributed) throws IbisCreationFailedException,
+            IOException {
 
-    	if (distributed) {
-        // Create an Communication object
-        communication = new Communication(Communication.DATABASE_ROLE, this);
-    	} else {
-    		communication = null;
-    	}
+        if (distributed) {
+            // Create an Communication object
+
+            ibis = Communication.createIbis(Communication.DATABASE_ROLE, null);
+
+            RPC.exportObject(DatabaseInterface.class, this,
+                    Communication.DATABASE_ROLE, ibis);
+            
+            //try to win database election
+            IbisIdentifier database = ibis.registry().elect("database");
+            
+            if (!database.equals(ibis.identifier())) {
+                throw new IOException("database already present in pool!");
+            }
+        } else {
+            ibis = null;
+        }
 
         if (!FILE.exists()) {
             logger.warn("Database file \"" + FILE + "\" does not exist");
@@ -124,8 +140,7 @@ public class Database implements Upcall {
         // try backup file
         if (items == null) {
             if (!OLD_FILE.exists()) {
-                logger.warn("Database file \"" + OLD_FILE
-                                + "\" does not exist");
+                logger.warn("Database file \"" + OLD_FILE + "\" does not exist");
             } else {
                 try {
                     FileInputStream in = new FileInputStream(OLD_FILE);
@@ -147,17 +162,15 @@ public class Database implements Upcall {
             logger.info("created new (empty) database, will save in \"" + FILE
                     + "\"");
         }
-        
-        if (communication != null) {
-        communication.start();
+
         logger.info("Database initialized");
-        }
     }
-
-    private synchronized int getSize() {
-        return items.size();
+    
+    @Override
+    public synchronized int size() throws RemoteException {
+      return items.size();
     }
-
+    
     private synchronized void save() {
         if (FILE.exists()) {
             FILE.renameTo(OLD_FILE);
@@ -173,7 +186,21 @@ public class Database implements Upcall {
             logger.warn("failed to write objects to file: " + FILE, e);
         }
     }
+    
+    @Override
+    public synchronized Item recognize(FeatureVector vector) {
+        TreeMap<Double, Item> result = recognize(vector,1);
+        
+        if (result.size() == 0) {
+            return null;
+        }
+        
+        Double key = result.firstKey();
 
+        return result.get(key);
+    }
+
+    @Override
     public synchronized TreeMap<Double, Item> recognize(FeatureVector vector,
             int nrOfResults) {
         if (nrOfResults == 0) {
@@ -210,8 +237,12 @@ public class Database implements Upcall {
         }
         logger.info("ending database");
         save();
-        if (communication != null) {
-        	communication.end();
+        if (ibis != null) {
+            try {
+                ibis.end();
+            } catch (Exception e) {
+                logger.error("Exception while ending ibis", e);
+            }
         }
     }
 
@@ -219,63 +250,16 @@ public class Database implements Upcall {
         return ended;
     }
 
-    public synchronized boolean learn(Item item) {
-
-        double[] weibulls = item.getVector().vector;
-
-        if (weibulls == null) {
-            return false;
-        }
-
-        items.add(item);
-
-        return true;
-    }
-
-    @Override
-    public void newServer(IbisIdentifier identifier) {
-        // IGNORE
-    }
-
-    @Override
-    public void serverGone(IbisIdentifier identifier) {
-        // IGNORE
-    }
-
-    @Override
-    public void gotMessage(Object object) {
-        if (!(object instanceof DatabaseRequest)) {
-            logger.error("Database received an unknown object in message: "
-                    + object);
-            return;
-        }
-
-        DatabaseRequest request = (DatabaseRequest) object;
-
-        switch (request.getFunction()) {
-
-        case LEARN:
-            logger.debug("got a Request to add something to database");
-            learn(request.getItem());
-            break;
-        case RECOGNIZE:
-            logger.debug("got a Recognize Request");
-
-            SortedMap<Double, Item> results = recognize(request.getVector(),
-                    request.getNrOfResults());
-
-            DatabaseReply reply = new DatabaseReply(request.getServer(), request.getSequenceNumber(), results);
-
-            try {
-                communication.send(request.getReplyAddress(), reply);
-            } catch (IOException e) {
-                logger.error("Could not send reply", e);
+    public synchronized void learn(Item item) {
+        //remove existing items with this name
+        for(int i = 0; i < items.size();i++) {
+            if (items.get(i).getName().equals(item.getName())) {
+                items.remove(i);
+                //go back one, this index wil contain a different item now
+                i--;
             }
-            break;
-        default:
-            logger.error("Received unknown request function: "
-                    + request.getFunction());
         }
+        items.add(item);
     }
 
     private static final class ShutDown extends Thread {
@@ -299,7 +283,7 @@ public class Database implements Upcall {
 
             while (!database.hasEnded()) {
                 Thread.sleep(SAVE_INTERVAL);
-                logger.info("Database now contains " + database.getSize()
+                logger.info("Database now contains " + database.size()
                         + " items");
                 database.save();
             }

@@ -1,7 +1,5 @@
 package ibis.dog.client.gui;
 
-import java.awt.Dimension;
-
 import ibis.dog.client.MessageListener;
 
 import javax.swing.BorderFactory;

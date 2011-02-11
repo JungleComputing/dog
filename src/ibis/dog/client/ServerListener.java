@@ -11,5 +11,5 @@ public interface ServerListener {
 
     public void serverGone(ServerHandler handler);
 
-    public void serverActive(ServerHandler handler);
+    public void serverStateChanged();
 }

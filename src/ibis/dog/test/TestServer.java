@@ -86,16 +86,17 @@ public class TestServer {
 
         }
 
-        CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels, vector.vector);
+        CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels, vector.getVector());
 
         long end = System.currentTimeMillis();
 
+        double[] array = vector.getVector();
         if (master) {
 
             double tmp = 0.0;
 
-            for (int i = 0; i < vector.vector.length; i++) {
-                tmp += vector.vector[i];
+            for (int i = 0; i < array.length; i++) {
+                tmp += array[i];
             }
 
             System.out.println("Time = " + (end - start) + " CHECK: " + tmp);

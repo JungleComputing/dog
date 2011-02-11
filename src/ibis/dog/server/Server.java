@@ -2,15 +2,14 @@ package ibis.dog.server;
 
 import ibis.dog.Communication;
 import ibis.dog.FeatureVector;
-import ibis.dog.Upcall;
 import ibis.imaging4j.Format;
 import ibis.imaging4j.Image;
 import ibis.imaging4j.Imaging4j;
-import ibis.ipl.IbisIdentifier;
+import ibis.ipl.Ibis;
+import ibis.ipl.util.rpc.RPC;
+import ibis.ipl.util.rpc.RemoteObject;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.rmi.RemoteException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +17,14 @@ import org.slf4j.LoggerFactory;
 import jorus.parallel.PxSystem;
 import jorus.weibull.CxWeibull;
 
-public class Server implements Upcall {
+public class Server implements ServerInterface {
 
     // public static final int IMAGE_WIDTH = 352;
     // public static final int IMAGE_HEIGHT = 768;
-	
-//    public static final int IMAGE_WIDTH = 1024;
-//    public static final int IMAGE_HEIGHT = 768;
-	
+
+    // public static final int IMAGE_WIDTH = 1024;
+    // public static final int IMAGE_HEIGHT = 768;
+
     public static final int IMAGE_WIDTH = 640;
     public static final int IMAGE_HEIGHT = 480;
 
@@ -35,19 +34,20 @@ public class Server implements Upcall {
 
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private final boolean master;
-
-    private final Communication communication;
-
-    private final LinkedList<ServerRequest> requests;
-
     private final PxSystem px;
 
+    private final boolean master;
+
+    // master-only fields
+
+    private final Ibis ibis;
+
+    private final RemoteObject<ServerInterface> remoteObject;
+
     private boolean ended = false;
+    private boolean initialized = false;
 
     private Server(String poolName, String poolSize) throws Exception {
-        requests = new LinkedList<ServerRequest>();
-
         logger.info("Initializing PxSystem at " + IMAGE_WIDTH + "x"
                 + IMAGE_HEIGHT);
         try {
@@ -64,22 +64,42 @@ public class Server implements Upcall {
 
         // Node 0 needs to provide an Ibis to contact the outside world.
         if (master) {
-            logger
-                    .info("Local PxSystem initalized. Initializing Global Communication");
-            communication = new Communication(Communication.SERVER_ROLE, this);
+            logger.info("Local PxSystem initalized. Initializing Global Communication");
+            ibis = Communication.createIbis(Communication.SERVER_ROLE, null);
+            remoteObject = RPC.exportObject(ServerInterface.class, this,
+                    "server", ibis);
+
             logger.info("Initializing Weibull at " + IMAGE_WIDTH + "x"
                     + IMAGE_HEIGHT);
         } else {
-            communication = null;
+            ibis = null;
+            remoteObject = null;
         }
 
-        // do initialisation now instead of after the first request is received.
+        // do initialization now instead of after the first request is received.
         CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
-        if (communication != null) {
-            communication.start();
-        }
+
         logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs()
                 + " Initialization done");
+
+        setInitialized();
+
+    }
+
+    private synchronized void setInitialized() {
+        initialized = true;
+        notifyAll();
+    }
+
+    @Override
+    public synchronized void waitUntilInitialized() throws RemoteException {
+        while (!initialized && !ended) {
+            try {
+                wait(1000);
+            } catch (InterruptedException e) {
+                // IGNORE
+            }
+        }
     }
 
     private synchronized void setEnded() {
@@ -90,127 +110,61 @@ public class Server implements Upcall {
         return ended;
     }
 
+    private synchronized void nudge() {
+        notifyAll();
+    }
+
     void end() {
+        if (hasEnded()) {
+            return;
+        }
         logger.info("Ending server");
         setEnded();
-        if (communication != null) {
-            communication.end();
+
+        if (master) {
+            try {
+                remoteObject.unexport();
+                ibis.end();
+            } catch (Exception e) {
+                logger.error("Error on stopping communication", e);
+            }
         }
         try {
             px.exitParallelSystem();
         } catch (Exception e) {
-            System.err.println("error on exiting parallel system");
-            e.printStackTrace(System.err);
+            logger.error("error on exiting parallel system", e);
         }
     }
 
-    private synchronized void queueRequest(ServerRequest request) {
-        requests.addLast(request);
-        notifyAll();
-    }
+    public FeatureVector calculateVector(Image image) throws RemoteException,
+            Exception {
+        FeatureVector result;
 
-    private synchronized ServerRequest getRequest(long timeout) {
-        long start = System.currentTimeMillis();
-        long timeLeft = timeout;
-
-        while (requests.size() == 0 && timeLeft > 0 && !ended) {
-            try {
-                wait(timeLeft);
-            } catch (InterruptedException e) {
-                // ignored
-            }
-
-            timeLeft = System.currentTimeMillis() - start;
-        }
-
-        if (requests.size() > 0) {
-            return requests.removeFirst();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public void gotMessage(Object object) {
-        if (!(object instanceof ServerRequest)) {
-            logger
-                    .error("Server Received an unknown request object: "
-                            + object);
-            return;
-        }
-
-        ServerRequest request = (ServerRequest) object;
-
-        logger.info("Server request received...");
-
-        queueRequest(request);
-    }
-
-    @Override
-    public void newServer(IbisIdentifier identifier) {
-        // IGNORE
-    }
-
-    @Override
-    public void serverGone(IbisIdentifier identifier) {
-        // IGNORE
-    }
-
-    private void processRequest(boolean master) {
-        ServerRequest request = null;
-
-        long receiving = System.currentTimeMillis();
-        long converting = 0;
+        long converting = System.currentTimeMillis();
         long scaling = 0;
         long computing = 0;
-        long sending = 0;
         long end = 0;
 
         byte[] pixels;
 
-        ServerReply reply = null;
         try {
             if (master) {
                 // The master should dequeue a request, and prepare it for
                 // processing
 
-                logger.debug("Getting request");
-                request = getRequest(DEFAULT_TIMEOUT);
-                converting = System.currentTimeMillis();
+                logger.debug("Got request");
 
-                logger.debug("Got request: " + request);
-
-                if (request == null) {
-                    return;
+                if (image == null) {
+                    logger.debug("fake request received, sending fake reply");
+                    return null;
                 }
-
-                Image srcImage = request.getImage();
-                
-                if (srcImage == null) {
-                	logger.debug("fake request received, sending fake reply");
-
-                	 reply = new ServerReply(communication.getIdentifier(), request
-                        .getTimestamp(), (FeatureVector) null);
-                	 
-                	 logger.debug("Sending Fake reply....");
-                     try {
-                         communication.send(request.getReplyAddress(), reply);
-                     } catch (Exception e) {
-                         logger.error("Failed to return reply to "
-                                 + request.getReplyAddress(), e);
-                     }
-                     logger.debug("Reply send....");
-                     
-                     return;
-                }
-                	
 
                 Image convertedImage;
-                if (srcImage.getFormat() == IMAGE_FORMAT) {
+                if (image.getFormat() == IMAGE_FORMAT) {
                     // no need to convert
-                    convertedImage = request.getImage();
+                    convertedImage = image;
                 } else {
-                    convertedImage = Imaging4j.convert(srcImage, IMAGE_FORMAT);
+                    convertedImage = Imaging4j.convert(image, IMAGE_FORMAT);
                 }
 
                 scaling = System.currentTimeMillis();
@@ -230,63 +184,65 @@ public class Server implements Upcall {
                 pixels = scaledImage.getData().array();
 
                 logger.debug("Starting computation");
+                computing = System.currentTimeMillis();
             } else {
                 // allocate space for image
                 pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
                         IMAGE_HEIGHT)];
             }
 
-            computing = System.currentTimeMillis();
-
-            FeatureVector result = new FeatureVector(CxWeibull.getNrInvars(),
+            result = new FeatureVector(CxWeibull.getNrInvars(),
                     CxWeibull.getNrRfields());
             CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels,
-                    result.vector);
-
-            sending = System.currentTimeMillis();
+                    result.getVector());
 
             if (master) {
                 logger.debug("Computation done");
-                reply = new ServerReply(communication.getIdentifier(), request
-                        .getTimestamp(), result);
             }
         } catch (Exception exception) {
             logger.error("error while processing request", exception);
-            if (master) {
-                reply = new ServerReply(communication.getIdentifier(), request
-                        .getTimestamp(), new Exception(
-                        "could not process request", exception));
-            }
-        }
-
-        if (master) {
-            logger.debug("Sending reply....");
-            try {
-                communication.send(request.getReplyAddress(), reply);
-            } catch (Exception e) {
-                logger.error("Failed to return reply to "
-                        + request.getReplyAddress(), e);
-            }
-            logger.debug("Reply send....");
+            throw exception;
         }
 
         end = System.currentTimeMillis();
 
         if (master) {
-            logger.info("Processing took: " + (end - receiving) + " (receive: "
-                    + (converting - receiving) + " convert: "
+            logger.info("Processing took: " + (end - converting) + " convert: "
                     + (scaling - converting) + " scale: "
-                    + (computing - scaling) + " parallel computation: "
-                    + (sending - computing) + " send reply: " + (end - sending)
-                    + ")");
+                    + (computing - scaling) + " parallel computation: " + ")");
             px.printStatistics();
+
+            // wake up run thread to do GC
+            nudge();
         }
+
+        return result;
     }
 
     private void run() {
-        while (!hasEnded()) {
-            processRequest(master);
-            System.gc();
+        if (master) {
+            synchronized (this) {
+                // we will be woken up after each vector by RPC thread
+                while (!hasEnded()) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        // IGNORE
+                    }
+                    System.gc();
+                }
+            }
+        } else {
+            // Continually calculate vectors
+            while (!hasEnded()) {
+                try {
+                    calculateVector(null);
+                } catch (Exception e) {
+                    logger.error("Error on caclulating vector", e);
+                }
+                System.gc();
+            }
+
         }
     }
 

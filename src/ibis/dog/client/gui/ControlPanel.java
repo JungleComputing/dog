@@ -5,11 +5,9 @@ import ibis.dog.client.WebCam;
 import ibis.video4j.VideoDeviceDescription;
 import ibis.video4j.devices.VideoSource;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -18,7 +16,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -29,204 +26,195 @@ import org.slf4j.LoggerFactory;
 
 public class ControlPanel extends JPanel implements ActionListener {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ControlPanel.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(ControlPanel.class);
 
-	// Generated
-	private static final long serialVersionUID = 1L;
+    // Generated
+    private static final long serialVersionUID = 1L;
 
-	private final JTextField inputField;
+    private final JTextField inputField;
 
-	private final JButton learnButton;
-	private final JButton recognizeButton;
+    private final JButton learnButton;
+    private final JButton recognizeButton;
 
-	private final Client client;
+    private final LearnRecognizeDialog learnRecognizeDialog;
 
-	private static final String NONE = "Camera Off";
-	private static final String SCAN = "Scan for devices";
+    private static final String NONE = "Camera Off";
+    private static final String SCAN = "Scan for devices";
 
-	private JComboBox deviceList;
+    private JComboBox deviceList;
 
-	private WebCam webCam;
+    private WebCam webCam;
 
-	private VideoSource currentCam;
+    private VideoSource currentCam;
 
-	private final VideoPanel videoPanel;
+    private final VideoPanel videoPanel;
 
-	Speech speech;
+    Speech speech;
 
-	TeachLearnDialog teachLearnDialog;
+    public ControlPanel(Client client) {
 
-	public ControlPanel(Client client) {
-		this.client = client;
+        speech = new Speech(true);
+        speech.speak("Voice initialized");
+        learnRecognizeDialog = new LearnRecognizeDialog(client, speech);
 
-		// set font for dialogs to slightly bigger font
-		UIManager.put("Label.font", new Font("Dialog", Font.BOLD, 16));
+        // set font for dialogs to slightly bigger font
+        UIManager.put("Label.font", new Font("Dialog", Font.BOLD, 16));
 
-		setBorder(BorderFactory.createTitledBorder("Control"));
-		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-		// setMinimumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
-		// setPreferredSize(new Dimension(665, VideoPanel.HEIGHT + 20));
-		// setMaximumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
+        setBorder(BorderFactory.createTitledBorder("Control"));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        // setMinimumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
+        // setPreferredSize(new Dimension(665, VideoPanel.HEIGHT + 20));
+        // setMaximumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
 
-		webCam = new WebCam(client);
+        webCam = new WebCam(client);
 
-		add(Box.createRigidArea(new Dimension(7, 7)));
+        add(Box.createRigidArea(new Dimension(7, 7)));
 
-		// actually display video
-		videoPanel = new VideoPanel(client);
-		add(videoPanel);
+        // actually display video
+        videoPanel = new VideoPanel(client);
+        add(videoPanel);
 
-		add(Box.createRigidArea(new Dimension(7, 7)));
+        add(Box.createRigidArea(new Dimension(7, 7)));
 
-		JPanel buttons = new JPanel();
-		buttons.setLayout(new GridLayout(8, 1));
-		buttons.setMaximumSize(new Dimension(190, VideoPanel.HEIGHT));
-		buttons.setMinimumSize(new Dimension(190, VideoPanel.HEIGHT));
-		buttons.setPreferredSize(new Dimension(190, VideoPanel.HEIGHT));
+        JPanel buttons = new JPanel();
+        buttons.setLayout(new GridLayout(8, 1));
+        buttons.setMaximumSize(new Dimension(190, VideoPanel.HEIGHT));
+        buttons.setMinimumSize(new Dimension(190, VideoPanel.HEIGHT));
+        buttons.setPreferredSize(new Dimension(190, VideoPanel.HEIGHT));
 
-		// Create the combo box, select the item at index 0 (Item "none").
-		deviceList = new JComboBox();
-		deviceList.addActionListener(this);
+        // Create the combo box, select the item at index 0 (Item "none").
+        deviceList = new JComboBox();
+        deviceList.addActionListener(this);
 
-		// deviceList.setMinimumSize(new Dimension(352, 25));
-		// deviceList.setMaximumSize(new Dimension(352, 25));
-		buttons.add(deviceList);
+        // deviceList.setMinimumSize(new Dimension(352, 25));
+        // deviceList.setMaximumSize(new Dimension(352, 25));
+        buttons.add(deviceList);
 
-		buttons.add(Box.createRigidArea(new Dimension(0, 5)));
-		buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
-		Font inputFont = new Font(null, Font.PLAIN, 16);
+        Font inputFont = new Font(null, Font.PLAIN, 16);
 
-		inputField = new JTextField("");
-		inputField.setFont(inputFont);
-		// inputField.setAlignmentY(Component.TOP_ALIGNMENT);
-		// inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-		buttons.add(inputField);
+        inputField = new JTextField("");
+        inputField.setFont(inputFont);
+        // inputField.setAlignmentY(Component.TOP_ALIGNMENT);
+        // inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        buttons.add(inputField);
 
-		Font buttonFont = new Font(null, Font.BOLD, 16);
+        Font buttonFont = new Font(null, Font.BOLD, 16);
 
-		learnButton = new JButton("Teach");
+        learnButton = new JButton("Teach");
 
-		learnButton.setFont(buttonFont);
-		learnButton.addActionListener(this);
-		buttons.add(learnButton);
+        learnButton.setFont(buttonFont);
+        learnButton.addActionListener(this);
+        buttons.add(learnButton);
 
-		buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
-		buttons.add(Box.createRigidArea(new Dimension(0, 5)));
+        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
-		recognizeButton = new JButton("Recognize");
-		recognizeButton.setFont(buttonFont);
-		recognizeButton.addActionListener(this);
-		buttons.add(recognizeButton);
+        recognizeButton = new JButton("Recognize");
+        recognizeButton.setFont(buttonFont);
+        recognizeButton.addActionListener(this);
+        buttons.add(recognizeButton);
 
-		// buttons.add(Box.createRigidArea(new Dimension(5, 5)));
+        // buttons.add(Box.createRigidArea(new Dimension(5, 5)));
 
-		add(buttons);
+        add(buttons);
 
-		add(Box.createRigidArea(new Dimension(5, 5)));
+        add(Box.createRigidArea(new Dimension(5, 5)));
 
-		speech = new Speech(true);
-		speech.speak("Voice initialized");
+      
 
-		// turn on webcam
-		updateVideoDevices();
-		if (deviceList.getItemCount() > 2) {
-			deviceList.setSelectedIndex(1);
-		} else {
-			deviceList.setSelectedIndex(0);
-		}
-	}
+        // turn on webcam
+        updateVideoDevices();
+        if (deviceList.getItemCount() > 2) {
+            deviceList.setSelectedIndex(1);
+        } else {
+            deviceList.setSelectedIndex(0);
+        }
+    }
 
-	public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
 
-		if (e.getSource() == learnButton) {
+        if (e.getSource() == learnButton) {
 
-			String name = inputField.getText();
+            String name = inputField.getText();
 
-			if (name.equals("")) {
-				JOptionPane.showMessageDialog(getRootPane(),
-						"Please enter object name first", "Error",
-						JOptionPane.ERROR_MESSAGE);
-				return;
-			}
+            if (name.equals("")) {
+                JOptionPane.showMessageDialog(getRootPane(),
+                        "Please enter object name first", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-			//only one active dialog at a time
-			if (teachLearnDialog == null || teachLearnDialog.isDone()) {
-				teachLearnDialog = new TeachLearnDialog(name, client, speech,
-						getRootPane());
-			}
+            learnRecognizeDialog.setLocationRelativeTo(this.getTopLevelAncestor());
+            learnRecognizeDialog.learn(name);
 
-		} else if (e.getSource() == recognizeButton) {
-			//only one active dialog at a time
-			if (teachLearnDialog == null || teachLearnDialog.isDone()) {
-				new TeachLearnDialog(null, client, speech, getRootPane());
-			}
+        } else if (e.getSource() == recognizeButton) {
+            learnRecognizeDialog.setLocationRelativeTo(this.getTopLevelAncestor());
+            learnRecognizeDialog.recognize();
+        } else if (e.getSource() == deviceList) {
 
-		} else if (e.getSource() == deviceList) {
+            Object tmp = deviceList.getSelectedItem();
 
-			Object tmp = deviceList.getSelectedItem();
+            if (currentCam != null) {
+                currentCam.close();
+                currentCam = null;
+                videoPanel.setInvalid();
+            }
 
-			if (currentCam != null) {
-				currentCam.close();
-				currentCam = null;
-				videoPanel.setInvalid();
-			}
+            if (tmp instanceof VideoDeviceDescription) {
+                VideoDeviceDescription d = (VideoDeviceDescription) tmp;
+                System.out.println("Selected device: "
+                        + d.getSimpleDescription());
 
-			if (tmp instanceof VideoDeviceDescription) {
-				VideoDeviceDescription d = (VideoDeviceDescription) tmp;
-				System.out.println("Selected device: "
-						+ d.getSimpleDescription());
+                try {
+                    currentCam = webCam.selectDevice(d);
+                } catch (Exception ex) {
+                    logger.error("Failed to select device " + d);
 
-				try {
-					currentCam = webCam.selectDevice(d);
-				} catch (Exception ex) {
-					logger.error("Failed to select device " + d);
+                    ex.printStackTrace();
+                }
+            } else {
+                String s = (String) tmp;
+                System.out.println("Selected special option: " + s);
 
-					ex.printStackTrace();
-				}
-			} else {
-				String s = (String) tmp;
-				System.out.println("Selected special option: " + s);
+                if (s.equals(SCAN)) {
+                    updateVideoDevices();
+                } else {
+                    // set to "none"
+                }
+            }
+        }
+    }
 
-				if (s.equals(SCAN)) {
-					updateVideoDevices();
-				} else {
-					// set to "none"
-				}
-			}
-		}
-	}
+    public void close() {
+        speech.done();
+        currentCam.close();
+    }
 
-	public void close() {
-		if (teachLearnDialog != null) {
-			teachLearnDialog.setDone();
-		}
-		speech.done();
-		currentCam.close();
-	}
+    private void updateVideoDevices() {
 
-	private void updateVideoDevices() {
+        // Find all video devices
+        VideoDeviceDescription[] devices = null;
 
-		// Find all video devices
-		VideoDeviceDescription[] devices = null;
+        try {
+            devices = webCam.availableDevices();
+        } catch (Exception e) {
+            logger.error("Could not get device list", e);
+            devices = new VideoDeviceDescription[0];
+        }
 
-		try {
-			devices = webCam.availableDevices();
-		} catch (Exception e) {
-			logger.error("Could not get device list", e);
-			devices = new VideoDeviceDescription[0];
-		}
+        deviceList.removeAllItems();
+        deviceList.addItem(NONE);
 
-		deviceList.removeAllItems();
-		deviceList.addItem(NONE);
+        for (int i = 0; i < devices.length; i++) {
+            deviceList.addItem(devices[i]);
+        }
 
-		for (int i = 0; i < devices.length; i++) {
-			deviceList.addItem(devices[i]);
-		}
-
-		deviceList.addItem(SCAN);
-	}
+        deviceList.addItem(SCAN);
+    }
 
 }

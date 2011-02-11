@@ -36,7 +36,7 @@ public class CLI implements MessageListener, StatisticsListener {
 
     @Override
     public void newStatistics(double inputFps, double displayedFps,
-            double processedFps) {
+            double processedFps, int databaseSize) {
         logger.info(String.format(
                 "Input %.2f fps. Displayed %2f fps. Processed %2f fps",
                 inputFps, displayedFps, processedFps));

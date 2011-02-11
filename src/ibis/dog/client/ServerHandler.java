@@ -4,38 +4,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibis.dog.Communication;
-import ibis.dog.server.ServerRequest;
+import ibis.dog.FeatureVector;
+import ibis.dog.database.DatabaseInterface;
+import ibis.dog.database.Item;
+import ibis.dog.server.ServerInterface;
 import ibis.imaging4j.Image;
+import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.util.rpc.RPC;
 import ibis.util.ThreadPool;
 
 public class ServerHandler implements Runnable {
 
     private static Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 
-    // maximum time we wait for an answer before we send a new request
-    private static final int TIMEOUT = 120000;
-
     public final IbisIdentifier address;
 
     private final Client client;
-    private final Communication communication;
+
+    private final DatabaseInterface database;
+    private final ServerInterface server;
 
     private boolean enabled = false;
     private boolean done = false;
 
-    private boolean waitingForReply = false;
-    
-    //server is active if a message has ever been received from it
+    // server is active if last calculation was succesful
     private boolean active = false;
 
-    ServerHandler(IbisIdentifier address, Client client,
-            Communication communication) {
+    ServerHandler(IbisIdentifier address, Client client, Ibis ibis,
+            DatabaseInterface database) {
         this.address = address;
         this.client = client;
-        this.communication = communication;
-        
+        this.database = database;
+
         logger.debug("new Server handler: " + this);
+
+        // create proxy to connect to server
+        server = RPC.createProxy(ServerInterface.class, address,
+                Communication.SERVER_ROLE, ibis);
 
         ThreadPool.createNew(this, "Server Handler for " + this);
     }
@@ -60,9 +66,10 @@ public class ServerHandler implements Runnable {
     }
 
     public String getName() {
-        return address.location().getLevel(address.location().numberOfLevels() - 1);
+        return address.location().getLevel(
+                address.location().numberOfLevels() - 1);
     }
-    
+
     private synchronized boolean isDone() {
         return done;
     }
@@ -72,76 +79,68 @@ public class ServerHandler implements Runnable {
         notifyAll();
     }
 
-    private boolean sendRequest(Image image) {
-        ServerRequest request = new ServerRequest(System.currentTimeMillis(), image, communication
-                .getIdentifier());
-
-        try {
-            communication.send(address, request);
-        } catch (Exception e) {
-            // TODO: how do we handle this error ?
-            logger.error("Failed to send request to " + this, e);
-            return false;
-        }
-        waitingForReply = true;
-        return true;
-    }
-
-    private synchronized void waitForReply() {
-        long deadline = System.currentTimeMillis() + TIMEOUT;
-
-        long now = System.currentTimeMillis();
-        while (waitingForReply && now < deadline) {
-            try {
-                wait(deadline - now);
-            } catch (InterruptedException e) {
-                // IGNORE
-            }
-            now = System.currentTimeMillis();
-        }
-    }
-
-    synchronized void replyReceived() {
-        logger.debug("reply received from " + this);
-        waitingForReply = false;
-        active = true;
-        notifyAll();
-    }
-    
     public synchronized boolean isActive() {
-    	return active;
+        return active;
+    }
+
+    private synchronized void setActive(boolean active) {
+        boolean changed;
+        synchronized (this) {
+            changed = (active != this.active);
+            this.active = active;
+            notifyAll();
+        }
+        if (changed) {
+            client.serverStateChanged();
+        }
+
     }
 
     public void run() {
-    	if (!isDone()) {
-        	//send fake request, to trigger a reply
-    		sendRequest(null);
-    	}
+        if (!isDone()) {
+            try {
+                server.waitUntilInitialized();
+                setActive(true);
+            } catch (Exception e) {
+                // IGNORE
+            }
+        }
         while (!isDone()) {
             if (isEnabled()) {
                 logger.debug("Getting image to send to " + address);
                 Image frame = client.getProcessImage();
+                long timestamp = System.currentTimeMillis();
                 logger.debug("Got image to send to " + address);
-                boolean success = true;
-                
-                if (frame == null) {
-                    success = false;
-                } else {
-                    logger.debug("Sending request to " + address);
-                    success = sendRequest(frame);
-                }
-                if (success) {
-                    logger.debug("Wating for reply from " + address);
-                    waitForReply();
-                } else {
+
+                try {
+                    // FIXME:compress images if needed (doesn't work in
+                    // Imaging4J at the moment)
+                    // if (!frame.getFormat().isCompressed()) {
+                    // Image converted;
+                    // if (frame.getFormat() == Format.RGB24) {
+                    // converted = frame;
+                    // } else {
+                    // converted = Imaging4j.convert(frame, Format.RGB24);
+                    // }
+                    // frame = Imaging4j.convert(converted, Format.MJPG);
+                    // }
+
+                    FeatureVector vector = server.calculateVector(frame);
+
+                    Item item = database.recognize(vector);
+
+                    client.newResult(address, timestamp, vector, item);
+
+                    setActive(true);
+                } catch (Exception e) {
+                    logger.error("Could not process frame", e);
+                    setActive(false);
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException e2) {
                         // IGNORE
                     }
-                    
                 }
-                logger.debug("Request/Reply cycle to " + address + " done");
             } else {
                 waitUntilEnabled();
             }

@@ -2,9 +2,6 @@ package ibis.dog.client.gui;
 
 import ibis.dog.client.ServerHandler;
 import ibis.dog.client.ServerListener;
-import ibis.util.ThreadPool;
-
-import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,12 +84,13 @@ public class ServerPanel extends JPanel implements
     }
     
     @Override
-    public synchronized void serverActive(ServerHandler handler) {
-    	ServerListItem listItem = servers.get(handler);
-
-    	if (listItem != null) {
-    		listItem.updateLabelColor();
-            listItem.repaint();
-    	}
+    public synchronized void serverStateChanged() {
+        for(ServerListItem listItem: servers.values()) {
+    
+            if (listItem != null) {
+                listItem.updateLabelColor();
+                listItem.repaint();
+            }
+        }
     }
 }

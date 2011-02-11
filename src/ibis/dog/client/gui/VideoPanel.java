@@ -20,7 +20,6 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.image.MemoryImageSource;
-import java.io.File;
 import java.nio.ByteBuffer;
 
 import javax.swing.JPanel;
@@ -129,11 +128,6 @@ class VideoPanel extends JPanel implements Runnable {
                     logger.debug("videostream exiting");
                     return;
                 } else {
-                    if (false) {
-                        Imaging4j.save(image, new File("image.jpg"));
-                        Imaging4j.save(image, new File("image.rgb"));
-                        return;
-                    }
 
                     Image argb32;
 
