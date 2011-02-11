@@ -38,10 +38,6 @@ public class Communication {
         Ibis ibis = IbisFactory.createIbis(ibisCapabilities, null, true,
                 eventHandler, null, role, RPC.rpcPortTypes);
         
-        if (eventHandler != null) {
-            ibis.registry().enableEvents();
-        }
-        
         logger.info("Communication initialized");
 
         return ibis;

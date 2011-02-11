@@ -83,7 +83,7 @@ public class ServerHandler implements Runnable {
         return active;
     }
 
-    private synchronized void setActive(boolean active) {
+    private void setActive(boolean active) {
         boolean changed;
         synchronized (this) {
             changed = (active != this.active);

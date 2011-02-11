@@ -25,229 +25,236 @@ import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 
 public class LearnRecognizeDialog extends JFrame implements ProgressListener,
-        Runnable {
+		Runnable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private final Client client;
-    private final Speech speech;
-    private final JProgressBar progressBar;
-    private final JTextArea text;
+	private final Client client;
+	private final Speech speech;
+	private final JProgressBar progressBar;
+	private final JTextArea text;
 
-    private String itemName;
-    
-    private boolean learning = false;
-    private boolean recognizing = false;
+	private String itemName;
 
-    LearnRecognizeDialog(Client client, Speech speech) {
-        this.client = client;
-        this.speech = speech;
+	private boolean learning = false;
+	private boolean recognizing = false;
 
-        // we catch the close event, cancel and dispose in the cancel method.
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+	LearnRecognizeDialog(Client client, Speech speech) {
+		this.client = client;
+		this.speech = speech;
 
-        // create status dialog
-        JPanel panel = new JPanel();
-        panel.setOpaque(true);
-        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		// we catch the close event, cancel and dispose in the cancel method.
+		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        Font font = new Font(null, Font.BOLD, 16);
+		// create status dialog
+		JPanel panel = new JPanel();
+		panel.setOpaque(true);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        text = new JTextArea(1, 25);
-        text.setFont(font);
-        text.setOpaque(false);
-        text.setEditable(false);
-        text.setLineWrap(true);
-        text.setWrapStyleWord(true);
-        text.setBorder(new EmptyBorder(10, 10, 10, 10));
-        panel.add(text);
+		Font font = new Font(null, Font.BOLD, 16);
 
-        progressBar = new JProgressBar(0, 100);
-        progressBar.setStringPainted(true);
-        progressBar.setIndeterminate(true);
+		text = new JTextArea(1, 25);
+		text.setFont(font);
+		text.setOpaque(false);
+		text.setEditable(false);
+		text.setLineWrap(true);
+		text.setWrapStyleWord(true);
+		text.setBorder(new EmptyBorder(10, 10, 10, 10));
+		panel.add(text);
 
-        panel.add(progressBar);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+		progressBar = new JProgressBar(0, 100);
+		progressBar.setStringPainted(true);
+		progressBar.setIndeterminate(true);
 
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                cancel();
-            }
-        });
-        // cancelButton.setBorder(BorderFactory.createEmptyBorder(10, 50, 10,
-        // 50));
-        cancelButton.setFont(font);
-        cancelButton.setAlignmentX(CENTER_ALIGNMENT);
+		panel.add(progressBar);
+		panel.add(Box.createRigidArea(new Dimension(0, 5)));
 
-        panel.add(cancelButton);
+		JButton cancelButton = new JButton("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				cancel();
+			}
+		});
+		// cancelButton.setBorder(BorderFactory.createEmptyBorder(10, 50, 10,
+		// 50));
+		cancelButton.setFont(font);
+		cancelButton.setAlignmentX(CENTER_ALIGNMENT);
 
-        setContentPane(panel);
+		panel.add(cancelButton);
 
-        // setPreferredSize(new Dimension(300, 200));
+		setContentPane(panel);
 
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                cancel();
-            }
-        });
+		// setPreferredSize(new Dimension(300, 200));
 
-        this.setAlwaysOnTop(true);
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				cancel();
+			}
+		});
 
-        pack();
-        setVisible(false);
-    }
+		this.setAlwaysOnTop(true);
 
-    public synchronized boolean isLearning() {
-        return learning;
-    }
+		pack();
+		setVisible(false);
+	}
 
-    public synchronized boolean isRecognizing() {
-        return recognizing;
-    }
+	public synchronized boolean isLearning() {
+		return learning;
+	}
 
-    public void cancel() {
-        synchronized (this) {
-            learning = false;
-            recognizing = false;
+	public synchronized boolean isRecognizing() {
+		return recognizing;
+	}
 
-            notifyAll();
-        }
+	public void cancel() {
+		synchronized (this) {
+			learning = false;
+			recognizing = false;
 
-        dispose();
-        setVisible(false);
-        repaint();
+			notifyAll();
+		}
 
-    }
+		dispose();
+		setVisible(false);
+		repaint();
 
-    @Override
-    public void message(String message) {
-        text.append(message + "\n");
+	}
 
-        repaint();
-    }
+	@Override
+	public void message(String message) {
+		text.append(message + "\n");
 
-    @Override
-    public boolean progress(double progress) {
-        progressBar.setValue((int) (progress * 100));
-        progressBar.setIndeterminate(false);
+		repaint();
+	}
 
-        repaint();
+	@Override
+	public boolean progress(double progress) {
+		progressBar.setValue((int) (progress * 100));
+		progressBar.setIndeterminate(false);
 
-        return isLearning() || isRecognizing();
-    }
+		repaint();
 
-    public void learn(String itemName) {
-        synchronized (this) {
-            if (isLearning() || isRecognizing()) {
-                return;
-            }
-        }
+		return isLearning() || isRecognizing();
+	}
 
-        this.itemName = itemName;
+	public void learn(String itemName) {
+		synchronized (this) {
+			if (isLearning() || isRecognizing()) {
+				return;
+			}
+		}
 
-        learning = true;
+		this.itemName = itemName;
 
-        text.setRows(2);
-        text.setText("Learning new object \"" + itemName + "\"");
+		learning = true;
 
-        progressBar.setIndeterminate(true);
+		text.setRows(2);
+		text.setText("Learning new object \"" + itemName + "\"");
 
-        pack();
-        setVisible(true);
+		progressBar.setIndeterminate(true);
 
-        ThreadPool.createNew(this, "lerning thread");
+		pack();
+		setVisible(true);
 
-    }
+		ThreadPool.createNew(this, "lerning thread");
 
-    public void recognize() {
-        synchronized (this) {
-            if (isLearning() || isRecognizing()) {
-                return;
-            }
+	}
 
-            recognizing = true;
-        }
+	public void recognize() {
+		synchronized (this) {
+			if (isLearning() || isRecognizing()) {
+				return;
+			}
 
-        text.setRows(Voter.RESULT_SET_SIZE + 2);
-        text.setText("Recognizing object:\n\n");
+			recognizing = true;
+		}
 
-        progressBar.setIndeterminate(true);
+		text.setRows(Voter.RESULT_SET_SIZE + 2);
+		text.setText("Recognizing object:\n\n");
 
-        pack();
+		progressBar.setIndeterminate(true);
 
-        setVisible(true);
+		pack();
 
-        ThreadPool.createNew(this, "recognize thread");
-    }
+		setVisible(true);
 
-    private synchronized String getItemName() {
-        return itemName;
-    }
+		ThreadPool.createNew(this, "recognize thread");
+	}
 
-    @Override
-    public void run() {
+	private synchronized String getItemName() {
+		return itemName;
+	}
 
-        if (isLearning()) {
+	@Override
+	public void run() {
 
-            // learn
-            try {
-                client.learn(getItemName(), this);
-                dispose();
-                setVisible(false);
-                String text = "I have just learned a new object called: \""
-                        + itemName + "\".";
-                speech.speak(text);
+		if (isLearning()) {
+			boolean result = false;
 
-                JOptionPane.showMessageDialog(this, text);
-            } catch (Exception e) {
-                dispose();
-                setVisible(false);
-                String text = "I failed to learn object called: \"" + itemName
-                        + "\".";
-                speech.speak(text);
-                JOptionPane.showMessageDialog(this,
-                        text + "\n" + e.getMessage(), "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            } finally {
-                cancel();
-            }
+			// learn
+			try {
+				result = client.learn(getItemName(), this);
+				dispose();
+				setVisible(false);
+				if (result) {
+					String text = "I have just learned a new object called: \""
+							+ itemName + "\".";
+					speech.speak(text);
+					JOptionPane.showMessageDialog(this, text);
+				} else if (isLearning()) {
+					String text = "I failed to learn object called: \"" + itemName
+					+ "\".";
+					speech.speak(text);
+					JOptionPane.showMessageDialog(this, text);
+				}
+			} catch (Exception e) {
+				dispose();
+				setVisible(false);
+				String text = "I failed to learn object called: \"" + itemName
+						+ "\".";
+				speech.speak(text);
+				JOptionPane.showMessageDialog(this, text + "\n"
+						+ e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			} finally {
+				cancel();
+			}
 
-        } else if (isRecognizing()) {
-            try {
-                RecognizeResult result = client.recognize(this);
+		} else if (isRecognizing()) {
+			try {
+				RecognizeResult result = client.recognize(this);
 
-                dispose();
+				dispose();
 
-                String text;
-                if (result != null && result.getItem() != null) {
-                    if (result.getConfidence() >= 0.7) {
-                        text = "This object is a \"" + result.getItem().getName() + "\"";
-                    } else if (result.getConfidence() >= 0.4) {
-                        text = "This seems to be a \"" + result.getItem().getName()
-                                + "\"";
-                    } else {
-                        text = "I do not recognize this object";
-                    }
-                    speech.speak(text);
-                    JOptionPane.showMessageDialog(this, text);
-                } else {
-                    text = "I do not recognize this object";
-                    speech.speak(text);
-                    JOptionPane.showMessageDialog(this, text,
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                }
-            } catch (Exception e) {
-                dispose();
-                JOptionPane
-                        .showMessageDialog(this, e.getMessage(),
-                                "Could not recognize Object",
-                                JOptionPane.ERROR_MESSAGE);
-            } finally {
-                cancel();
-            }
-        }
-    }
+				String text;
+				if (result != null && result.getItem() != null) {
+					if (result.getConfidence() >= 0.7) {
+						text = "This object is a \""
+								+ result.getItem().getName() + "\"";
+					} else if (result.getConfidence() >= 0.4) {
+						text = "This seems to be a \""
+								+ result.getItem().getName() + "\"";
+					} else {
+						text = "I do not recognize this object";
+					}
+					speech.speak(text);
+					JOptionPane.showMessageDialog(this, text);
+				} else if (isRecognizing()) {
+					text = "I do not recognize this object";
+					speech.speak(text);
+					JOptionPane.showMessageDialog(this, text, "Warning",
+							JOptionPane.WARNING_MESSAGE);
+				}
+			} catch (Exception e) {
+				dispose();
+				JOptionPane
+						.showMessageDialog(this, e.getMessage(),
+								"Could not recognize Object",
+								JOptionPane.ERROR_MESSAGE);
+			} finally {
+				cancel();
+			}
+		}
+	}
 
 }
