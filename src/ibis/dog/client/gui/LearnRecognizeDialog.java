@@ -130,10 +130,11 @@ public class LearnRecognizeDialog extends JFrame implements ProgressListener,
 
 	@Override
 	public boolean progress(double progress) {
-		progressBar.setValue((int) (progress * 100));
-		progressBar.setIndeterminate(false);
-
-		repaint();
+		if (progress > 0.0) {
+			progressBar.setValue((int) (progress * 100));
+			progressBar.setIndeterminate(false);
+			repaint();
+		}
 
 		return isLearning() || isRecognizing();
 	}
@@ -152,6 +153,7 @@ public class LearnRecognizeDialog extends JFrame implements ProgressListener,
 		text.setRows(2);
 		text.setText("Learning new object \"" + itemName + "\"");
 
+		progressBar.setValue(0);
 		progressBar.setIndeterminate(true);
 
 		pack();
@@ -173,6 +175,7 @@ public class LearnRecognizeDialog extends JFrame implements ProgressListener,
 		text.setRows(Voter.RESULT_SET_SIZE + 2);
 		text.setText("Recognizing object:\n\n");
 
+		progressBar.setValue(0);
 		progressBar.setIndeterminate(true);
 
 		pack();
@@ -203,8 +206,8 @@ public class LearnRecognizeDialog extends JFrame implements ProgressListener,
 					speech.speak(text);
 					JOptionPane.showMessageDialog(this, text);
 				} else if (isLearning()) {
-					String text = "I failed to learn object called: \"" + itemName
-					+ "\".";
+					String text = "I failed to learn object called: \""
+							+ itemName + "\".";
 					speech.speak(text);
 					JOptionPane.showMessageDialog(this, text);
 				}
