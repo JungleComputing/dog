@@ -29,7 +29,6 @@
 
 
 #default.user.name = hlab01
-default.user.name = ndrost
 #default.user.key = H:\\.ssh\\id_dsa
 
 # Details of cluster "VU"
