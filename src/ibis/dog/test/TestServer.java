@@ -2,12 +2,12 @@ package ibis.dog.test;
 
 import ibis.dog.FeatureVector;
 import ibis.dog.server.Server;
-import ibis.imaging4j.Format;
-import ibis.imaging4j.Image;
-import ibis.imaging4j.conversion.Conversion;
-import ibis.imaging4j.conversion.Convertor;
-import ibis.imaging4j.scaling.Scaler;
-import ibis.imaging4j.scaling.Scaling;
+import ibis.media.imaging.Format;
+import ibis.media.imaging.Image;
+import ibis.media.imaging.conversion.Conversion;
+import ibis.media.imaging.conversion.Convertor;
+import ibis.media.imaging.scaling.Scaler;
+import ibis.media.imaging.scaling.Scaling;
 import ibis.ipl.IbisCreationFailedException;
 
 import java.io.IOException;

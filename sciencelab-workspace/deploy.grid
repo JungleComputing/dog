@@ -28,8 +28,9 @@
 # longitude           Longitude position of this cluster (double)
 
 
-default.user.name = hlab01
-default.user.key = H:\\.ssh\\id_dsa
+#default.user.name = hlab01
+default.user.name = ndrost
+#default.user.key = H:\\.ssh\\id_dsa
 
 # Details of cluster "VU"
 VU.server.adaptor = SshTrilead

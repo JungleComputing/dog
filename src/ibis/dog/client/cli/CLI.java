@@ -10,8 +10,8 @@ import ibis.dog.client.MessageListener;
 import ibis.dog.client.ServerHandler;
 import ibis.dog.client.StatisticsListener;
 import ibis.dog.client.WebCam;
-import ibis.imaging4j.Image;
-import ibis.imaging4j.io.IO;
+import ibis.media.imaging.Image;
+import ibis.media.imaging.io.IO;
 
 public class CLI implements MessageListener, StatisticsListener {
 

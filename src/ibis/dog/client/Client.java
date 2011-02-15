@@ -6,13 +6,13 @@ import ibis.dog.client.Voter.RecognizeResult;
 import ibis.dog.database.Database;
 import ibis.dog.database.DatabaseInterface;
 import ibis.dog.database.Item;
-import ibis.imaging4j.Image;
+import ibis.media.imaging.Image;
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisCreationFailedException;
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.RegistryEventHandler;
 import ibis.ipl.util.rpc.RPC;
-import ibis.video4j.VideoConsumer;
+import ibis.media.video.VideoConsumer;
 
 import java.io.IOException;
 import java.rmi.RemoteException;

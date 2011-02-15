@@ -9,7 +9,7 @@
     <property name="ipl" location="external/ipl"/>
     <property name="freetts" location="external/freetts"/>
     <property name="jfreechart" location="external/jfreechart"/>
-    <property name="video4J" location="external/video4J"/>
+    <property name="media" location="external/media"/>
 
     <target name="build" depends="clean,copy-external,compile">
     </target>
@@ -36,13 +36,13 @@
 	    <fileset dir="${ipl}"/>
 	    <fileset dir="${freetts}" />
 	    <fileset dir="${jfreechart}" />
-	    <fileset dir="${video4J}" />
+	    <fileset dir="${media}" />
 	</copy>
 
 	<copy todir="lib-server">
 	    <fileset dir="external" includes="*.jar" />
 	    <fileset dir="${ipl}"/>
-	    <fileset dir="${video4J}" includes="*.jar" />
+	    <fileset dir="${media}" includes="*.jar" />
 	</copy>
 
 	<echo message="using deploy from ${deploy.home}"/>

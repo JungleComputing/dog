@@ -1,9 +1,9 @@
 package ibis.dog.client;
 
-import ibis.imaging4j.Format;
-import ibis.video4j.VideoDeviceDescription;
-import ibis.video4j.VideoDeviceFactory;
-import ibis.video4j.devices.VideoSource;
+import ibis.media.imaging.Format;
+import ibis.media.video.VideoDeviceDescription;
+import ibis.media.video.VideoDeviceFactory;
+import ibis.media.video.devices.VideoSource;
 
 public class WebCam {
 

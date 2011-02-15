@@ -2,8 +2,8 @@ package ibis.dog.client.gui;
 
 import ibis.dog.client.Client;
 import ibis.dog.client.WebCam;
-import ibis.video4j.VideoDeviceDescription;
-import ibis.video4j.devices.VideoSource;
+import ibis.media.video.VideoDeviceDescription;
+import ibis.media.video.devices.VideoSource;
 
 import java.awt.Dimension;
 import java.awt.Font;

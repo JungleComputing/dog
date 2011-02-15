@@ -8,7 +8,7 @@ import ibis.dog.FeatureVector;
 import ibis.dog.database.DatabaseInterface;
 import ibis.dog.database.Item;
 import ibis.dog.server.ServerInterface;
-import ibis.imaging4j.Image;
+import ibis.media.imaging.Image;
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.util.rpc.RPC;

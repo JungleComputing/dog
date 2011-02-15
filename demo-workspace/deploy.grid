@@ -27,8 +27,8 @@
 # latitude            Latitude position of this cluster (double)
 # longitude           Longitude position of this cluster (double)
 
-#default.user.name=ndrost
-#default.cache.dir=dog-demo-cache
+default.user.name=ndrost
+default.cache.dir=dog-demo-cache
 
 # Details of cluster "VU"
 VU.server.adaptor = SshTrilead

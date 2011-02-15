@@ -2,9 +2,9 @@ package ibis.dog.server;
 
 import ibis.dog.Communication;
 import ibis.dog.FeatureVector;
-import ibis.imaging4j.Format;
-import ibis.imaging4j.Image;
-import ibis.imaging4j.Imaging4j;
+import ibis.media.imaging.Format;
+import ibis.media.imaging.Image;
+import ibis.media.imaging.Imaging;
 import ibis.ipl.Ibis;
 import ibis.ipl.util.rpc.RPC;
 import ibis.ipl.util.rpc.RemoteObject;
@@ -164,7 +164,7 @@ public class Server implements ServerInterface {
                     // no need to convert
                     convertedImage = image;
                 } else {
-                    convertedImage = Imaging4j.convert(image, IMAGE_FORMAT);
+                    convertedImage = Imaging.convert(image, IMAGE_FORMAT);
                 }
 
                 scaling = System.currentTimeMillis();
@@ -175,7 +175,7 @@ public class Server implements ServerInterface {
                     // no need to scale
                     scaledImage = convertedImage;
                 } else {
-                    scaledImage = Imaging4j.scale(convertedImage, IMAGE_WIDTH,
+                    scaledImage = Imaging.scale(convertedImage, IMAGE_WIDTH,
                             IMAGE_HEIGHT);
                 }
 

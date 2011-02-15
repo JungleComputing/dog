@@ -1,7 +1,7 @@
 package ibis.dog.client.cli;
 
 import ibis.dog.client.Client;
-import ibis.imaging4j.Image;
+import ibis.media.imaging.Image;
 import ibis.util.ThreadPool;
 
 public class FakeVideoProvider implements Runnable {
