@@ -1,6 +1,6 @@
 <project name="Dog Demo" default="build" basedir=".">
 
-    <property name="version" value="-1.0rc1" />
+    <property name="version" value="-1.0rc2" />
     <property name="jar" value="dog${version}.jar" />
 
     <!-- root of deploy, not libs -->
