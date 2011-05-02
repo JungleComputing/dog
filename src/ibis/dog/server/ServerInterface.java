@@ -3,7 +3,7 @@ package ibis.dog.server;
 import ibis.dog.FeatureVector;
 import ibis.media.imaging.Image;
 
-import java.rmi.RemoteException;
+import ibis.ipl.util.rpc.RemoteException;
 
 public interface ServerInterface {
 

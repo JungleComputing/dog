@@ -9,7 +9,7 @@ import ibis.ipl.Ibis;
 import ibis.ipl.util.rpc.RPC;
 import ibis.ipl.util.rpc.RemoteObject;
 
-import java.rmi.RemoteException;
+import ibis.ipl.util.rpc.RemoteException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
