@@ -48,7 +48,6 @@ DAS3-Delft.cores = 136
 #DAS3-Delft.memory = 
 DAS3-Delft.latitude = 51.9979
 DAS3-Delft.longitude = 4.3742
-DAS3-Delft.color = #FF8000
 DAS3-Delft.location = DAS-3@Delft@NL
 
 # Details of cluster "DAS3-Leiden"
@@ -69,7 +68,6 @@ DAS3-Leiden.cores = 64
 #DAS3-Leiden.memory = 
 DAS3-Leiden.latitude = 52.1686
 DAS3-Leiden.longitude = 4.4598
-DAS3-Leiden.color = #FFFF00
 DAS3-Leiden.location = DAS-3@Leiden@NL
 
 # Details of cluster "DAS3-MultimediaN"
@@ -90,7 +88,6 @@ DAS3-MultimediaN.cores = 92
 #DAS3-MultimediaN.memory = 
 DAS3-MultimediaN.latitude = 52.3561
 DAS3-MultimediaN.longitude = 4.953
-DAS3-MultimediaN.color = #80FF00
 DAS3-MultimediaN.location = DAS-3@MultimediaN@NL
 
 # Details of cluster "DAS3-UvA"
@@ -111,7 +108,6 @@ DAS3-UvA.cores = 164
 #DAS3-UvA.memory = 
 DAS3-UvA.latitude = 52.3561
 DAS3-UvA.longitude = 4.953
-DAS3-UvA.color = #00FFFF
 DAS3-UvA.location = DAS-3@UvA@NL
 
 # Details of cluster "DAS3-VU"
@@ -132,7 +128,6 @@ DAS3-VU.cores = 340
 #DAS3-VU.memory = 
 DAS3-VU.latitude = 52.3328
 DAS3-VU.longitude = 4.8669
-DAS3-VU.color = #007FFF
 DAS3-VU.location = DAS-3@VU@NL
 
 # Details of cluster "DAS4-Astron"
@@ -153,7 +148,6 @@ DAS4-Astron.cores = 184
 #DAS4-Astron.memory = 
 DAS4-Astron.latitude = 52.81335
 DAS4-Astron.longitude = 6.396
-DAS4-Astron.color = #0000FF
 DAS4-Astron.location = DAS-4@VU@NL
 
 # Details of cluster "DAS4-Delft"
@@ -174,7 +168,6 @@ DAS4-Delft.cores = 256
 #DAS4-Delft.memory = 
 DAS4-Delft.latitude = 51.9979
 DAS4-Delft.longitude = 4.3742
-DAS4-Delft.color = #8000FF
 DAS4-Delft.location = DAS-4@Delft@NL
 
 # Details of cluster "DAS4-Leiden"
@@ -195,7 +188,6 @@ DAS4-Leiden.cores = 128
 #DAS4-Leiden.memory = 
 DAS4-Leiden.latitude = 52.1686
 DAS4-Leiden.longitude = 4.4598
-DAS4-Leiden.color = #FF00FF
 DAS4-Leiden.location = DAS-4@Leiden@NL
 
 # Details of cluster "DAS4-MultimediaN"
@@ -216,7 +208,6 @@ DAS4-MultimediaN.cores = 92
 #DAS4-MultimediaN.memory = 
 DAS4-MultimediaN.latitude = 52.35505
 DAS4-MultimediaN.longitude = 4.95583
-DAS4-MultimediaN.color = #FF0080
 DAS4-MultimediaN.location = DAS-4@MultimediaN@NL
 
 # Details of cluster "DAS4-UvA"
@@ -237,7 +228,6 @@ DAS4-UvA.cores = 164
 #DAS4-UvA.memory = 
 DAS4-UvA.latitude = 52.35505
 DAS4-UvA.longitude = 4.95583
-DAS4-UvA.color = #FF8080
 DAS4-UvA.location = DAS-4@UvA@NL
 
 # Details of cluster "DAS4-VU"
@@ -258,5 +248,4 @@ DAS4-VU.cores = 440
 #DAS4-VU.memory = 
 DAS4-VU.latitude = 52.3328
 DAS4-VU.longitude = 4.8669
-DAS4-VU.color = #FFBF80
 DAS4-VU.location = DAS-4@VU@NL
