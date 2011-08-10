@@ -15,41 +15,9 @@ Client.pool.name = demo
 Local-Server.cluster.name = local
 Local-Server.process.count = 1
 Local-Server.resource.count = 1
-Local-Server.application.name = Server
-Local-Server.runtime = 60
-Local-Server.pool.name = demo
 
 VU-Server.cluster.name = DAS4-VU
-VU-Server.process.count = 4
-VU-Server.resource.count = 4
-VU-Server.application.name = Server
-VU-Server.runtime = 60
-VU-Server.pool.name = demo
-
 Delft-Server.cluster.name = DAS4-Delft
-Delft-Server.process.count = 4
-Delft-Server.resource.count = 4
-Delft-Server.application.name = Server
-Delft-Server.runtime = 60
-Delft-Server.pool.name = demo
-
 UvA-Server.cluster.name = DAS4-UvA
-UvA-Server.process.count = 4
-UvA-Server.resource.count = 4
-UvA-Server.application.name = Server
-UvA-Server.runtime = 60
-UvA-Server.pool.name = demo
-
 Leiden-Server.cluster.name = DAS4-Leiden
-Leiden-Server.process.count = 4
-Leiden-Server.resource.count = 4
-Leiden-Server.application.name = Server
-Leiden-Server.runtime = 60
-Leiden-Server.pool.name = demo
-
 MultimediaN-Server.cluster.name = DAS4-MultimediaN
-MultimediaN-Server.process.count = 4
-MultimediaN-Server.resource.count = 4
-MultimediaN-Server.application.name = Server
-MultimediaN-Server.runtime = 60
-MultimediaN-Server.pool.name = demo
