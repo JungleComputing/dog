@@ -1,4 +1,0 @@
-#!/bin/bash
-
-exec java -classpath deploy/lib/*:deploy/lib/adaptors/GlobusAdaptor/cog-jglobus.jar -DUID=${UID} org.globus.tools.ProxyInit $@
-
