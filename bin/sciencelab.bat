@@ -6,7 +6,7 @@ rem %~dp0 is expanded pathname of the current script under NT
 
 if "%DEPLOY_HOME%X"=="X" set DEPLOY_HOME=%~dp0..\deploy
 
-set DEPLOY_ARGS=sciencelab-workspace -r -m
+set DEPLOY_ARGS=-r -m sciencelab-workspace
 
 :setupArgs
 if ""%1""=="""" goto doneStart
@@ -15,6 +15,8 @@ shift
 goto setupArgs
 
 :doneStart
+
+cd %~dp0..
 
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" goto 64BIT_ARCHITECTURE
 java -splash:images\ibis-splash.png -classpath "%CLASSPATH%;%DEPLOY_HOME%;%DEPLOY_HOME%\lib\*;%DEPLOY_HOME%\lib\castor-1.1.1-xml.jar" -Dgat.adaptor.path="%DEPLOY_HOME%"\lib\adaptors -Dibis.deploy.home="%DEPLOY_HOME%" -Djava.library.path="%DEPLOY_HOME%"\lib\native_libraries32 ibis.deploy.gui.GUI %DEPLOY_ARGS%
