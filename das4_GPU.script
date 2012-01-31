@@ -1,0 +1,21 @@
+#!/bin/sh
+
+export SGE_ROOT=/usr/local/Cluster-Apps/sge
+
+NR_NODES=$1
+shift
+NR_PROCS=$1
+shift
+JAVA=$1
+shift
+ARGS=$*
+
+RUNTIME=1:00:00
+
+OPTION=-1
+
+#RESERVATION=-reserve 1111
+
+echo /usr/local/VU/reserve.sge/bin/prun $RESERVATION $OPTION -rsh ssh -asocial -t $RUNTIME -np 1 -q gpu.q $JAVA $ARGS
+exec /usr/local/VU/reserve.sge/bin/prun $RESERVATION $OPTION -rsh ssh -asocial -t $RUNTIME -np 1 -q gpu.q $JAVA $ARGS
+

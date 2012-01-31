@@ -4,9 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibis.dog.Communication;
-import ibis.dog.FeatureVector;
-import ibis.dog.database.DatabaseInterface;
-import ibis.dog.database.Item;
 import ibis.dog.server.ServerInterface;
 import ibis.media.imaging.Image;
 import ibis.ipl.Ibis;
@@ -22,7 +19,6 @@ public class ServerHandler implements Runnable {
 
     private final Client client;
 
-    private final DatabaseInterface database;
     private final ServerInterface server;
 
     private boolean enabled = false;
@@ -31,11 +27,9 @@ public class ServerHandler implements Runnable {
     // server is active if last calculation was succesful
     private boolean active = false;
 
-    ServerHandler(IbisIdentifier address, Client client, Ibis ibis,
-            DatabaseInterface database) {
+    ServerHandler(IbisIdentifier address, Client client, Ibis ibis) {
         this.address = address;
         this.client = client;
-        this.database = database;
 
         logger.debug("new Server handler: " + this);
 
@@ -108,7 +102,8 @@ public class ServerHandler implements Runnable {
         while (!isDone()) {
             if (isEnabled()) {
                 logger.debug("Getting image to send to " + address);
-                Image frame = client.getProcessImage();
+                Image[] frames = new Image[3];
+                frames[0] = client.getProcessImage(0);
                 long timestamp = System.currentTimeMillis();
                 logger.debug("Got image to send to " + address);
 
@@ -125,11 +120,9 @@ public class ServerHandler implements Runnable {
                     // frame = Imaging4j.convert(converted, Format.MJPG);
                     // }
 
-                    FeatureVector vector = server.calculateVector(frame);
+                   Image disparity = server.calculateDisparity(frames);
 
-                    Item item = database.recognize(vector);
-
-                    client.newResult(address, timestamp, vector, item);
+                    client.newResult(address, timestamp, disparity);
 
                     setActive(true);
                 } catch (Exception e) {

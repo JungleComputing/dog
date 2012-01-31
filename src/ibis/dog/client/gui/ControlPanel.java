@@ -21,6 +21,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,32 +34,31 @@ public class ControlPanel extends JPanel implements ActionListener {
 
     // Generated
     private static final long serialVersionUID = 1L;
-
-    private final JTextField inputField;
-
-    private final JButton learnButton;
-    private final JButton recognizeButton;
-
-    private final LearnRecognizeDialog learnRecognizeDialog;
-
+    
     private static final String NONE = "Camera Off";
     private static final String SCAN = "Scan for devices";
 
+    private JComboBox inputList;
     private JComboBox deviceList;
 
     private WebCam webCam;
 
-    private VideoSource currentCam;
+    private VideoSource[] currentCams;
 
-    private final VideoPanel videoPanel;
+    private final VideoPanel[] videoPanels;
 
+    private Client client;
+    
+    private Map<Integer, Integer> cameraList;
+    
     Speech speech;
 
-    public ControlPanel(Client client) {
+    public ControlPanel(Client c) {
 
+    	client = c;
+    	
         speech = new Speech(true);
         speech.speak("Voice initialized");
-        learnRecognizeDialog = new LearnRecognizeDialog(client, speech);
 
         // set font for dialogs to slightly bigger font
         UIManager.put("Label.font", new Font("Dialog", Font.BOLD, 16));
@@ -68,12 +70,16 @@ public class ControlPanel extends JPanel implements ActionListener {
         // setMaximumSize(new Dimension(665, VideoPanel.HEIGHT + 20));
 
         webCam = new WebCam(client);
+        currentCams = new VideoSource[2];
 
         add(Box.createRigidArea(new Dimension(7, 7)));
 
         // actually display video
-        videoPanel = new VideoPanel(client);
-        add(videoPanel);
+        videoPanels = new VideoPanel[2];
+        for(int i=0; i<videoPanels.length; i++){
+        	videoPanels[i] = new VideoPanel(client);
+        	add(videoPanels[i]);
+        }
 
         add(Box.createRigidArea(new Dimension(7, 7)));
 
@@ -83,41 +89,25 @@ public class ControlPanel extends JPanel implements ActionListener {
         buttons.setMinimumSize(new Dimension(190, VideoPanel.HEIGHT));
         buttons.setPreferredSize(new Dimension(190, VideoPanel.HEIGHT));
 
+        // Create the combo box, select the item at index 0 (Item "Left").
+        inputList = new JComboBox();
+        inputList.addItem("Left");
+        inputList.addItem("Right");
+        inputList.addActionListener(this);
+        
         // Create the combo box, select the item at index 0 (Item "none").
         deviceList = new JComboBox();
         deviceList.addActionListener(this);
 
         // deviceList.setMinimumSize(new Dimension(352, 25));
         // deviceList.setMaximumSize(new Dimension(352, 25));
+        buttons.add(inputList);
         buttons.add(deviceList);
 
         buttons.add(Box.createRigidArea(new Dimension(0, 5)));
         buttons.add(Box.createRigidArea(new Dimension(0, 5)));
 
-        Font inputFont = new Font(null, Font.PLAIN, 16);
-
-        inputField = new JTextField("");
-        inputField.setFont(inputFont);
-        // inputField.setAlignmentY(Component.TOP_ALIGNMENT);
-        // inputField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        buttons.add(inputField);
-
         Font buttonFont = new Font(null, Font.BOLD, 16);
-
-        learnButton = new JButton("Teach");
-
-        learnButton.setFont(buttonFont);
-        learnButton.addActionListener(this);
-        buttons.add(learnButton);
-
-        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
-
-        buttons.add(Box.createRigidArea(new Dimension(0, 5)));
-
-        recognizeButton = new JButton("Recognize");
-        recognizeButton.setFont(buttonFont);
-        recognizeButton.addActionListener(this);
-        buttons.add(recognizeButton);
 
         // buttons.add(Box.createRigidArea(new Dimension(5, 5)));
 
@@ -125,44 +115,21 @@ public class ControlPanel extends JPanel implements ActionListener {
 
         add(Box.createRigidArea(new Dimension(5, 5)));
 
-      
-
         // turn on webcam
+        cameraList = new HashMap<Integer, Integer>();
         updateVideoDevices();
-        if (deviceList.getItemCount() > 2) {
-            deviceList.setSelectedIndex(1);
-        } else {
-            deviceList.setSelectedIndex(0);
-        }
     }
 
     public void actionPerformed(ActionEvent e) {
 
-        if (e.getSource() == learnButton) {
-
-            String name = inputField.getText();
-
-            if (name.equals("")) {
-                JOptionPane.showMessageDialog(getRootPane(),
-                        "Please enter object name first", "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            learnRecognizeDialog.setLocationRelativeTo(this.getTopLevelAncestor());
-            learnRecognizeDialog.learn(name);
-
-        } else if (e.getSource() == recognizeButton) {
-            learnRecognizeDialog.setLocationRelativeTo(this.getTopLevelAncestor());
-            learnRecognizeDialog.recognize();
-        } else if (e.getSource() == deviceList) {
+        if (e.getSource() == deviceList) {
 
             Object tmp = deviceList.getSelectedItem();
 
-            if (currentCam != null) {
-                currentCam.close();
-                currentCam = null;
-                videoPanel.setInvalid();
+            if (currentCams[0] != null) {
+                currentCams[0].close();
+                currentCams[0] = null;
+                videoPanels[0].setInvalid();
             }
 
             if (tmp instanceof VideoDeviceDescription) {
@@ -171,7 +138,9 @@ public class ControlPanel extends JPanel implements ActionListener {
                         + d.getSimpleDescription());
 
                 try {
-                    currentCam = webCam.selectDevice(d);
+                    currentCams[0] = webCam.selectDevice(d);
+                    cameraList.put(0, d.deviceNumber);
+                    client.setCameras(cameraList);
                 } catch (Exception ex) {
                     logger.error("Failed to select device " + d);
 
@@ -192,7 +161,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
     public void close() {
         speech.done();
-        currentCam.close();
+        currentCams[0].close();
     }
 
     private void updateVideoDevices() {
@@ -209,7 +178,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
         deviceList.removeAllItems();
         deviceList.addItem(NONE);
-
+        
         for (int i = 0; i < devices.length; i++) {
             deviceList.addItem(devices[i]);
         }

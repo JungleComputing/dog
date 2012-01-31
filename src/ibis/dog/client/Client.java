@@ -1,11 +1,6 @@
 package ibis.dog.client;
 
 import ibis.dog.Communication;
-import ibis.dog.FeatureVector;
-import ibis.dog.client.Voter.RecognizeResult;
-import ibis.dog.database.Database;
-import ibis.dog.database.DatabaseInterface;
-import ibis.dog.database.Item;
 import ibis.media.imaging.Image;
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisCreationFailedException;
@@ -37,49 +32,40 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 
 	private final Map<IbisIdentifier, ServerHandler> servers;
 
-	// current image
-	private Image input = null;
+	private Map<Integer, Integer> cameras;
+	
+	// current images
+	private Image[] inputs;
+	private Image[] displays;
 	private long inputSeqNr = 0;
 	private long lastDisplayedFrame = 0;
 	private long lastProcessedFrame = 0;
 
-	private final Voter voter;
-
-	// vector that was generated from "newest" frame
-	private FeatureVector newestVector = null;
-	// timestamp of frame used to generate newest vector
-	private long newestVectorTimestamp = 0;
+	// disparity that was generated from "newest" frame
+	private Image newestDisparity = null;
+	// disparity of frame used to generate newest vector
+	private long newestDisparityTimestamp = 0;
 
 	private boolean done = false;
 
 	private final Statistics statistics;
 
-	// remote or local database
-	private final DatabaseInterface database;
-
 	public Client(MessageListener messageListener,
-			ServerListener serverListener, boolean includeDatabase,
+			ServerListener serverListener,
 			StatisticsListener... statisticListeners)
 			throws IbisCreationFailedException, IOException {
 		this.messageListener = messageListener;
 		this.serverListener = serverListener;
 
 		servers = new HashMap<IbisIdentifier, ServerHandler>();
-		voter = new Voter();
+		cameras = new HashMap<Integer, Integer>();
+		
+		inputs = new Image[cameras.size()];
+		displays = new Image[cameras.size() + 1];
 
 		logger.debug("Initializing client");
 
 		ibis = Communication.createIbis(Communication.CLIENT_ROLE, this);
-
-		if (includeDatabase) {
-			database = new Database(false);
-		} else {
-			IbisIdentifier databaseIdentifier = ibis.registry()
-					.getElectionResult("database");
-
-			database = RPC.createProxy(DatabaseInterface.class,
-					databaseIdentifier, Communication.DATABASE_ROLE, ibis);
-		}
 
 		statistics = new Statistics(statisticListeners, this);
 		
@@ -88,6 +74,12 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		logger.info("Done initializing client");
 	}
 
+	public void setCameras(Map<Integer, Integer> cameraList){
+		cameras = cameraList;
+		inputs = new Image[cameras.size()];
+		displays = new Image[cameras.size() + 1];		
+	}
+	
 	public void log(String message) {
 		if (messageListener != null) {
 			messageListener.message(message);
@@ -104,7 +96,7 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		}
 
 		Image copy;
-		// copy image
+		// copy images
 		try {
 			copy = Image.copy(image, null);
 		} catch (Exception e) {
@@ -113,15 +105,17 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		}
 
 		synchronized (this) {
-			this.input = copy;
+			int index = cameras.get(copy.getNumber());
+			this.inputs[index] = copy;
+			this.displays[index] = copy;
 			statistics.gotFrame();
 			inputSeqNr++;
 			notifyAll();
 		}
 	}
 
-	public synchronized Image getDisplayImage() {
-		while (lastDisplayedFrame == inputSeqNr || input == null) {
+	public synchronized Image getDisplayImage(int index) {
+		while (lastDisplayedFrame == inputSeqNr || displays[index] == null) {
 			if (done) {
 				return null;
 			}
@@ -133,11 +127,12 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		}
 		lastDisplayedFrame = inputSeqNr;
 		statistics.displayedFrame();
-		return input;
+		
+		return displays[index];
 	}
 
-	public synchronized Image getProcessImage() {
-		while (lastProcessedFrame == inputSeqNr || input == null) {
+	public synchronized Image getProcessImage(int index) {
+		while (lastProcessedFrame == inputSeqNr || inputs[index] == null) {
 			if (done) {
 				return null;
 			}
@@ -149,32 +144,25 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		}
 		lastProcessedFrame = inputSeqNr;
 
-		return input;
+		return inputs[index];
 	}
 
 	// called by serverHandlers to give us a new result item/vector
 	public void newResult(IbisIdentifier server, long timestamp,
-			FeatureVector vector, Item item) {
+			Image disparity) {
 		statistics.processedFrame();
 
 		synchronized (this) {
-			if (timestamp > newestVectorTimestamp) {
-				newestVectorTimestamp = timestamp;
-				newestVector = vector;
+			if (timestamp > newestDisparityTimestamp) {
+				newestDisparityTimestamp = timestamp;
+				newestDisparity = disparity;
+				displays[displays.length - 1] = disparity;
 				notifyAll();
 			}
 		}
 
-		voter.newResult(server, timestamp, item);
-
 		String serverName = server.location().getLevel(
 				server.location().numberOfLevels() - 1);
-
-		if (item == null) {
-			log(serverName + " does not recognize this object");
-		} else {
-			log(serverName + " says this is a " + item.getName());
-		}
 	}
 
 	synchronized int processingServerCount() {
@@ -187,85 +175,34 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		return result;
 	}
 
-	private synchronized FeatureVector getFeatureVector(long timestamp)
+	private synchronized Image getDisparity(long timestamp)
 			throws Exception {
-		while (!done && this.newestVectorTimestamp < timestamp) {
+		while (!done && this.newestDisparityTimestamp < timestamp) {
 			if (processingServerCount() <= 0) {
 				throw new Exception(
-						"Cannot learn object: No servers processing images");
+						"No servers processing images");
 			}
 
 			// FIXME: this check could improve, it only checks if the webcam has
 			// ever worked
 			if (inputSeqNr == 0) {
-				throw new Exception(
-						"Cannot learn object: No images available for processing");
+				throw new Exception("No images available for processing");
 			}
 
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new Exception("Error while learning object");
+				throw new Exception("Error while waiting for time-stamp");
 			}
 		}
 
-		if (newestVector == null) {
-			throw new Exception(
-					"Error while learning object: cannot get vector");
+		if (newestDisparity == null) {
+			throw new Exception("Cannot get disparity");
 		}
 
-		return newestVector;
+		return newestDisparity;
 	}
 
-	public boolean learn(String name, ProgressListener listener) throws Exception {
-		logger.info("learning new item " + name);
-
-		if(!listener.progress(0.0)) {
-			return false;
-		}
-
-		FeatureVector vector = getFeatureVector(System.currentTimeMillis());
-
-		if (!listener.progress(0.5)) {
-			return false;
-		}
-
-		// create new database item
-		Item item = new Item(vector, name, System.getProperty("user.name"),
-				null);
-		
-		if (!listener.progress(0.6)) {
-			return false;
-		}
-
-		// learn item (either local, or through RPC mechanism)
-		database.learn(item);
-
-		listener.progress(1.0);
-		
-		return true;
-	}
-
-	public RecognizeResult recognize(ProgressListener listener)
-			throws Exception {
-		logger.info("recognizing object");
-
-		synchronized (this) {
-			// FIXME: this check could improve, it only checks if the webcam has
-			// ever worked
-			if (inputSeqNr == 0) {
-				throw new Exception(
-						"Cannot recognize object: No images available for processing");
-
-			}
-		}
-
-		if (database.size() == 0) {
-			throw new Exception("Database empty");
-		}
-
-		return voter.recognize(listener, this);
-	}
 
 	public synchronized void end() {
 		done = true;
@@ -278,10 +215,6 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 			ibis.end();
 		} catch (Exception e) {
 			logger.error("Error on ending Ibis", e);
-		}
-
-		if (database != null && (database instanceof Database)) {
-			((Database) database).end();
 		}
 	}
 
@@ -303,7 +236,7 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 		synchronized (this) {
 			logger.debug("new server: " + joinedIbis);
 
-			handler = new ServerHandler(joinedIbis, this, ibis, database);
+			handler = new ServerHandler(joinedIbis, this, ibis);
 
 			servers.put(joinedIbis, handler);
 		}
@@ -358,9 +291,9 @@ public class Client implements VideoConsumer, RegistryEventHandler {
 	}
 
 	public int getDatabaseSize() throws RemoteException {
-		return database.size();
-	}
-
+		return 0;
+	}	
+	
 	public void serverStateChanged() {
 		serverListener.serverStateChanged();
 	}

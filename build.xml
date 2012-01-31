@@ -10,6 +10,7 @@
     <property name="freetts" location="external/freetts"/>
     <property name="jfreechart" location="external/jfreechart"/>
     <property name="media" location="external/media"/>
+    <property name="gpu" location="external/gpu"/>	
 
     <target name="build" depends="clean,copy-external,compile">
     </target>
@@ -43,6 +44,7 @@
 	    <fileset dir="external" includes="*.jar" />
 	    <fileset dir="${ipl}"/>
 	    <fileset dir="${media}" includes="*.jar" />
+		<fileset dir="${gpu}" />		
 	</copy>
 
 	<echo message="using deploy from ${deploy.home}"/>

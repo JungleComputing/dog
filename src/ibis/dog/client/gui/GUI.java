@@ -9,6 +9,7 @@ import java.awt.event.WindowListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JWindow;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
@@ -29,12 +30,12 @@ public class GUI extends JPanel implements WindowListener {
 
 	private final ControlPanel controlPanel;
 
-	public GUI(boolean includeDatabase) throws Exception {
+	public GUI() throws Exception {
 		MessagePanel messagePanel = new MessagePanel();
 		ServerPanel serverPanel = new ServerPanel();
 		StatisticsPanel statisticsPanel = new StatisticsPanel();
-
-		client = new Client(messagePanel, serverPanel, includeDatabase,
+		
+		client = new Client(messagePanel, serverPanel,
 				statisticsPanel);
 
 		controlPanel = new ControlPanel(client);
@@ -98,7 +99,7 @@ public class GUI extends JPanel implements WindowListener {
 			public void run() {
 				createAndShowGUI();
 			}
-		});
+		});	
 	}
 
 	private void createAndShowGUI() {
@@ -113,12 +114,20 @@ public class GUI extends JPanel implements WindowListener {
 		// Create and set up the content pane.
 		this.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(this);
-
-		// Display the window.
-		frame.pack();
 		frame.setVisible(true);
+		
+		JFrame videoFrame = new JFrame("Disparity");
+		videoFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+		videoFrame.setMinimumSize(new Dimension(WIDTH, HEIGHT));
+		videoFrame.setMaximumSize(new Dimension(WIDTH, HEIGHT));		
+		
+		// Display the video window.
+		VideoPanel videoPanel = new VideoPanel(client, 1);
+		videoPanel.setOpaque(true);
+		videoFrame.setContentPane(videoPanel);
+		videoFrame.setVisible(true);
 	}
-
+	
 	private void exit() {
 		controlPanel.close();
 		client.end();
@@ -160,16 +169,8 @@ public class GUI extends JPanel implements WindowListener {
 	}
 
 	public static void main(String[] args) {
-		boolean includeDatabase = false;
-
-		for (int i = 0; i < args.length; i++) {
-			if (args.equals("--include-database"))
-				;
-			includeDatabase = true;
-		}
-
 		try {
-			new GUI(includeDatabase);
+			new GUI();
 		} catch (Exception e) {
 			logger.error("Error in client", e);
 		}

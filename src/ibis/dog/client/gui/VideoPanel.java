@@ -44,16 +44,18 @@ class VideoPanel extends JPanel implements Runnable {
 	public static final int HEIGHT = 337;
 
 	private final Client client;
-
+	private int imageIndex;
+	
 	private boolean imageValid;
 
 	private int[] pixels;
 	private MemoryImageSource source;
 	private java.awt.Image offscreen;
-
+	
 	public VideoPanel(Client client) {
 		this.client = client;
-
+		imageIndex = 0;
+		
 		imageValid = false;
 
 		pixels = new int[WIDTH * HEIGHT];
@@ -73,6 +75,15 @@ class VideoPanel extends JPanel implements Runnable {
 		ThreadPool.createNew(this, "video stream");
 	}
 
+	public VideoPanel(Client client, int index){
+		this(client);
+		imageIndex = index;
+	}
+	
+	public void setIndex(int index){
+		imageIndex = index;
+	}
+	
 	public void paint(Graphics g) {
 
 		Graphics2D g2 = (Graphics2D) g;
@@ -150,7 +161,7 @@ class VideoPanel extends JPanel implements Runnable {
 	public void run() {
 		while (true) {
 			try {
-				Image image = client.getDisplayImage();
+				Image image = client.getDisplayImage(imageIndex);
 
 				if (image == null) {
 					logger.debug("videostream exiting");

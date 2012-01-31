@@ -1,7 +1,9 @@
 package ibis.dog.server;
 
+import gpu.*;
+import stereo.*;
+
 import ibis.dog.Communication;
-import ibis.dog.FeatureVector;
 import ibis.media.imaging.Format;
 import ibis.media.imaging.Image;
 import ibis.media.imaging.Imaging;
@@ -10,12 +12,12 @@ import ibis.ipl.util.rpc.RPC;
 import ibis.ipl.util.rpc.RemoteObject;
 
 import java.rmi.RemoteException;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jorus.parallel.PxSystem;
-import jorus.weibull.CxWeibull;
+import sun.awt.image.ImagingLib;
 
 public class Server implements ServerInterface {
 
@@ -28,59 +30,41 @@ public class Server implements ServerInterface {
     public static final int IMAGE_WIDTH = 640;
     public static final int IMAGE_HEIGHT = 480;
 
-    public static final Format IMAGE_FORMAT = Format.RGB24;
+    public static final Format IMAGE_FORMAT = Format.GREY;
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private final PxSystem px;
-
-    private final boolean master;
-
-    // master-only fields
-
     private final Ibis ibis;
 
     private final RemoteObject<ServerInterface> remoteObject;
 
+    private GPURuntime runtime;
+    private RectifierGPU rectifierLeft;
+    private RectifierGPU rectifierRight;
+    private StereoPipelineGPU stereo;
+    
     private boolean ended = false;
     private boolean initialized = false;
 
-    private Server(String poolName, String poolSize) throws Exception {
-        logger.info("Initializing PxSystem at " + IMAGE_WIDTH + "x"
+    private Server() throws Exception {
+        // Server needs to provide an Ibis to contact the outside world.
+        logger.info("Initializing Global Communication");
+        ibis = Communication.createIbis(Communication.SERVER_ROLE, null);
+        remoteObject = RPC.exportObject(ServerInterface.class, this,
+                "server", ibis);
+
+        logger.info("Initializing Stereo at " + IMAGE_WIDTH + "x"
                 + IMAGE_HEIGHT);
-        try {
-            px = PxSystem.init(poolName, poolSize);
-        } catch (Exception e) {
-            logger.error("Could not initialize Parallel system", e);
-            throw e;
-        }
-
-        logger.debug("nrCPUs = " + px.nrCPUs());
-        logger.debug("myCPU = " + px.myCPU());
-
-        master = (px.myCPU() == 0);
-
-        // Node 0 needs to provide an Ibis to contact the outside world.
-        if (master) {
-            logger.info("Local PxSystem initalized. Initializing Global Communication");
-            ibis = Communication.createIbis(Communication.SERVER_ROLE, null);
-            remoteObject = RPC.exportObject(ServerInterface.class, this,
-                    "server", ibis);
-
-            logger.info("Initializing Weibull at " + IMAGE_WIDTH + "x"
-                    + IMAGE_HEIGHT);
-        } else {
-            ibis = null;
-            remoteObject = null;
-        }
 
         // do initialization now instead of after the first request is received.
-        CxWeibull.initialize(IMAGE_WIDTH, IMAGE_HEIGHT);
+        runtime = new GPURuntime();
+        rectifierLeft = new RectifierGPU(runtime, IMAGE_WIDTH, IMAGE_HEIGHT);
+        rectifierRight = new RectifierGPU(runtime, IMAGE_WIDTH, IMAGE_HEIGHT);
+        stereo = new StereoPipelineGPU(runtime, IMAGE_WIDTH, IMAGE_HEIGHT, 16);
 
-        logger.info("Rank " + px.myCPU() + " of " + px.nrCPUs()
-                + " Initialization done");
+        logger.info("Initialization done");
 
         setInitialized();
 
@@ -121,128 +105,104 @@ public class Server implements ServerInterface {
         logger.info("Ending server");
         setEnded();
 
-        if (master) {
-            try {
-                remoteObject.unexport();
-                ibis.end();
-            } catch (Exception e) {
-                logger.error("Error on stopping communication", e);
-            }
-        }
-        try {
-            px.exitParallelSystem();
+       try {
+            remoteObject.unexport();
+            ibis.end();
         } catch (Exception e) {
-            logger.error("error on exiting parallel system", e);
+            logger.error("Error on stopping communication", e);
         }
     }
 
-    public FeatureVector calculateVector(Image image) throws RemoteException,
+    public Image calculateDisparity(Image[] images) throws RemoteException,
             Exception {
-        FeatureVector result;
+        Image result;
 
         long converting = System.currentTimeMillis();
         long scaling = 0;
         long computing = 0;
         long end = 0;
 
-        byte[] pixels;
-
         try {
-            if (master) {
-                // The master should dequeue a request, and prepare it for
-                // processing
+            // The server should dequeue a request, and prepare it for
+            // processing
 
-                logger.debug("Got request");
+            logger.debug("Got request");
 
-                if (image == null) {
-                    logger.debug("fake request received, sending fake reply");
-                    return null;
-                }
-
-                Image convertedImage;
-                if (image.getFormat() == IMAGE_FORMAT) {
-                    // no need to convert
-                    convertedImage = image;
-                } else {
-                    convertedImage = Imaging.convert(image, IMAGE_FORMAT);
-                }
-
-                scaling = System.currentTimeMillis();
-
-                Image scaledImage;
-                if (convertedImage.getWidth() == IMAGE_WIDTH
-                        && convertedImage.getHeight() == IMAGE_HEIGHT) {
-                    // no need to scale
-                    scaledImage = convertedImage;
-                } else {
-                    scaledImage = Imaging.scale(convertedImage, IMAGE_WIDTH,
-                            IMAGE_HEIGHT);
-                }
-
-                // Imaging4j.save(scaledImage, new File("image.rgb"));
-
-                pixels = scaledImage.getData().array();
-
-                logger.debug("Starting computation");
-                computing = System.currentTimeMillis();
-            } else {
-                // allocate space for image
-                pixels = new byte[(int) Format.RGB24.bytesRequired(IMAGE_WIDTH,
-                        IMAGE_HEIGHT)];
+            if (images == null) {
+                logger.debug("fake request received, sending fake reply");
+                return null;
             }
 
-            result = new FeatureVector(CxWeibull.getNrInvars(),
-                    CxWeibull.getNrRfields());
-            CxWeibull.doRecognize(IMAGE_WIDTH, IMAGE_HEIGHT, pixels,
-                    result.getVector());
-
-            if (master) {
-                logger.debug("Computation done");
+            Image[] convertedImages = new Image[images.length];
+            for(int k=0; k<images.length; k++){
+            	if (images[k].getFormat() == IMAGE_FORMAT) {
+            		// no need to convert
+            		convertedImages[k] = images[k];
+            	} else {
+            		convertedImages[k] = Imaging.convert(images[k], IMAGE_FORMAT);
+            	}
             }
+
+            scaling = System.currentTimeMillis();
+
+            Image[] scaledImages = new Image[images.length];
+            for(int k=0; k<images.length; k++){
+            	if (convertedImages[k].getWidth() == IMAGE_WIDTH
+                    && convertedImages[k].getHeight() == IMAGE_HEIGHT) {
+            		// no need to scale
+            		scaledImages[k] = convertedImages[k];
+            	} else {
+            		scaledImages[k] = Imaging.scale(convertedImages[k], IMAGE_WIDTH,
+                        IMAGE_HEIGHT);
+            	}
+            }
+
+            // Imaging4j.save(scaledImage, new File("image.rgb"));
+
+            GPUArray rectifiedLeft = rectifierLeft.rectify(scaledImages[0].getData().array());
+            GPUArray rectifiedRight = rectifierRight.rectify(scaledImages[1].getData().array());
+
+            logger.debug("Starting computation");
+            computing = System.currentTimeMillis();
+            
+            result = new Image(IMAGE_FORMAT, IMAGE_WIDTH, IMAGE_HEIGHT);
+            
+            int[] resultMatrix;
+            resultMatrix = stereo.executeStereo(rectifiedLeft, rectifiedRight);
+            
+            for(int i=0; i<IMAGE_HEIGHT; i++)
+            	for(int j=0; j<IMAGE_WIDTH; j++)
+            		result.getData().array()[i*IMAGE_WIDTH+j] = (byte)resultMatrix[i*IMAGE_WIDTH+j];
+
+            logger.debug("Computation done");
         } catch (Exception exception) {
-            logger.error("error while processing request", exception);
+            logger.error("Error while processing request", exception);
             throw exception;
         }
 
         end = System.currentTimeMillis();
 
-        if (master) {
-            logger.info("Processing took: " + (end - converting) + " convert: "
+        logger.info("Processing took: " + (end - converting) + " convert: "
                     + (scaling - converting) + " scale: "
                     + (computing - scaling) + " parallel computation: " + ")");
-            px.printStatistics();
 
-            // wake up run thread to do GC
-            nudge();
-        }
+        // wake up run thread to do GC
+        nudge();
 
         return result;
     }
 
     private void run() {
-        if (master) {
-            synchronized (this) {
-                // we will be woken up after each vector by RPC thread
-                while (!hasEnded()) {
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        // IGNORE
-                    }
-                    System.gc();
-                }
-            }
-        } else {
-            // Continually calculate vectors
+        synchronized (this) {
+            // we will be woken up after each vector by RPC thread
             while (!hasEnded()) {
                 try {
-                    calculateVector(null);
-                } catch (Exception e) {
-                    logger.error("Error on caclulating vector", e);
+                    wait();
+                } catch (InterruptedException e) {
+                    // IGNORE
                 }
                 System.gc();
             }
-
         }
     }
 
@@ -259,29 +219,12 @@ public class Server implements ServerInterface {
     };
 
     public static void main(String[] args) {
-        String poolName = null;
-        String poolSize = null;
 
-        if (args.length == 0) {
-            poolName = System.getProperty("ibis.deploy.job.id", null);
-            poolSize = System.getProperty("ibis.deploy.job.size", null);
-        } else if (args.length == 2) {
-            poolName = args[0];
-            poolSize = args[1];
-        }
-
-        logger.info("Image processing server starting in pool \"" + poolName
-                + "\" of size " + poolSize);
-
-        if (poolName == null || poolSize == null) {
-            System.err
-                    .println("USAGE: Server poolname poolsize OR set ibis.deploy.job.id and ibis.deploy.job.size properties");
-            System.exit(1);
-        }
+        logger.info("Image processing server starting");
 
         Server server = null;
         try {
-            server = new Server(poolName, poolSize);
+            server = new Server();
             // Install a shutdown hook that terminates Ibis.
             Runtime.getRuntime().addShutdownHook(new ShutDown(server));
 
